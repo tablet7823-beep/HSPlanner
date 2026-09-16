@@ -248,7 +248,7 @@ pub fn apply_item_granted_conversions(
                         stat_sources,
                         &key,
                         SourceContribution {
-                            label: format!("{label} (removed)"),
+                            label: crate::calc::i18n::tr("{label} (removed)").replace("{label}", &label),
                             source_type: SourceType::Item,
                             value: (-share_min * val.0, -share_max * val.1),
                             forge: None,

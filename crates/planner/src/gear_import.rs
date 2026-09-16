@@ -27,7 +27,7 @@ impl GearView {
                 .width((window.rem_size() * (560. / 13.)).min(window.viewport_size().width * 0.94))
                 .max_h(window.viewport_size().height * 0.86)
                 .margin_top(window.viewport_size().height * 0.07)
-                .overlay_closable(false)
+                .overlay_closable(true)
                 .on_ok(|_, _, _| false)
                 .child(view.clone())
         });

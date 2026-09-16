@@ -27,7 +27,7 @@ pub fn apply_base_attributes(
                 attr_sources,
                 &attr.key,
                 SourceContribution {
-                    label: "Base character".to_string(),
+                    label: crate::calc::i18n::tr("Base character").to_string(),
                     source_type: SourceType::Class,
                     value: (default_base, default_base),
                     forge: None,
@@ -43,7 +43,7 @@ pub fn apply_base_attributes(
                 attr_sources,
                 &attr.key,
                 SourceContribution {
-                    label: format!("{class_name} base"),
+                    label: crate::calc::i18n::tr("{class} base").replace("{class}", &class_name),
                     source_type: SourceType::Class,
                     value: (class_base, class_base),
                     forge: None,
@@ -56,7 +56,7 @@ pub fn apply_base_attributes(
                 attr_sources,
                 &attr.key,
                 SourceContribution {
-                    label: "Allocated points".to_string(),
+                    label: crate::calc::i18n::tr("Allocated points").to_string(),
                     source_type: SourceType::Allocated,
                     value: (added as f64, added as f64),
                     forge: None,
@@ -81,7 +81,7 @@ pub fn apply_difficulty_penalty(difficulty: Option<&str>, stat_sources: &mut Sou
         stat_sources,
         "all_resistances",
         SourceContribution {
-            label: format!("{} difficulty", def.name),
+            label: crate::calc::i18n::tr("{name} difficulty").replace("{name}", &def.name),
             source_type: SourceType::Custom,
             value: (def.resist_penalty, def.resist_penalty),
             forge: None,
@@ -115,7 +115,7 @@ pub fn apply_class_baseline(
                 stat_sources,
                 stat_key,
                 SourceContribution {
-                    label: "Base character".to_string(),
+                    label: crate::calc::i18n::tr("Base character").to_string(),
                     source_type: SourceType::Class,
                     value: (value, value),
                     forge: None,
@@ -133,7 +133,7 @@ pub fn apply_class_baseline(
                 stat_sources,
                 stat_key,
                 SourceContribution {
-                    label: format!("{class_name} base"),
+                    label: crate::calc::i18n::tr("{class} base").replace("{class}", &class_name),
                     source_type: SourceType::Class,
                     value: (value, value),
                     forge: None,
@@ -149,7 +149,7 @@ pub fn apply_class_baseline(
                 stat_sources,
                 stat_key,
                 SourceContribution {
-                    label: format!("Per level × {level}"),
+                    label: crate::calc::i18n::tr("Per level x {n}").replace("{n}", &level.to_string()),
                     source_type: SourceType::Level,
                     value: (total, total),
                     forge: None,
@@ -179,7 +179,7 @@ pub fn apply_light_radius_to_attributes(stat_sources: &mut SourceMap) {
         stat_sources,
         "increased_all_attributes",
         SourceContribution {
-            label: "Increased All Attributes (per Light Radius)".to_string(),
+            label: crate::calc::i18n::tr("Increased All Attributes (per Light Radius)").to_string(),
             source_type: SourceType::Tree,
             value: (points.0 * rate.0 / 100.0, points.1 * rate.1 / 100.0),
             forge: None,
@@ -272,7 +272,9 @@ pub fn apply_increased_per_attribute(attr_sources: &mut SourceMap, stat_sources:
             attr_sources,
             &attr.key,
             SourceContribution {
-                label: format!("Increased {} ({})", attr.name, label_parts.join(", ")),
+                label: crate::calc::i18n::tr("Increased {name} ({parts})")
+                    .replace("{name}", &attr.name)
+                    .replace("{parts}", &label_parts.join(", ")),
                 source_type: SourceType::Tree,
                 value: (bonus_min, bonus_max),
                 forge: None,
@@ -330,7 +332,7 @@ pub fn apply_stats_per_attribute(
                     stat_sources,
                     stat_key,
                     SourceContribution {
-                        label: format!("From {attr_name}"),
+                        label: crate::calc::i18n::tr("From {name}").replace("{name}", &attr_name),
                         source_type: SourceType::Attribute,
                         value,
                         forge: None,
@@ -532,7 +534,9 @@ pub fn apply_attribute_divided_stats(
                 stat_sources,
                 stat_key,
                 SourceContribution {
-                    label: format!("From {attr_name} (÷{divisor})"),
+                    label: crate::calc::i18n::tr("From {name} (÷{divisor})")
+                        .replace("{name}", &attr_name)
+                        .replace("{divisor}", &divisor.to_string()),
                     source_type: SourceType::Attribute,
                     value: (contrib_min, contrib_max),
                     forge: None,
@@ -687,7 +691,7 @@ pub fn apply_damage_per_resist(stat_sources: &mut SourceMap) {
         stat_sources,
         "enhanced_damage",
         SourceContribution {
-            label: "Damage from Resistances".to_string(),
+            label: crate::calc::i18n::tr("Damage from Resistances").to_string(),
             source_type: SourceType::Item,
             value: bonus,
             forge: None,

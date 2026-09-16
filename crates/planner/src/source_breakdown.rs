@@ -59,7 +59,7 @@ fn multiplier(value: (f64, f64)) -> String {
 }
 
 fn source_label(kind: SourceType) -> &'static str {
-    match kind {
+    tr(match kind {
         SourceType::Class => "CLASS",
         SourceType::Allocated => "ALLOCATED",
         SourceType::Level => "LEVEL",
@@ -70,7 +70,7 @@ fn source_label(kind: SourceType) -> &'static str {
         SourceType::Subskill => "SUBTREE",
         SourceType::Custom => "CONFIG",
         SourceType::Tree => "TREE",
-    }
+    })
 }
 fn source_color(kind: SourceType, p: &TooltipTheme) -> Hsla {
     match kind {
@@ -87,7 +87,7 @@ fn source_color(kind: SourceType, p: &TooltipTheme) -> Hsla {
 }
 fn display_label(source: &SourceContribution) -> String {
     if let Some(forge) = &source.forge {
-        return format!("↳ Forged modifier ({})", forge.mod_name);
+        return tr("↳ Forged modifier ({name})").replace("{name}", &forge.mod_name);
     }
     if source.source_type != SourceType::Tree {
         return source.label.clone();
@@ -520,7 +520,7 @@ impl Render for SourcesTooltip {
                             .text_size(units(10.))
                             .text_color(p.accent_hot)
                             .font_weight(FontWeight::SEMIBOLD)
-                            .child(TooltipText::new("sources-title", "SOURCES", 0.12)),
+                            .child(TooltipText::new("sources-title", tr("SOURCES"), 0.12)),
                     )
                     .child(
                         div()

@@ -71,7 +71,7 @@ pub(super) fn open(session: Entity<Session>, window: &mut Window, cx: &mut App) 
             .width((window.rem_size() * 36.).min(window.viewport_size().width * 0.94))
             .max_h(window.viewport_size().height * 0.88)
             .margin_top(window.viewport_size().height * 0.06)
-            .overlay_closable(false)
+            .overlay_closable(true)
             .on_ok(|_, _, _| false)
             .child(editor.clone())
     });

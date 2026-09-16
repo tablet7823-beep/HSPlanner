@@ -203,7 +203,9 @@ impl GearView {
                 .width(width)
                 .h(window.viewport_size().height * 0.88)
                 .margin_top(window.viewport_size().height * 0.06)
-                .overlay_closable(false)
+                // Clicking the backdrop runs the same on_cancel as Escape, so a
+                // dirty draft still raises the confirmation instead of vanishing.
+                .overlay_closable(true)
                 // Focused buttons keep their native Enter activation. An Enter
                 // bubbling from search or the dialog itself must not discard a draft.
                 .on_ok(|_, _, _| false)

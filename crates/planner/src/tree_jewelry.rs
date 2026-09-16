@@ -103,7 +103,7 @@ impl TreeView {
                 .width((window.rem_size() * (640. / 13.)).min(window.viewport_size().width * 0.94))
                 .h(window.viewport_size().height * 0.88)
                 .margin_top(window.viewport_size().height * 0.06)
-                .overlay_closable(false)
+                .overlay_closable(true)
                 .on_ok(|_, _, _| false)
                 .on_close(move |_, window, cx| window.focus(&focus, cx))
                 .child(editor.clone())
