@@ -8,8 +8,14 @@ Korean `[tr("Sword"), tr("Mace"), ..].contains(&item.base_type)` is checking
 English base types against Korean labels and is always false. Nothing panics
 and no test that runs in English notices; the feature just stops working.
 
+The same trap has a second shape. `.header(tr("Accept"), ..)` shipped for a
+while: "Accept" is also a button label, so the catalogue translated it and the
+update check started sending a header named 확인. Protocol text is not prose,
+and where it sits is the only way to tell.
+
 So: a `tr()` call is a bug when its text is in the catalogue **and** it sits in
-a comparison. Exit code 1 if any such site exists.
+a comparison, or when it sits in a protocol position at all. Exit code 1 if any
+such site exists.
 
 Run:  python tools/i18n_lint.py
 """
@@ -33,6 +39,13 @@ MEMBERSHIP = re.compile(r"\.(contains|starts_with|ends_with|eq|eq_ignore_ascii_c
 EQUALITY_BEFORE = re.compile(r"(==|!=)\s*$")
 EQUALITY_AFTER = re.compile(r"^\s*(==|!=)")
 
+# Arguments to these are read by something other than a person, so no entry in
+# the catalogue is ever the right answer — unlike a comparison, this is a bug
+# whether or not the string happens to be translated today.
+PROTOCOL = re.compile(
+    r"\.(?:header|set_header|append_header|insert_header|content_type|mime|uri|url)\s*\("
+)
+
 
 def compares(line: str, start: int, end: int) -> bool:
     """Is the tr() spanning [start, end) an operand of a comparison?"""
@@ -41,6 +54,26 @@ def compares(line: str, start: int, end: int) -> bool:
     # `[tr("Sword"), tr("Mace")].contains(..)` — the receiver is everything to
     # the left, so any membership test later on the line is testing this value.
     return any(m.start() >= end for m in MEMBERSHIP.finditer(line))
+
+
+def protocol_position(line: str, start: int) -> bool:
+    """Is the tr() anywhere inside the parentheses of a machine-facing call?
+
+    Both arguments count: the name and the value of a header are equally not
+    prose, and `.header(ACCEPT, tr("application/json"))` is the same bug.
+    """
+    for call in PROTOCOL.finditer(line):
+        depth = 0
+        for index in range(call.end() - 1, len(line)):
+            if line[index] == "(":
+                depth += 1
+            elif line[index] == ")":
+                depth -= 1
+                if depth == 0:
+                    break
+            if depth and index == start:
+                return True
+    return False
 
 
 def catalogues() -> set[str]:
@@ -68,21 +101,26 @@ def main() -> int:
             lines = open(path, encoding="utf-8").read().split("\n")
             for index, line in enumerate(lines):
                 for match in TR_CALL.finditer(line):
-                    if match.group(1) not in translated:
+                    if protocol_position(line, match.start()):
+                        reason = "reaches a protocol, not a person"
+                    elif match.group(1) not in translated:
                         continue
-                    if compares(line, match.start(), match.end()):
-                        findings.append(
-                            (path.replace(os.sep, "/"), index + 1,
-                             match.group(1), line.strip())
-                        )
+                    elif compares(line, match.start(), match.end()):
+                        reason = "is compared, not displayed"
+                    else:
+                        continue
+                    findings.append(
+                        (path.replace(os.sep, "/"), index + 1,
+                         match.group(1), reason, line.strip())
+                    )
 
-    for path, line_no, text, source in findings:
-        print(f"{path}:{line_no}: tr({text!r}) is compared, not displayed")
-        print(f"    {source[:110]}")
+    for path, line_no, text, reason, line in findings:
+        print(f"{path}:{line_no}: tr({text!r}) {reason}")
+        print(f"    {line[:110]}")
     if findings:
-        print(f"\n{len(findings)} site(s) compare a translated string.")
+        print(f"\n{len(findings)} site(s) use tr() for something other than display.")
         return 1
-    print(f"clean: no translated tr() sits in a comparison "
+    print(f"clean: no translated tr() sits in a comparison, none reach a protocol "
           f"({len(translated)} translated strings checked)")
     return 0
 

@@ -183,7 +183,9 @@ async fn fetch_latest(http: Arc<dyn HttpClient>) -> anyhow::Result<Release> {
     let request = Request::get(format!(
         "https://api.github.com/repos/{REPO}/releases/latest"
     ))
-    .header(tr("Accept"), tr("application/vnd.github+json"))
+    // Protocol, not prose: the automatic wrapping pass caught these and the
+    // catalogue then turned Accept into 확인, which is not a valid header name.
+    .header("Accept", "application/vnd.github+json")
     .follow_redirects(RedirectPolicy::FollowAll)
     .timeout(CHECK_TIMEOUT)
     .body(AsyncBody::default())?;
