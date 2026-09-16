@@ -1,4 +1,5 @@
 //! Retained jewelry editor; mutations reach the shared document only on Apply.
+use hsplanner_engine::calc::i18n::tr;
 use super::*;
 use crate::skill_details::{format_value, stat_name};
 use gpui_kit::base::{Disableable, Selectable};
@@ -23,7 +24,7 @@ use hsplanner_ui::{
 
 pub(super) fn description(content: Option<&TreeSocketContent>) -> (String, Vec<String>) {
     match content {
-        None => ("Empty socket".into(), vec![]),
+        None => (tr("Empty socket").into(), vec![]),
         Some(TreeSocketContent::Item { id }) => {
             let (name, stats) = match data::get_socketable_by_id(id) {
                 Some(data::Socketable::Gem(g)) => (&g.name, &g.stats),
@@ -43,7 +44,7 @@ pub(super) fn description(content: Option<&TreeSocketContent>) -> (String, Vec<S
             )
         }
         Some(TreeSocketContent::Uncut { affixes }) => (
-            "Uncut Jewel".into(),
+            tr("Uncut Jewel").into(),
             affixes
                 .iter()
                 .map(|eq| match data::get_affix(&eq.affix_id) {
@@ -184,7 +185,7 @@ impl JewelryEditor {
             Tab::Items
         };
         let search =
-            cx.new(|cx| InputState::new(window, cx).placeholder("Search by name or stat…"));
+            cx.new(|cx| InputState::new(window, cx).placeholder(tr("Search by name or stat…")));
         let subscription = cx.subscribe(&search, |this, _, event: &InputEvent, cx| {
             if matches!(event, InputEvent::Change) {
                 this.filter(cx);
@@ -217,9 +218,9 @@ impl JewelryEditor {
                     &g.name,
                     g.tier,
                     if g.name.to_lowercase().contains("jewel") {
-                        "Jewel"
+                        tr("Jewel")
                     } else {
-                        "Gem"
+                        tr("Gem")
                     },
                 )
             })
@@ -227,7 +228,7 @@ impl JewelryEditor {
                 data::data()
                     .runes
                     .values()
-                    .map(|r| (&r.id, &r.name, r.tier, "Rune")),
+                    .map(|r| (&r.id, &r.name, r.tier, tr("Rune"))),
             )
             .map(|(id, name, tier, kind)| {
                 let (_, lines) = description(Some(&TreeSocketContent::Item { id: id.clone() }));
@@ -262,7 +263,7 @@ impl JewelryEditor {
                     name: top.description.clone(),
                     stats: String::new(),
                     search: top.description.to_lowercase(),
-                    kind: "Affix",
+                    kind: tr("Affix"),
                     tier: tiers.len() as u32,
                 });
             }
@@ -391,7 +392,7 @@ impl JewelryEditor {
         }
         if self.document != DocumentKey::from_session(self.session.read(cx)) {
             self.error = Some(
-                "The build changed while this editor was open. Close it and reopen the socket."
+                tr("The build changed while this editor was open. Close it and reopen the socket.")
                     .into(),
             );
             cx.notify();
@@ -440,7 +441,7 @@ impl JewelryEditor {
 
     fn status_text(&self) -> String {
         match &self.pending {
-            None => "Empty socket".into(),
+            None => tr("Empty socket").into(),
             Some(TreeSocketContent::Uncut { affixes }) => format!(
                 "Uncut Jewel · {} affix{}",
                 affixes.len(),
@@ -606,7 +607,7 @@ impl JewelryEditor {
                         .p_8()
                         .text_center()
                         .text_color(p.muted)
-                        .child("No matches"),
+                        .child(tr("No matches")),
                 )
             })
             .when(!self.choices.is_empty(), |v| {
@@ -630,7 +631,7 @@ impl JewelryEditor {
         };
         let full = affixes.len() >= jewelry::MAX_AFFIXES;
         let toggle = if self.adding {
-            modal_button("add-affix-done", "Done", ButtonTone::Neutral, cx).on_click(cx.listener(
+            modal_button("add-affix-done", tr("Done"), ButtonTone::Neutral, cx).on_click(cx.listener(
                 |this, _, window, cx| {
                     this.adding = false;
                     this.search
@@ -640,7 +641,7 @@ impl JewelryEditor {
                 },
             ))
         } else {
-            modal_button("add-affix", "+ Add affix", ButtonTone::Primary, cx)
+            modal_button("add-affix", tr("+ Add affix"), ButtonTone::Primary, cx)
                 .disabled(full)
                 .on_click(cx.listener(|this, _, _, cx| {
                     this.adding = true;
@@ -707,9 +708,9 @@ impl JewelryEditor {
                             .text_size(rems(14. / 13.))
                             .font_weight(FontWeight::SEMIBOLD)
                             .text_color(p.muted)
-                            .child("No affixes yet"),
+                            .child(tr("No affixes yet")),
                     )
-                    .child(mono(10., p.faint).child("Click + Add affix to roll")),
+                    .child(mono(10., p.faint).child(tr("Click + Add affix to roll"))),
             );
         }
         tab.child(
@@ -881,7 +882,7 @@ impl Render for JewelryEditor {
         let dirty = !jewelry::same_content(self.original.as_ref(), self.pending.as_ref());
         let has_pending = self.pending.is_some();
         let status_color = if has_pending { p.accent_hot } else { p.faint };
-        let eyebrow = modal_eyebrow("jewelry-eyebrow", "Jewelry Socket").child(
+        let eyebrow = modal_eyebrow("jewelry-eyebrow", tr("Jewelry Socket")).child(
             div().text_color(p.accent_hot).child(TooltipText::new(
                 "jewelry-eyebrow-id",
                 format!("#{}", self.node_id),
@@ -894,8 +895,8 @@ impl Render for JewelryEditor {
             .border_b_1()
             .border_color(p.border)
             .bg(p.background)
-            .child(self.tab_button(Tab::Items, "Gems / Runes / Jewels", cx))
-            .child(self.tab_button(Tab::Uncut, "Craft Uncut Jewel", cx));
+            .child(self.tab_button(Tab::Items, tr("Gems / Runes / Jewels"), cx))
+            .child(self.tab_button(Tab::Uncut, tr("Craft Uncut Jewel"), cx));
         let body = if self.tab == Tab::Items {
             div()
                 .flex_1()
@@ -916,7 +917,7 @@ impl Render for JewelryEditor {
             .size_full()
             .flex()
             .flex_col()
-            .child(modal_header(eyebrow, "Insert Socketable", None, cx))
+            .child(modal_header(eyebrow, tr("Insert Socketable"), None, cx))
             .child(tabs)
             .child(body)
             .children(error.map(|error| {
@@ -943,7 +944,7 @@ impl Render for JewelryEditor {
                     )
                     .when(has_pending, |view| {
                         view.child(
-                            modal_button("clear-jewelry", "Clear", ButtonTone::Neutral, cx)
+                            modal_button("clear-jewelry", tr("Clear"), ButtonTone::Neutral, cx)
                                 .on_click(cx.listener(|this, _, window, cx| {
                                     this.pending = None;
                                     this.error = None;
@@ -958,9 +959,9 @@ impl Render for JewelryEditor {
                         modal_button(
                             "apply-jewelry",
                             if !has_pending && self.original.is_some() {
-                                "Remove"
+                                tr("Remove")
                             } else {
-                                "Insert"
+                                tr("Insert")
                             },
                             ButtonTone::Primary,
                             cx,

@@ -1,4 +1,5 @@
 //! Human-readable item editing. Parsing never mutates the caller's draft.
+use hsplanner_engine::calc::i18n::tr;
 use crate::gear;
 use hsplanner_engine::calc::{affix::apply_stars_to_ranged_value, data, types::*};
 use regex::Regex;
@@ -145,7 +146,7 @@ fn modifier_text(eq: &EquippedAffix, forged: bool) -> String {
         def.description.clone()
     };
     let unholy = if def.group_id == "random_unholy" {
-        "[Unholy] "
+        tr("[Unholy] ")
     } else {
         ""
     };
@@ -158,7 +159,7 @@ fn modifier_text(eq: &EquippedAffix, forged: bool) -> String {
 }
 
 pub fn serialize(item: &EquippedItem) -> Result<String, String> {
-    let base = data::get_item(&item.base_id).ok_or("Unknown base item")?;
+    let base = data::get_item(&item.base_id).ok_or(tr("Unknown base item"))?;
     let mut lines = vec![
         format!("Rarity: {}", base.rarity.to_uppercase()),
         base.name.clone(),
@@ -168,13 +169,13 @@ pub fn serialize(item: &EquippedItem) -> Result<String, String> {
     ];
     for (section, base_stats, overrides, skill) in [
         (
-            "Implicit:",
+            tr("Implicit:"),
             base.implicit.as_ref(),
             &item.implicit_overrides,
             false,
         ),
         (
-            "Skill Bonuses:",
+            tr("Skill Bonuses:"),
             base.skill_bonuses.as_ref(),
             &item.skill_bonus_overrides,
             true,
@@ -215,8 +216,8 @@ pub fn serialize(item: &EquippedItem) -> Result<String, String> {
         }
     }
     for (section, entries, forged) in [
-        ("Affixes:", &item.affixes, false),
-        ("Forged Mods:", &item.forged_mods, true),
+        (tr("Affixes:"), &item.affixes, false),
+        (tr("Forged Mods:"), &item.forged_mods, true),
     ] {
         lines.extend(["--------".into(), section.into()]);
         lines.extend(entries.iter().map(|a| modifier_text(a, forged)));
@@ -286,14 +287,14 @@ fn parse_modifier(line: &str, forged: bool) -> Result<EquippedAffix, String> {
     let text = line.strip_prefix("[Unholy]").unwrap_or(line).trim();
     let c = SUFFIX
         .captures(text)
-        .ok_or("Expected [T<tier>, roll <0..1>] or [T<tier>, custom]")?;
+        .ok_or(tr("Expected [T<tier>, roll <0..1>] or [T<tier>, custom]"))?;
     let tier: u32 = c[2].parse().map_err(|_| "Invalid tier")?;
     let roll: f64 = c
         .get(4)
         .map_or(Ok(1.), |m| m.as_str().parse())
         .map_err(|_| "Invalid roll")?;
     if !roll.is_finite() || !(0.0..=1.0).contains(&roll) {
-        return Err("Roll must be between 0 and 1".into());
+        return Err(tr("Roll must be between 0 and 1").into());
     }
     let content = c[1].trim();
     let defs = if forged {
@@ -319,7 +320,7 @@ fn parse_modifier(line: &str, forged: bool) -> Result<EquippedAffix, String> {
         };
         exact(b).cmp(&exact(a)).then(a.id.cmp(&b.id))
     });
-    let a = matches.first().ok_or("Unknown affix or tier")?;
+    let a = matches.first().ok_or(tr("Unknown affix or tier"))?;
     let custom = c
         .get(3)
         .is_some_and(|m| m.as_str().eq_ignore_ascii_case("custom"));
@@ -327,7 +328,7 @@ fn parse_modifier(line: &str, forged: bool) -> Result<EquippedAffix, String> {
         Some(
             prefix(content)
                 .filter(|p| !p.1)
-                .ok_or("Custom roll needs a single numeric value")?
+                .ok_or(tr("Custom roll needs a single numeric value"))?
                 .0,
         )
     } else if content != a.description {
@@ -357,7 +358,7 @@ pub fn parse(text: &str, original: &EquippedItem) -> ParseResult {
             item: None,
             diagnostics: vec![Diagnostic {
                 line: 0,
-                message: "Unknown base item".into(),
+                message: tr("Unknown base item").into(),
                 warning: false,
             }],
         };
@@ -431,7 +432,7 @@ pub fn parse(text: &str, original: &EquippedItem) -> ParseResult {
             if parts.len() > 6 || parts.iter().any(|s| !matches!(*s, "N" | "R" | "_")) {
                 report(
                     line_no,
-                    "Expected at most six sockets, separated by '-' (N/R/_)".into(),
+                    tr("Expected at most six sockets, separated by '-' (N/R/_)").into(),
                     false,
                 );
                 continue;
@@ -452,7 +453,7 @@ pub fn parse(text: &str, original: &EquippedItem) -> ParseResult {
         }
         if let Some(v) = line.strip_prefix("Augment:") {
             section = "augment";
-            let result = v.trim().rsplit_once(" · Level ").and_then(|(name, level)| {
+            let result = v.trim().rsplit_once(tr(" · Level ")).and_then(|(name, level)| {
                 data::data()
                     .augments
                     .values()
@@ -468,7 +469,7 @@ pub fn parse(text: &str, original: &EquippedItem) -> ParseResult {
                 }
                 _ => report(
                     line_no,
-                    "Expected Augment: <name> · Level <valid level>".into(),
+                    tr("Expected Augment: <name> · Level <valid level>").into(),
                     false,
                 ),
             };
@@ -498,17 +499,17 @@ pub fn parse(text: &str, original: &EquippedItem) -> ParseResult {
                 &base.base_type
             };
             if line != expected {
-                report(line_no, "Base item identity is read-only".into(), true)
+                report(line_no, tr("Base item identity is read-only").into(), true)
             };
             continue;
         }
         if [
-            "Item Level:",
-            "Requires Level:",
-            "Defense:",
-            "Damage:",
-            "Attack Speed:",
-            "Block:",
+            tr("Item Level:"),
+            tr("Requires Level:"),
+            tr("Defense:"),
+            tr("Damage:"),
+            tr("Attack Speed:"),
+            tr("Block:"),
         ]
         .iter()
         .any(|p| line.starts_with(p))
@@ -524,7 +525,7 @@ pub fn parse(text: &str, original: &EquippedItem) -> ParseResult {
                 let Some((value, range, name)) = prefix(body) else {
                     report(
                         line_no,
-                        "Expected a numeric value followed by a stat name".into(),
+                        tr("Expected a numeric value followed by a stat name").into(),
                         false,
                     );
                     continue;
@@ -574,7 +575,7 @@ pub fn parse(text: &str, original: &EquippedItem) -> ParseResult {
                 if custom && range {
                     report(
                         line_no,
-                        "A custom value must be a single number".into(),
+                        tr("A custom value must be a single number").into(),
                         false,
                     );
                     continue;
@@ -611,14 +612,14 @@ pub fn parse(text: &str, original: &EquippedItem) -> ParseResult {
                 let Some(c) = SOCKET.captures(line) else {
                     report(
                         line_no,
-                        "Expected [index] (Normal|Rainbow): <gem or Rune of name>".into(),
+                        tr("Expected [index] (Normal|Rainbow): <gem or Rune of name>").into(),
                         false,
                     );
                     continue;
                 };
                 let index = c[1].parse::<usize>().unwrap_or(0).wrapping_sub(1);
                 if index >= item.socketed.len() {
-                    report(line_no, "Socket index outside socket map".into(), false);
+                    report(line_no, tr("Socket index outside socket map").into(), false);
                     continue;
                 }
                 let name = c[3].trim();
@@ -685,22 +686,22 @@ pub fn parse(text: &str, original: &EquippedItem) -> ParseResult {
         }
     }
     if item.socket_count > gear::max_sockets(&item) {
-        report(0, "Too many sockets for this item".into(), false)
+        report(0, tr("Too many sockets for this item").into(), false)
     }
     if item.forged_mods.len() > 1 {
-        report(0, "An item can have only one forged modifier".into(), false)
+        report(0, tr("An item can have only one forged modifier").into(), false)
     }
     if base
         .max_affixes
         .is_some_and(|max| item.affixes.len() > max as usize)
     {
-        report(0, "Too many affixes for this item".into(), false)
+        report(0, tr("Too many affixes for this item").into(), false)
     }
     if !item.affixes.is_empty() && !gear::accepts_affixes(base) {
-        report(0, "This item cannot have affixes".into(), false)
+        report(0, tr("This item cannot have affixes").into(), false)
     }
     if !item.forged_mods.is_empty() && !data::can_star_forge(&base.slot, &base.rarity) {
-        report(0, "This item cannot have forged modifiers".into(), false)
+        report(0, tr("This item cannot have forged modifiers").into(), false)
     }
     let valid = !diagnostics.iter().any(|d| !d.warning);
     ParseResult {

@@ -1,3 +1,4 @@
+use hsplanner_engine::calc::i18n::tr;
 use hsplanner_ui::tooltip::CursorTooltipExt;
 mod dialogs;
 mod query;
@@ -84,7 +85,7 @@ impl LibrarySort {
                     .as_deref()
                     .and_then(hsplanner_engine::calc::data::get_class)
                     .map(|class| class.name.as_str())
-                    .unwrap_or("Unknown")
+                    .unwrap_or(tr("Unknown"))
                     .to_lowercase(),
             ),
             SortColumn::Level => {
@@ -133,12 +134,12 @@ impl EventEmitter<Opened> for LibraryView {}
 impl LibraryView {
     pub fn new(session: Entity<Session>, window: &mut Window, cx: &mut Context<Self>) -> Self {
         let search =
-            cx.new(|cx| InputState::new(window, cx).placeholder("Search builds, classes, tags…"));
-        let name = cx.new(|cx| InputState::new(window, cx).placeholder("Build or folder name"));
+            cx.new(|cx| InputState::new(window, cx).placeholder(tr("Search builds, classes, tags…")));
+        let name = cx.new(|cx| InputState::new(window, cx).placeholder(tr("Build or folder name")));
         let tags =
-            cx.new(|cx| InputState::new(window, cx).placeholder("Tags, separated by commas"));
+            cx.new(|cx| InputState::new(window, cx).placeholder(tr("Tags, separated by commas")));
         let code =
-            cx.new(|cx| InputState::new(window, cx).placeholder("Paste a build code or link"));
+            cx.new(|cx| InputState::new(window, cx).placeholder(tr("Paste a build code or link")));
         let subscriptions = vec![
             cx.observe(&session, |this, _, cx| {
                 this.query_cache.get_mut().invalidate();
@@ -278,14 +279,14 @@ impl LibraryView {
         let color = if sorted { p.accent_hot } else { p.faint };
         let muted = p.muted;
         let accessible_title = if column == SortColumn::Favorite {
-            "Favorite"
+            tr("Favorite")
         } else {
             title
         };
         let state = if sorted {
             match direction {
-                SortDirection::Ascending => ", currently ascending",
-                SortDirection::Descending => ", currently descending",
+                SortDirection::Ascending => tr(", currently ascending"),
+                SortDirection::Descending => tr(", currently descending"),
             }
         } else {
             ""
@@ -395,11 +396,11 @@ impl LibraryView {
 
     pub fn location(&self, cx: &App) -> String {
         if self.recent {
-            "Recent".into()
+            tr("Recent").into()
         } else if self.favorites {
-            "Favorites".into()
+            tr("Favorites").into()
         } else if self.unfiled {
-            "Unfiled".into()
+            tr("Unfiled").into()
         } else if let Some(id) = &self.folder {
             self.session
                 .read(cx)
@@ -411,12 +412,12 @@ impl LibraryView {
                 .map(|f| f.name.clone())
                 .unwrap_or_else(|| "Folder".into())
         } else {
-            "All Builds".into()
+            tr("All Builds").into()
         }
     }
     fn folder_destinations(&self, build_id: &str, cx: &Context<Self>) -> Div {
         let p = cx.global::<TooltipTheme>();
-        let destinations = std::iter::once((None, "Unfiled".to_string())).chain(
+        let destinations = std::iter::once((None, tr("Unfiled").to_string())).chain(
             self.session
                 .read(cx)
                 .state()
@@ -429,7 +430,7 @@ impl LibraryView {
             .flex()
             .flex_col()
             .gap_1()
-            .child(label("Move to folder", p.faint))
+            .child(label(tr("Move to folder"), p.faint))
             .children(destinations.map(|(folder, name)| {
                 let id = build_id.to_string();
                 Button::new(SharedString::from(format!(
@@ -559,7 +560,7 @@ impl Render for LibraryView {
                             .w(rems(28. / 13.))
                             .flex_none()
                             .p_0()
-                            .accessibility_label("Toggle favorite")
+                            .accessibility_label(tr("Toggle favorite"))
                             .on_click(cx.listener(move |this, _, _, cx| {
                                 this.apply(cx, |s| {
                                     s.edit_library(|l| {
@@ -594,7 +595,7 @@ impl Render for LibraryView {
                                     .mt(rems(5. / 13.))
                                     .overflow_hidden()
                                     .when(active_id.as_ref() == Some(&id), |v| {
-                                        v.child(label("Active", accent))
+                                        v.child(label(tr("Active"), accent))
                                     })
                                     .when(build.profiles.len() > 1, |view| {
                                         view.child(label(
@@ -650,7 +651,7 @@ impl Render for LibraryView {
             .p_4()
             .border_l_1()
             .border_color(border)
-            .child(div().text_lg().child("Build details"))
+            .child(div().text_lg().child(tr("Build details")))
             .child(Input::new(&self.name).planner_style(cx))
             .child(
                 div()
@@ -662,7 +663,7 @@ impl Render for LibraryView {
                             .bg(hsplanner_ui::theme::chrome_gold_surface())
                             .text_color(cx.global::<TooltipTheme>().accent_hot)
                             .border_color(cx.global::<TooltipTheme>().accent_deep)
-                            .label("New build")
+                            .label(tr("New build"))
                             .on_click(cx.listener(|this, _, _, cx| {
                                 let name = this.name.read(cx).value().to_string();
                                 if this.apply(cx, |s| s.new_build(&name).map(|_| ())) {
@@ -673,7 +674,7 @@ impl Render for LibraryView {
                     .child(
                         Button::new("new-folder")
                             .planner_style(cx)
-                            .label("New folder")
+                            .label(tr("New folder"))
                             .on_click(cx.listener(|this, _, _, cx| {
                                 let name = this.name.read(cx).value().to_string();
                                 let parent = this.folder.clone();
@@ -693,7 +694,7 @@ impl Render for LibraryView {
                 .child(
                     Button::new("rename-build")
                         .planner_style(cx)
-                        .label("Rename selected build")
+                        .label(tr("Rename selected build"))
                         .on_click(cx.listener(move |this, _, _, cx| {
                             let name = this.name.read(cx).value().to_string();
                             this.apply(cx, |s| s.edit_library(|l| l.rename(&rename, &name)));
@@ -703,7 +704,7 @@ impl Render for LibraryView {
                 .child(
                     Button::new("save-tags")
                         .planner_style(cx)
-                        .label("Save tags")
+                        .label(tr("Save tags"))
                         .on_click(cx.listener(move |this, _, _, cx| {
                             let value = this.tags.read(cx).value().to_string();
                             this.apply(cx, |s| s.edit_library(|l| l.set_tags(&tags, &value)));
@@ -713,7 +714,7 @@ impl Render for LibraryView {
                 .child(
                     Button::new("duplicate-build")
                         .planner_style(cx)
-                        .label("Duplicate")
+                        .label(tr("Duplicate"))
                         .on_click(cx.listener(move |this, _, _, cx| {
                             this.apply(cx, |s| {
                                 s.edit_library(|l| l.duplicate(&duplicate).map(|_| ()))
@@ -724,9 +725,9 @@ impl Render for LibraryView {
                     Button::new("favorite-build")
                         .planner_style(cx)
                         .label(if build.favorite {
-                            "Remove favorite"
+                            tr("Remove favorite")
                         } else {
-                            "Add favorite"
+                            tr("Add favorite")
                         })
                         .on_click(cx.listener(move |this, _, _, cx| {
                             this.apply(cx, |s| {
@@ -741,7 +742,7 @@ impl Render for LibraryView {
                 .child(
                     Button::new("delete-build")
                         .planner_style(cx)
-                        .label("Delete selected build")
+                        .label(tr("Delete selected build"))
                         .on_click(cx.listener(move |this, _, _, cx| {
                             this.apply(cx, |s| {
                                 s.remove_build(&remove);
@@ -760,10 +761,10 @@ impl Render for LibraryView {
             .p_3()
             .border_r_1()
             .border_color(border)
-            .child(label("◆ Library", accent))
-            .child(div().pt_3().child(label("Smart", muted)))
+            .child(label(tr("◆ Library"), accent))
+            .child(div().pt_3().child(label(tr("Smart"), muted)))
             .child(
-                navigation("recent", "◷ Recent", total.min(12), self.recent, cx).on_click(
+                navigation("recent", tr("◷ Recent"), total.min(12), self.recent, cx).on_click(
                     cx.listener(|this, _, _, cx| {
                         this.recent = true;
                         this.unfiled = false;
@@ -778,7 +779,7 @@ impl Render for LibraryView {
             .child(
                 navigation(
                     "all-builds",
-                    "☷ All Builds",
+                    tr("☷ All Builds"),
                     total,
                     !self.recent && !self.unfiled && !self.favorites && self.folder.is_none(),
                     cx,
@@ -796,7 +797,7 @@ impl Render for LibraryView {
             .child(
                 navigation(
                     "favorites",
-                    "☆ Favorites",
+                    tr("☆ Favorites"),
                     favorite_count,
                     self.favorites,
                     cx,
@@ -813,7 +814,7 @@ impl Render for LibraryView {
             );
         folder_list = folder_list
             .child(
-                navigation("unfiled", "□ Unfiled", unfiled_count, self.unfiled, cx).on_click(
+                navigation("unfiled", tr("□ Unfiled"), unfiled_count, self.unfiled, cx).on_click(
                     cx.listener(|this, _, _, cx| {
                         this.unfiled = true;
                         this.recent = false;
@@ -825,7 +826,7 @@ impl Render for LibraryView {
                     }),
                 ),
             )
-            .child(div().pt_3().child(label("Folders", muted)));
+            .child(div().pt_3().child(label(tr("Folders"), muted)));
         for folder in folders {
             let id = folder.id.clone();
             let folder_count = folder_counts.get(id.as_str()).copied().unwrap_or(0);
@@ -854,7 +855,7 @@ impl Render for LibraryView {
                 .child(
                     Button::new("rename-folder")
                         .planner_style(cx)
-                        .label("Rename folder")
+                        .label(tr("Rename folder"))
                         .on_click(cx.listener(|this, _, window, cx| {
                             this.edit_dialog(EditKind::RenameFolder, window, cx)
                         })),
@@ -862,7 +863,7 @@ impl Render for LibraryView {
                 .child(
                     Button::new("delete-folder")
                         .planner_style(cx)
-                        .label("Remove folder")
+                        .label(tr("Remove folder"))
                         .on_click(cx.listener(move |this, _, _, cx| {
                             this.apply(cx, |s| {
                                 s.edit_library(|l| {
@@ -884,7 +885,7 @@ impl Render for LibraryView {
             .when(count == 0, |container| {
                 container.child(div().p_6().text_color(muted).child(gpui_kit::text!(
                     id = "empty-library",
-                    "No matching builds. Create a build or import an existing code."
+                    tr("No matching builds. Create a build or import an existing code.")
                 )))
             });
         let pagination = div()
@@ -895,7 +896,7 @@ impl Render for LibraryView {
             .child(
                 Button::new("previous-page")
                     .planner_style(cx)
-                    .label("Previous")
+                    .label(tr("Previous"))
                     .on_click(cx.listener(|this, _, _, cx| {
                         this.page = this.page.saturating_sub(1);
                         cx.notify();
@@ -905,7 +906,7 @@ impl Render for LibraryView {
             .child(
                 Button::new("next-page")
                     .planner_style(cx)
-                    .label("Next")
+                    .label(tr("Next"))
                     .on_click(cx.listener(move |this, _, _, cx| {
                         if (this.page + 1) * 25 < count {
                             this.page += 1;
@@ -921,13 +922,13 @@ impl Render for LibraryView {
             .gap_2()
             .border_b_1()
             .border_color(border)
-            .child(label("Filter", muted))
+            .child(label(tr("Filter"), muted))
             .child(
                 Button::new("clear-tags")
                     .planner_style(cx)
                     .small()
                     .rounded_full()
-                    .label("All ×")
+                    .label(tr("All ×"))
                     .border_color(if self.active_tag.is_none() && !self.high_level {
                         palette.accent_deep
                     } else {
@@ -966,7 +967,7 @@ impl Render for LibraryView {
                 .planner_style(cx)
                 .small()
                 .rounded_full()
-                .label("Lv 90+")
+                .label(tr("Lv 90+"))
                 .selected(self.high_level)
                 .on_click(cx.listener(|this, _, _, cx| {
                     this.high_level = !this.high_level;
@@ -996,30 +997,30 @@ impl Render for LibraryView {
             .child(
                 div()
                     .flex_1()
-                    .child(self.sort_header(SortColumn::Name, "Name", cx)),
+                    .child(self.sort_header(SortColumn::Name, tr("Name"), cx)),
             )
             .child(
                 div()
                     .w(rems(130. / 13.))
                     .flex_none()
-                    .child(self.sort_header(SortColumn::Class, "Class", cx)),
+                    .child(self.sort_header(SortColumn::Class, tr("Class"), cx)),
             )
             .child(div().w(rems(64. / 13.)).flex_none().child(self.sort_header(
                 SortColumn::Level,
-                "Lv",
+                tr("Lv"),
                 cx,
             )))
             .child(
                 div()
                     .w(rems(76. / 13.))
                     .flex_none()
-                    .child(label("Season", palette.faint)),
+                    .child(label(tr("Season"), palette.faint)),
             )
             .child(
                 div()
                     .w(rems(140. / 13.))
                     .flex_none()
-                    .child(self.sort_header(SortColumn::Modified, "Modified", cx)),
+                    .child(self.sort_header(SortColumn::Modified, tr("Modified"), cx)),
             );
         let import = div()
             .mx_4()
@@ -1033,10 +1034,10 @@ impl Render for LibraryView {
             .child(
                 div()
                     .text_color(palette.text)
-                    .child("↓  Paste a build code to import"),
+                    .child(tr("↓  Paste a build code to import")),
             )
             .child(div().text_color(muted).text_sm().child(
-                "Drop a shared build link or code here, or paste a code to import it into Unfiled.",
+                tr("Drop a shared build link or code here, or paste a code to import it into Unfiled."),
             ))
             .when(self.importing, |view| {
                 view.child(
@@ -1052,7 +1053,7 @@ impl Render for LibraryView {
                         .child(
                             Button::new("import-build")
                                 .planner_style(cx)
-                                .label("Import")
+                                .label(tr("Import"))
                                 .on_click(cx.listener(|this, _, _, cx| {
                                     let code = this.code.read(cx).value().to_string();
                                     if this.apply(cx, |s| s.import_code(&code).map(|_| ())) {
@@ -1136,7 +1137,7 @@ impl Render for LibraryView {
                         Button::new("share-selected")
                             .planner_style(cx)
                             .flex_1()
-                            .label("Share")
+                            .label(tr("Share"))
                             .disabled(share.is_none())
                             .opacity(if share.is_none() { 0.4 } else { 1. })
                             .on_click(move |_, _, cx| {
@@ -1149,7 +1150,7 @@ impl Render for LibraryView {
                         Button::new("open-selected")
                             .planner_style(cx)
                             .flex_1()
-                            .label("▸ Open Build")
+                            .label(tr("▸ Open Build"))
                             .disabled(open_id.is_none())
                             .opacity(if open_id.is_none() { 0.4 } else { 1. })
                             .bg(hsplanner_ui::theme::chrome_gold_surface())
@@ -1182,7 +1183,7 @@ impl Render for LibraryView {
                     .p_3()
                     .border_t_1()
                     .border_color(border)
-                    .child(label("Local library", muted))
+                    .child(label(tr("Local library"), muted))
                     .child(
                         div()
                             .text_sm()
@@ -1218,7 +1219,7 @@ impl Render for LibraryView {
                     .child(
                         Button::new("toolbar-new")
                             .planner_style(cx)
-                            .label("+ New")
+                            .label(tr("+ New"))
                             .text_color(accent)
                             .bg(hsplanner_ui::theme::chrome_gold_surface())
                             .on_click(cx.listener(|this, _, window, cx| {
@@ -1226,7 +1227,7 @@ impl Render for LibraryView {
                             })),
                     )
                     .child(
-                        toolbar_button("toolbar-import", "Import…", "import", cx).on_click(
+                        toolbar_button("toolbar-import", tr("Import…"), "import", cx).on_click(
                             cx.listener(|this, _, _, cx| {
                                 this.importing = !this.importing;
                                 cx.notify();
@@ -1234,7 +1235,7 @@ impl Render for LibraryView {
                         ),
                     )
                     .child(
-                        toolbar_button("toolbar-copy", "Copy", "copy", cx)
+                        toolbar_button("toolbar-copy", tr("Copy"), "copy", cx)
                             .disabled(duplicate_id.is_none())
                             .on_click(cx.listener(move |this, _, _, cx| {
                                 if let Some(id) = &duplicate_id {
@@ -1245,14 +1246,14 @@ impl Render for LibraryView {
                             })),
                     )
                     .child(
-                        toolbar_button("toolbar-rename", "Rename", "rename", cx)
+                        toolbar_button("toolbar-rename", tr("Rename"), "rename", cx)
                             .disabled(selected_id.is_none())
                             .on_click(cx.listener(|this, _, window, cx| {
                                 this.edit_dialog(EditKind::Rename, window, cx)
                             })),
                     )
                     .child(
-                        toolbar_button("toolbar-delete", "Delete", "delete", cx)
+                        toolbar_button("toolbar-delete", tr("Delete"), "delete", cx)
                             .disabled(selected_id.is_none())
                             .on_click(cx.listener(move |this, _, _, cx| {
                                 if let Some(id) = &selected_id {
@@ -1265,7 +1266,7 @@ impl Render for LibraryView {
                             })),
                     )
                     .child(
-                        toolbar_button("toolbar-folder", "New Folder", "newfolder", cx).on_click(
+                        toolbar_button("toolbar-folder", tr("New Folder"), "newfolder", cx).on_click(
                             cx.listener(|this, _, window, cx| {
                                 this.edit_dialog(EditKind::NewFolder, window, cx)
                             }),
@@ -1275,7 +1276,7 @@ impl Render for LibraryView {
                         Button::new("manage-build")
                             .planner_style(cx)
                             .label("…")
-                            .cursor_tooltip("Manage tags and folders")
+                            .cursor_tooltip(tr("Manage tags and folders"))
                             .on_click(cx.listener(|this, _, window, cx| {
                                 this.editing = !this.editing;
                                 if let Some(build) = this

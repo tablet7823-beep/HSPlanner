@@ -589,9 +589,13 @@ pub fn compute_build_stats_core(input: &BuildStatsInput) -> ComputedStats {
                     input.subskill_ranks,
                 );
                 (
+                    // Keyed by the displayed name: the views look it up the
+                    // same way. The lookup *inside* rank_bonus_for is against
+                    // item skillBonuses, which stay English, so that one gets
+                    // match_name instead.
                     normalize_skill_name(&s.name),
                     rank_bonus_for(
-                        &s.name,
+                        s.match_name(),
                         s.damage_type.as_deref(),
                         &tags,
                         &stats,

@@ -1,4 +1,5 @@
 //! Application preferences dialog, after the reference SettingsModal.
+use hsplanner_engine::calc::i18n::tr;
 use crate::shell::{Shell, ToggleProfileControls};
 use gpui_kit::{
     base::Link,
@@ -144,10 +145,10 @@ impl Render for SettingsView {
             .map(|sample| compact(*sample, &scale))
             .collect::<Vec<_>>()
             .join("  ·  ");
-        let saving = section("settings-saving", "Saving", cx)
+        let saving = section("settings-saving", tr("Saving"), cx)
             .child(
                 Checkbox::new("settings-auto-save")
-                    .label("Auto-save")
+                    .label(tr("Auto-save"))
                     .checked(settings.auto_save)
                     .on_click(cx.listener(|this, checked: &bool, _, cx| {
                         let checked = *checked;
@@ -155,7 +156,7 @@ impl Render for SettingsView {
                     })),
             )
             .child(description(
-                "Saves changes to the active build as you make them.",
+                tr("Saves changes to the active build as you make them."),
                 cx,
             ))
             .child(if settings.auto_save {
@@ -166,11 +167,11 @@ impl Render for SettingsView {
                     p.accent_hot.opacity(0.8),
                 )
             });
-        let numbers = section("settings-numbers", "Numbers", cx)
+        let numbers = section("settings-numbers", tr("Numbers"), cx)
             .child(
                 div()
                     .font_weight(FontWeight::SEMIBOLD)
-                    .child("Largest unit"),
+                    .child(tr("Largest unit")),
             )
             .child(
                 div()
@@ -193,11 +194,11 @@ impl Render for SettingsView {
                 div()
                     .flex()
                     .gap_1p5()
-                    .child(hint("Preview ·".into(), p.faint))
+                    .child(hint(tr("Preview ·").into(), p.faint))
                     .child(hint(preview, p.accent_hot.opacity(0.8))),
             );
-        let display = section("settings-display", "Display", cx)
-            .child(div().font_weight(FontWeight::SEMIBOLD).child("UI scale"))
+        let display = section("settings-display", tr("Display"), cx)
+            .child(div().font_weight(FontWeight::SEMIBOLD).child(tr("UI scale")))
             .child(
                 div()
                     .flex()
@@ -216,23 +217,23 @@ impl Render for SettingsView {
                     })),
             )
             .child(hint(
-                "Ctrl + / Ctrl − zooms too, this is the one that sticks".into(),
+                tr("Ctrl + / Ctrl − zooms too, this is the one that sticks").into(),
                 p.faint,
             ));
-        let interface = section("settings-interface", "Interface", cx)
+        let interface = section("settings-interface", tr("Interface"), cx)
             .child(
                 Checkbox::new("settings-profile-controls")
-                    .label("Build and profile controls")
+                    .label(tr("Build and profile controls"))
                     .checked(profile_controls)
                     .on_click(|_, window, cx| {
                         window.dispatch_action(Box::new(ToggleProfileControls), cx)
                     }),
             )
             .child(description(
-                "Shows the build name, profile switcher and save state under the top bar.",
+                tr("Shows the build name, profile switcher and save state under the top bar."),
                 cx,
             ));
-        let credits = section("settings-credits", "Credits", cx)
+        let credits = section("settings-credits", tr("Credits"), cx)
             .child(
                 div()
                     .flex()
@@ -262,14 +263,14 @@ impl Render for SettingsView {
                 div()
                     .text_size(rems(12. / 13.))
                     .text_color(p.muted)
-                    .child("Built and maintained by zium."),
+                    .child(tr("Built and maintained by zium.")),
             )
             .child(
                 div()
                     .flex()
                     .gap_3()
-                    .child(external("settings-kofi", "Support on Ko-fi", KOFI_URL, cx))
-                    .child(external("settings-github", "GitHub", GITHUB_URL, cx)),
+                    .child(external("settings-kofi", tr("Support on Ko-fi"), KOFI_URL, cx))
+                    .child(external("settings-github", tr("GitHub"), GITHUB_URL, cx)),
             )
             .child(
                 div()
@@ -278,7 +279,7 @@ impl Render for SettingsView {
                     .border_t_1()
                     .border_color(p.border)
                     .child(hint(
-                        "Fan-made planner. Hero Siege © Panic Art Studios — not affiliated."
+                        tr("Fan-made planner. Hero Siege © Panic Art Studios — not affiliated.")
                             .to_uppercase(),
                         p.faint,
                     )),
@@ -289,9 +290,9 @@ impl Render for SettingsView {
             .flex_col()
             .text_size(rems(1.))
             .child(modal_header(
-                modal_eyebrow("settings-eyebrow", "Preferences"),
-                "Settings",
-                Some("Stored on this device".into()),
+                modal_eyebrow("settings-eyebrow", tr("Preferences")),
+                tr("Settings"),
+                Some(tr("Stored on this device").into()),
                 cx,
             ))
             .child(

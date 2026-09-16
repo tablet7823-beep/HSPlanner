@@ -1,4 +1,5 @@
 //! Incarnation jewelry edits. The build document owns socket contents, including dormant slots.
+use hsplanner_engine::calc::i18n::tr;
 use crate::{BuildSnapshot, gear::jewel_affix_allowed};
 use hsplanner_engine::calc::{
     data,
@@ -37,20 +38,20 @@ pub fn same_content(a: Option<&TreeSocketContent>, b: Option<&TreeSocketContent>
 pub fn add_affix(content: &mut Option<TreeSocketContent>, id: &str) -> Result<(), String> {
     let def = data::get_affix(id)
         .filter(|a| jewel_affix_allowed(a))
-        .ok_or("Choose a jewel affix.")?;
+        .ok_or(tr("Choose a jewel affix."))?;
     let mut affixes = match content.as_ref() {
         Some(TreeSocketContent::Uncut { affixes }) => affixes.clone(),
         _ => vec![],
     };
     if affixes.len() >= MAX_AFFIXES {
-        return Err("An Uncut Jewel can have at most four affixes.".into());
+        return Err(tr("An Uncut Jewel can have at most four affixes.").into());
     }
     if affixes
         .iter()
         .filter_map(|a| data::get_affix(&a.affix_id))
         .any(|a| a.group_id == def.group_id)
     {
-        return Err("This jewel already has that affix family.".into());
+        return Err(tr("This jewel already has that affix family.").into());
     }
     affixes.push(EquippedAffix {
         affix_id: def.id.clone(),
@@ -68,31 +69,31 @@ pub fn commit(
     content: Option<TreeSocketContent>,
 ) -> Result<(), String> {
     if !can_edit(snapshot, node_id) {
-        return Err("Allocate this Jewelry Socket before editing it.".into());
+        return Err(tr("Allocate this Jewelry Socket before editing it.").into());
     }
     match &content {
         Some(TreeSocketContent::Item { id }) if data::get_socketable_by_id(id).is_none() => {
-            return Err("Unknown gem, rune or jewel.".into());
+            return Err(tr("Unknown gem, rune or jewel.").into());
         }
         Some(TreeSocketContent::Item { .. }) => {}
         Some(TreeSocketContent::Uncut { affixes }) => {
             if affixes.is_empty() || affixes.len() > MAX_AFFIXES {
-                return Err("Choose one to four jewel affixes.".into());
+                return Err(tr("Choose one to four jewel affixes.").into());
             }
             let mut groups = HashSet::new();
             for eq in affixes {
                 let def = data::get_affix(&eq.affix_id)
                     .filter(|a| jewel_affix_allowed(a))
-                    .ok_or("Invalid jewel affix.")?;
+                    .ok_or(tr("Invalid jewel affix."))?;
                 if !groups.insert(&def.group_id) {
-                    return Err("Jewel affix families must be different.".into());
+                    return Err(tr("Jewel affix families must be different.").into());
                 }
                 if eq.tier != def.tier
                     || !eq.roll.is_finite()
                     || !(0. ..=1.).contains(&eq.roll)
                     || eq.custom_value.is_some_and(|v| !v.is_finite())
                 {
-                    return Err("Invalid jewel tier or roll.".into());
+                    return Err(tr("Invalid jewel tier or roll.").into());
                 }
             }
         }

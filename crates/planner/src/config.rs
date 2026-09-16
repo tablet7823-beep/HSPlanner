@@ -1,4 +1,5 @@
 //! Character and encounter editing. Each control writes through the shared session.
+use hsplanner_engine::calc::i18n::tr;
 use crate::TreeView;
 use gpui_kit::base::Disableable;
 use gpui_kit::component::{
@@ -395,7 +396,7 @@ impl ConfigView {
             match text.parse::<f64>() {
                 Ok(value) if value.is_finite() => Some(value),
                 _ => {
-                    self.error = Some("Enter a finite number for this value.".into());
+                    self.error = Some(tr("Enter a finite number for this value.").into());
                     cx.notify();
                     return;
                 }
@@ -528,8 +529,8 @@ impl ConfigView {
 
     fn custom_stats(&self, cx: &Context<Self>) -> Div {
         let p = cx.global::<TooltipTheme>();
-        panel_with_trailing("config-custom","Custom Config",count_badge("custom-count",self.session.read(cx).snapshot().custom_stats.len(),None,cx),cx)
-            .child(help("Add stats the engine doesn't compute yet — one per line: value, then stat name. They stack with regular sources and show up in tooltips. Per-profile.",cx))
+        panel_with_trailing("config-custom",tr("Custom Config"),count_badge("custom-count",self.session.read(cx).snapshot().custom_stats.len(),None,cx),cx)
+            .child(help(tr("Add stats the engine doesn't compute yet — one per line: value, then stat name. They stack with regular sources and show up in tooltips. Per-profile."),cx))
             .child(Textarea::new(&self.custom_editor).w_full().font_family(theme::MONO_FONT_FAMILY).text_size(rems(12. / 13.)).border_color(p.border_strong).bg(p.background))
             .children(self.custom_issues.iter().map(|issue|div().mt_2().px_2p5().py_1p5().rounded_sm().border_1().border_color(theme::stat_color("strength",cx).opacity(0.4)).text_size(rems(10. / 13.)).text_color(theme::stat_color("strength",cx)).child(issue.clone())))
             .children(self.session.read(cx).snapshot().custom_stats.iter().map(|stat| {
@@ -544,7 +545,7 @@ impl ConfigView {
             .flex_1()
             .track_focus(&self.level_slider_focus)
             .role(accesskit::Role::Group)
-            .aria_label("Character level")
+            .aria_label(tr("Character level"))
             .rounded_sm()
             .when(self.level_slider_focus.is_focused(window), |view| {
                 view.shadow(vec![BoxShadow {
@@ -594,14 +595,16 @@ impl ConfigView {
         let remaining = total.saturating_sub(spent);
         let mut attributes = panel_with_trailing(
             "config-attributes",
-            "Attributes",
+            tr("Attributes"),
             div()
                 .flex()
                 .items_center()
                 .gap_2()
                 .child(label(
                     "attribute-budget",
-                    format!("{remaining} / {total} free"),
+                    tr("{n} / {total} free")
+                        .replace("{n}", &remaining.to_string())
+                        .replace("{total}", &total.to_string()),
                     if remaining > 0 { p.accent_hot } else { p.muted },
                 ))
                 .child(
@@ -614,8 +617,8 @@ impl ConfigView {
                         .text_size(rems(10. / 13.))
                         .font_weight(FontWeight::SEMIBOLD)
                         .line_height(relative(1.5))
-                        .accessibility_label("Reset attributes")
-                        .child(TooltipText::new("reset-attributes-label", "RESET", 0.14))
+                        .accessibility_label(tr("Reset attributes"))
+                        .child(TooltipText::new("reset-attributes-label", tr("Reset"), 0.14))
                         .disabled(spent == 0)
                         .on_click(cx.listener(|this, _, _, cx| {
                             this.edit(cx, |snapshot| snapshot.allocated.clear())
@@ -624,7 +627,7 @@ impl ConfigView {
             cx,
         )
         .child(help(
-            "Allocate attribute points. Shift = ×5 · Ctrl/Cmd+Shift = all.",
+            tr("Allocate attribute points. Shift = ×5 · Ctrl/Cmd+Shift = all."),
             cx,
         ));
         let class = snapshot.class_id.as_deref().and_then(data::get_class);
@@ -665,7 +668,7 @@ impl ConfigView {
                             )
                             .child(label(
                                 SharedString::from(format!("attribute-base-{key}")),
-                                format!("Base {base:.0}"),
+                                tr("Base {n}").replace("{n}", &format!("{base:.0}")),
                                 p.faint,
                             )),
                     )
@@ -758,22 +761,22 @@ impl ConfigView {
         attributes = attributes.child(rows);
         div().flex().flex_col().gap_4()
             .child(div().grid().grid_cols(if logical_width >= 768. { 2 } else { 1 }).gap_4()
-                .child(panel("config-class","Class",cx).child(help("The class this build is based on.",cx))
-                    .child(Select::new(&self.class).planner_style(cx).placeholder("Select a class…").search_placeholder("Search class…").accessibility_label("Class").w_full()))
-                .child(panel("config-level","Level",cx).child(help("Sets how many attribute and skill points you have.",cx))
-                    .child(div().flex().items_center().gap_3().child(self.level_control(window, cx)).child(self.number(NumberField::Level,"Character level",cx)))))
-            .child(panel_with_trailing("config-difficulty","Difficulty",label("difficulty-penalty",format!("{}% all resistances",data::game_config().difficulties.iter().find(|difficulty|difficulty.id==snapshot.difficulty).map(|difficulty|difficulty.resist_penalty).unwrap_or(0.)),if snapshot.difficulty=="normal" {p.muted}else{p.negative}),cx).child(help("Higher difficulties cut every resistance, which lowers survivability and any damage that scales off resistances.",cx))
-                .child(Select::new(&self.difficulty).planner_style(cx).placeholder("Select difficulty…").search_placeholder("Search difficulty…").accessibility_label("Difficulty").w_full()))
+                .child(panel("config-class",tr("Class"),cx).child(help(tr("The class this build is based on."),cx))
+                    .child(Select::new(&self.class).planner_style(cx).placeholder(tr("Select a class…")).search_placeholder(tr("Search class…")).accessibility_label(tr("Class")).w_full()))
+                .child(panel("config-level",tr("Level"),cx).child(help(tr("Sets how many attribute and skill points you have."),cx))
+                    .child(div().flex().items_center().gap_3().child(self.level_control(window, cx)).child(self.number(NumberField::Level,tr("Character level"),cx)))))
+            .child(panel_with_trailing("config-difficulty",tr("Difficulty"),label("difficulty-penalty",tr("{pct}% all resistances").replace("{pct}",&data::game_config().difficulties.iter().find(|difficulty|difficulty.id==snapshot.difficulty).map(|difficulty|difficulty.resist_penalty).unwrap_or(0.).to_string()),if snapshot.difficulty=="normal" {p.muted}else{p.negative}),cx).child(help(tr("Higher difficulties cut every resistance, which lowers survivability and any damage that scales off resistances."),cx))
+                .child(Select::new(&self.difficulty).planner_style(cx).placeholder(tr("Select difficulty…")).search_placeholder(tr("Search difficulty…")).accessibility_label(tr("Difficulty")).w_full()))
             .child(attributes)
-            .child(panel("config-subskill-points", "Sub-skill points", cx)
-                .child(help("Point budget for each skill subtree. Default: 20. Range: 1–30. Existing allocations are kept when you lower the limit.", cx))
+            .child(panel("config-subskill-points", tr("Sub-skill points"), cx)
+                .child(help(tr("Point budget for each skill subtree. Default: 20. Range: 1–30. Existing allocations are kept when you lower the limit."), cx))
                 .child(div().flex().items_center().justify_between().gap_3()
-                    .child(div().child("Maximum points per subtree"))
-                    .child(self.number(NumberField::SubskillPoints, "Maximum sub-skill points", cx))))
-            .child(panel("config-charms","Charm Inventory",cx).child(help("Whether your character has unlocked the extra charm cell in-game.",cx))
-                .child(Checkbox::new("extra-charm-slot").checked(self.session.read(cx).state().settings.extra_charm_slot).label("Extra charm slot unlocked")
+                    .child(div().child(tr("Maximum points per subtree")))
+                    .child(self.number(NumberField::SubskillPoints, tr("Maximum sub-skill points"), cx))))
+            .child(panel("config-charms",tr("Charm Inventory"),cx).child(help(tr("Whether your character has unlocked the extra charm cell in-game."),cx))
+                .child(Checkbox::new("extra-charm-slot").checked(self.session.read(cx).state().settings.extra_charm_slot).label(tr("Extra charm slot unlocked"))
                     .on_click(cx.listener(|this,checked:&bool,_,cx|this.session.update(cx,|session,cx| {let mut settings=session.state().settings.clone();settings.extra_charm_slot = *checked;session.set_settings(settings);cx.notify();}))))
-                .child(div().pl_6().mt_1().text_size(rems(12. / 13.)).text_color(p.muted).child("Adds the unlockable 30th cell to the charm grid in the Gear tab. Stored on this device, shared by all builds.")))
+                .child(div().pl_6().mt_1().text_size(rems(12. / 13.)).text_color(p.muted).child(tr("Adds the unlockable 30th cell to the charm grid in the Gear tab. Stored on this device, shared by all builds."))))
     }
 
     fn conditions(&self, enemy: bool, small: bool, cx: &Context<Self>) -> Div {
@@ -782,15 +785,15 @@ impl ConfigView {
         let (id, title, subtitle, conditions) = if enemy {
             (
                 "config-enemy",
-                "Enemy Conditions",
-                "Conditions on the target",
+                tr("Enemy Conditions"),
+                tr("Conditions on the target"),
                 ENEMY_CONDITIONS,
             )
         } else {
             (
                 "config-player",
-                "Player Conditions",
-                "Self-state flags",
+                tr("Player Conditions"),
+                tr("Self-state flags"),
                 PLAYER_CONDITIONS,
             )
         };
@@ -862,9 +865,9 @@ impl ConfigView {
     }
 
     fn resistances(&self, small: bool, cx: &Context<Self>) -> Div {
-        panel_with_trailing("config-resistances","Enemy Resistances",count_badge("resistance-count",["fire","cold","lightning","poison","arcane"].into_iter().filter(|key|self.session.read(cx).snapshot().enemy_resistances.contains_key(*key)).count(),Some(5),cx),cx)
-            .child(help("Per-element resistance % the target has. Damage modifier = 1 − (Enemy Res × (1 − Ignore)). 100% Ignore fully bypasses resistance; lower values help proportionally even against immune targets.",cx))
-            .child(div().grid().grid_cols(if small { 4 } else { 2 }).gap_2().children([("fire","Fire"),("cold","Cold"),("lightning","Lightning"),("poison","Poison"),("arcane","Arcane")].into_iter().map(|(key,name)| {
+        panel_with_trailing("config-resistances",tr("Enemy Resistances"),count_badge("resistance-count",["fire","cold","lightning","poison","arcane"].into_iter().filter(|key|self.session.read(cx).snapshot().enemy_resistances.contains_key(*key)).count(),Some(5),cx),cx)
+            .child(help(tr("Per-element resistance % the target has. Damage modifier = 1 − (Enemy Res × (1 − Ignore)). 100% Ignore fully bypasses resistance; lower values help proportionally even against immune targets."),cx))
+            .child(div().grid().grid_cols(if small { 4 } else { 2 }).gap_2().children([("fire",tr("Fire")),("cold",tr("Cold")),("lightning",tr("Lightning")),("poison",tr("Poison")),("arcane",tr("Arcane"))].into_iter().map(|(key,name)| {
                 tile(false,cx).flex().items_center().justify_between().gap_2()
                     .child(label(SharedString::from(format!("res-label-{key}")),name,condition_color(key,cx)))
                     .child(div().flex().items_center().gap_1().child(self.number(NumberField::Resistance(key.into()),format!("Enemy {name} resistance"),cx)).child("%"))
@@ -885,7 +888,7 @@ impl ConfigView {
             .collect::<Vec<_>>();
         let mut card = panel_with_trailing(
             "config-buffs",
-            "Active Buffs",
+            tr("Active Buffs"),
             count_badge(
                 "buff-count",
                 buffs
@@ -904,11 +907,11 @@ impl ConfigView {
             cx,
         )
         .child(help(
-            "Enable buffs you have cast and are currently active.",
+            tr("Enable buffs you have cast and are currently active."),
             cx,
         ));
         if buffs.is_empty() {
-            return card.child(empty("No buffs available for this class.", cx));
+            return card.child(empty(tr("No buffs available for this class."), cx));
         }
         for skill in buffs {
             let key = skill.id.clone();
@@ -970,7 +973,7 @@ impl ConfigView {
         }
         let mut card = panel_with_trailing(
             "config-aura",
-            "Active Aura",
+            tr("Active Aura"),
             count_badge(
                 "aura-count",
                 usize::from(snapshot.active_aura_id.is_some())
@@ -989,14 +992,14 @@ impl ConfigView {
             ),
             cx,
         )
-        .child(help("Select the single aura you are running.", cx));
+        .child(help(tr("Select the single aura you are running."), cx));
         if skills.is_empty() {
-            card = card.child(empty("No auras available for this class.", cx));
+            card = card.child(empty(tr("No auras available for this class."), cx));
         } else {
             card = card.child(
                 tile(snapshot.active_aura_id.is_none(), cx).mb_2().child(
                     Radio::new("aura-none")
-                        .label("None")
+                        .label(tr("None"))
                         .checked(snapshot.active_aura_id.is_none())
                         .on_click(cx.listener(|this, _, _, cx| {
                             this.edit(cx, |snapshot| snapshot.active_aura_id = None)
@@ -1024,7 +1027,7 @@ impl ConfigView {
         if !merc_auras.is_empty() {
             card = card.child(div().my_3().child(label(
                 "config-merc-aura-label",
-                "Mercenary",
+                tr("Mercenary"),
                 cx.global::<TooltipTheme>().accent_hot,
             )));
             for (key, (name, item, level)) in merc_auras {
@@ -1082,7 +1085,7 @@ impl ConfigView {
         }
         let mut card = panel_with_trailing(
             "config-blessings",
-            "Item Blessings",
+            tr("Item Blessings"),
             count_badge(
                 "blessing-count",
                 granted
@@ -1100,7 +1103,7 @@ impl ConfigView {
             ),
             cx,
         )
-        .child(help("Conditional item-granted effects", cx));
+        .child(help(tr("Conditional item-granted effects"), cx));
         for (key, skill) in granted {
             let checked = snapshot
                 .player_conditions
@@ -1235,7 +1238,7 @@ impl ConfigView {
         );
         let mut card = panel_with_trailing(
             "config-procs",
-            "Procs",
+            tr("Procs"),
             count_badge(
                 "proc-count",
                 rows.iter()
@@ -1247,12 +1250,12 @@ impl ConfigView {
             cx,
         )
         .child(help(
-            "Skills (and subtree nodes) that trigger another skill on hit / kill / cast.",
+            tr("Skills (and subtree nodes) that trigger another skill on hit / kill / cast."),
             cx,
         ));
         if rows.is_empty() {
             return card.child(empty(
-                "No proc skills, subtree nodes or item procs available.",
+                tr("No proc skills, subtree nodes or item procs available."),
                 cx,
             ));
         }
@@ -1264,10 +1267,10 @@ impl ConfigView {
                 .justify_between()
                 .child(label(
                     "kills-per-second-label",
-                    "Kills / sec",
+                    tr("Kills / sec"),
                     cx.global::<TooltipTheme>().faint,
                 ))
-                .child(self.number(NumberField::Kills, "Kills per second", cx)),
+                .child(self.number(NumberField::Kills, tr("Kills per second"), cx)),
         );
         for (key, name, detail) in rows {
             let checked = snapshot.proc_toggles.get(&key).copied().unwrap_or(false);
@@ -1313,15 +1316,15 @@ impl ConfigView {
             }
         }
         if !stacks.is_empty() {
-            content=content.child(panel_with_trailing("config-stacks","Combat Stacks",count_badge("stack-count",stacks.iter().filter(|(stack,max)|snapshot.stack_counts.get(&stack.key).copied().unwrap_or(*max)<*max).count(),None,cx),cx).child(help("How many stacks to assume are up. Builds start at their cap; drop the count to see a colder rotation.",cx))
+            content=content.child(panel_with_trailing("config-stacks",tr("Combat Stacks"),count_badge("stack-count",stacks.iter().filter(|(stack,max)|snapshot.stack_counts.get(&stack.key).copied().unwrap_or(*max)<*max).count(),None,cx),cx).child(help(tr("How many stacks to assume are up. Builds start at their cap; drop the count to see a colder rotation."),cx))
                 .children(stacks.into_iter().map(|(stack,max)|tile(false,cx).flex().items_center().justify_between().gap_2().child(stack.name.clone())
                     .child(div().flex().items_center().gap_1().child(self.number(NumberField::Stack(stack.key.clone()),format!("{} stacks",stack.name),cx)).child(format!("/ {max}"))))));
         }
         let skills = data::get_skills_by_class(snapshot.class_id.as_deref().unwrap_or(""));
         let kinds = [
-            ("sentry", "Sentry"),
-            ("summon", "Summon"),
-            ("guardian", "Guardian"),
+            ("sentry", tr("Sentry")),
+            ("summon", tr("Summon")),
+            ("guardian", tr("Guardian")),
         ]
         .into_iter()
         .filter(|(_, tag)| {
@@ -1339,9 +1342,9 @@ impl ConfigView {
         .collect::<Vec<_>>();
         if !kinds.is_empty() {
             content = content.child(
-                panel("config-entity-rate", "Entity Attack Rate", cx)
+                panel("config-entity-rate", tr("Entity Attack Rate"), cx)
                     .child(help(
-                        "Base attacks/casts per second of the entities a skill fields.",
+                        tr("Base attacks/casts per second of the entities a skill fields."),
                         cx,
                     ))
                     .children(kinds.into_iter().map(|(key, name)| {
@@ -1390,7 +1393,7 @@ impl ConfigView {
         Some(
             panel_with_trailing(
                 "config-projectiles",
-                "Skill Projectile Counts",
+                tr("Skill Projectile Counts"),
                 count_badge(
                     "projectile-count",
                     skills.iter().filter(|skill| snapshot.skill_projectiles.contains_key(&skill.id)).count(),
@@ -1399,7 +1402,7 @@ impl ConfigView {
                 ),
                 cx,
             )
-            .child(help("How many projectiles a skill fires per cast. Multiplies that skill's per-cast damage and DPS. Skills start at the count the game gives them; clear the field to go back to it.", cx))
+            .child(help(tr("How many projectiles a skill fires per cast. Multiplies that skill's per-cast damage and DPS. Skills start at the count the game gives them; clear the field to go back to it."), cx))
             .child(div().grid().grid_cols(if small { 2 } else { 1 }).gap_2().children(
                 skills.into_iter().map(|skill| {
                     let overridden = snapshot.skill_projectiles.get(&skill.id).is_some_and(|value| *value != skill.base_projectiles.unwrap_or(1));
@@ -1443,10 +1446,10 @@ impl Render for ConfigView {
             .id("configuration").track_focus(&self.focus).size_full().min_h_0().bg(cx.global::<TooltipTheme>().background)
             .scrollbar_width(rems(if self.has_vertical_scroll { 10. / 13. } else { 0. }))
             .child(div().p_6().flex().flex_col().gap_8()
-                .child(section_heading("config-heading","Setup · character & encounter","Configuration",cx))
+                .child(section_heading("config-heading",tr("Setup · character & encounter"),tr("Configuration"),cx))
                 .when_some(self.error.clone(),|view,error|view.child(div().text_color(cx.global::<TooltipTheme>().negative).child(error)))
-                .child(div().flex().flex_col().gap_4().child(group_heading("config-character-heading","Character","Class, level and attribute allocation.",cx)).child(self.basics(logical_width,window,cx)))
-                .child(div().flex().flex_col().gap_4().child(group_heading("config-combat-heading","Encounter & Combat","Buffs, procs, enemy and player state, and manual overrides the calculator reads.",cx))
+                .child(div().flex().flex_col().gap_4().child(group_heading("config-character-heading",tr("Character"),tr("Class, level and attribute allocation."),cx)).child(self.basics(logical_width,window,cx)))
+                .child(div().flex().flex_col().gap_4().child(group_heading("config-combat-heading",tr("Encounter & Combat"),tr("Buffs, procs, enemy and player state, and manual overrides the calculator reads."),cx))
                     .child(div().grid().grid_cols(if wide {2}else{1}).gap_4()
                         .child(div().flex().flex_col().gap_4().child(self.buffs(cx)).child(self.aura(cx)).child(self.procs(cx)).when_some(self.blessings(cx),|view,panel|view.child(panel)).child(self.dynamic_overrides(cx)))
                         .child(div().flex().flex_col().gap_4().child(self.conditions(true,small,cx)).child(self.conditions(false,small,cx)).child(self.resistances(small,cx)).when_some(self.projectiles(small,cx),|view,panel|view.child(panel)).child(self.custom_stats(cx))))))

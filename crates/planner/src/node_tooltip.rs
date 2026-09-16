@@ -1,3 +1,4 @@
+use hsplanner_engine::calc::i18n::tr;
 use std::collections::HashMap;
 
 use gpui_kit::base::Tooltip;
@@ -22,9 +23,34 @@ pub struct NodeLines {
     pub unsupported: Vec<String>,
 }
 
+/// Descriptions split into recognised and unsupported by the build script.
+///
+/// The classifier runs on the English text at compile time — its rules are
+/// English — so the strings arrive here untranslated and are localised now.
+/// `Info::l` goes through the same catalogue, which keeps the two copies equal;
+/// `classification_covers_every_node_and_keeps_original_lines` relies on that.
 pub fn load_lines() -> HashMap<usize, NodeLines> {
-    serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/node-lines.json")))
-        .expect("engine-classified tree descriptions")
+    let classified: HashMap<usize, NodeLines> =
+        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/node-lines.json")))
+            .expect("engine-classified tree descriptions");
+    classified
+        .into_iter()
+        .map(|(id, lines)| {
+            let localize = |group: Vec<String>| {
+                group
+                    .into_iter()
+                    .map(|line| hsplanner_engine::calc::i18n::tr_data(&line))
+                    .collect()
+            };
+            (
+                id,
+                NodeLines {
+                    parsed: localize(lines.parsed),
+                    unsupported: localize(lines.unsupported),
+                },
+            )
+        })
+        .collect()
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -36,13 +62,13 @@ enum Tone {
 
 fn tier(node: &Node, info: Option<&Info>) -> (&'static str, Tone) {
     match info.map(|info| info.n.as_str()) {
-        Some("jewelry") => ("Jewelry Socket", Tone::Rare),
-        Some("warp") => ("Warp Node", Tone::Rare),
-        Some("root") => ("Starting Node", Tone::Angelic),
-        Some("big") => ("Notable", Tone::Rare),
-        _ if node.r >= 12. => ("Keystone", Tone::Rare),
-        _ if node.r >= 10. => ("Minor", Tone::Rare),
-        _ => ("Minor", Tone::Neutral),
+        Some("jewelry") => (tr("Jewelry Socket"), Tone::Rare),
+        Some("warp") => (tr("Warp Node"), Tone::Rare),
+        Some("root") => (tr("Starting Node"), Tone::Angelic),
+        Some("big") => (tr("Notable"), Tone::Rare),
+        _ if node.r >= 12. => (tr("Keystone"), Tone::Rare),
+        _ if node.r >= 10. => (tr("Minor"), Tone::Rare),
+        _ => (tr("Minor"), Tone::Neutral),
     }
 }
 
@@ -233,9 +259,9 @@ impl RenderOnce for NodeTooltip {
                         .child(
                             text(
                                 if self.allocated {
-                                    "Right-click to edit socket"
+                                    tr("Right-click to edit socket")
                                 } else {
-                                    "Allocate this node to activate its socket"
+                                    tr("Allocate this node to activate its socket")
                                 },
                                 palette.faint,
                             )
@@ -264,7 +290,7 @@ impl RenderOnce for NodeTooltip {
                                         .text_color(palette.muted)
                                         .child(TooltipText::new(
                                             "tooltip-unsupported",
-                                            "NOT YET SUPPORTED",
+                                            tr("NOT YET SUPPORTED"),
                                             label_tracking,
                                         )),
                                 )
@@ -282,7 +308,7 @@ impl RenderOnce for NodeTooltip {
                                         .text_size(rems(10. / 13.))
                                         .italic()
                                         .text_color(palette.muted.opacity(0.7))
-                                        .child("These mods are not yet calculated by the planner."),
+                                        .child(tr("These mods are not yet calculated by the planner.")),
                                 ),
                         );
                     }
@@ -323,7 +349,7 @@ impl RenderOnce for NodeTooltip {
                 );
             }
         } else {
-            panel = panel.child(section(palette).child(text("No data available", palette.faint)));
+            panel = panel.child(section(palette).child(text(tr("No data available"), palette.faint)));
         }
         if self.effects {
             EffectTransition::new(fade)
@@ -365,6 +391,36 @@ mod tests {
             lines[&853].unsupported,
             ["+2500 Lightning Damage dealt by odin"]
         );
+    }
+
+    #[test]
+    fn the_tree_view_shows_translated_node_text() {
+        // This view keeps its own copy of the node data instead of reading
+        // GameData, and it used to parse that copy raw: every node title and
+        // description in the tooltip stayed English while the rest of the app
+        // was Korean. Both halves have to come through the catalogue.
+        use hsplanner_engine::calc::i18n;
+
+        for locale in i18n::available_locales() {
+            let _scope = i18n::LocaleScope::enter(Some(locale.clone()));
+            let graph = Graph::load();
+            let lines = load_lines();
+            let mut checked = 0;
+            for (id, info) in &graph.info {
+                if i18n::tr_data(&info.t) != info.t {
+                    panic!("{locale}: node {id} title {:?} was not translated", info.t);
+                }
+                for line in lines[id].parsed.iter().chain(&lines[id].unsupported) {
+                    assert_eq!(
+                        &i18n::tr_data(line),
+                        line,
+                        "{locale}: node {id} description was not translated"
+                    );
+                    checked += 1;
+                }
+            }
+            assert!(checked > 0, "{locale}: no node descriptions were inspected");
+        }
     }
 
     #[test]

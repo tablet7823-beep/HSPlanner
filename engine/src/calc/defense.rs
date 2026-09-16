@@ -182,15 +182,20 @@ pub fn derive_defense_insights(stats: &Stats) -> Vec<DefenseInsight> {
         if gain_pct.is_some_and(|g| g <= INSIGHT_MIN_GAIN_PCT) {
             continue;
         }
+        // Built here rather than in the view, so the wording goes through the
+        // catalogue; word order and the element name both differ by language.
         let gain_label = match gain_pct {
-            Some(g) => format!("+{}% EHP", js_round(g)),
-            None => "immunity".to_string(),
+            Some(g) => crate::calc::i18n::tr("+{pct}% EHP")
+                .replace("{pct}", &js_round(g).to_string()),
+            None => crate::calc::i18n::tr("immunity").to_string(),
         };
+        let element_label = crate::calc::i18n::tr_owned(element);
         insights.push(DefenseInsight {
-            text: format!(
-                "Cap {element} res ({}→{cap}): {gain_label} vs {element}",
-                js_round(raw)
-            ),
+            text: crate::calc::i18n::tr("Cap {element} res ({raw}→{cap}): {gain} vs {element}")
+                .replace("{raw}", &js_round(raw).to_string())
+                .replace("{cap}", &format!("{cap}"))
+                .replace("{gain}", &gain_label)
+                .replace("{element}", &element_label),
             gain_pct,
         });
     }

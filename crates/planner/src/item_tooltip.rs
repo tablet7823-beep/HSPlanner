@@ -1,4 +1,5 @@
 //! Item tooltip: the reference `itemTooltipModel.ts` model and `ItemTooltip.tsx` look.
+use hsplanner_engine::calc::i18n::tr;
 use crate::{
     gear::{
         editor::rarity_label,
@@ -37,7 +38,7 @@ impl<'de> serde::Deserialize<'de> for OrderedKeys {
             type Value = OrderedKeys;
 
             fn expecting(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                f.write_str("an item stat map")
+                f.write_str(tr("an item stat map"))
             }
 
             fn visit_map<M: serde::de::MapAccess<'de>>(
@@ -362,36 +363,36 @@ fn random_skill_label(skill_id: Option<&str>) -> String {
 fn random_element_label(element: Option<&str>) -> String {
     match element {
         Some(element) => format!("to {} Skills (random element)", capitalize(element)),
-        None => "to Random Element Skills (not rolled)".into(),
+        None => tr("to Random Element Skills (not rolled)").into(),
     }
 }
 
 fn all_skills_class_label(class_id: Option<&str>) -> String {
     match class_id.and_then(data::get_class) {
         Some(class) => format!("to All Skills ({})", class.name),
-        None if class_id.is_some() => "to All Skills (Class)".into(),
-        None => "to All Skills (Class) (not rolled)".into(),
+        None if class_id.is_some() => tr("to All Skills (Class)").into(),
+        None => tr("to All Skills (Class) (not rolled)").into(),
     }
 }
 
 fn subskill_boost_label(skill_id: Option<&str>) -> String {
     match skill_id.and_then(skill_name) {
         Some(name) => format!("to {name} Sub Skills"),
-        None if skill_id.is_some() => "to Random Skill Sub Skills".into(),
-        None => "to Random Skill Sub Skills (not rolled)".into(),
+        None if skill_id.is_some() => tr("to Random Skill Sub Skills").into(),
+        None => tr("to Random Skill Sub Skills (not rolled)").into(),
     }
 }
 
 fn trigger_label(trigger: &str) -> Option<&'static str> {
     Some(match trigger {
-        "on_hit" => "on Hit",
-        "on_attack" => "when Attacking",
-        "when_struck" => "when Struck",
-        "on_kill" => "on Kill",
-        "on_cast" => "on Cast",
-        "on_block" => "on Block",
-        "on_death" => "on Death",
-        "aura" => "Aura:",
+        "on_hit" => tr("on Hit"),
+        "on_attack" => tr("when Attacking"),
+        "when_struck" => tr("when Struck"),
+        "on_kill" => tr("on Kill"),
+        "on_cast" => tr("on Cast"),
+        "on_block" => tr("on Block"),
+        "on_death" => tr("on Death"),
+        "aura" => tr("Aura:"),
         _ => return None,
     })
 }
@@ -433,26 +434,26 @@ pub(crate) fn build_model(
     let mut rows = Vec::new();
     if let Some((min, max)) = base.defense_min.zip(base.defense_max) {
         rows.push(Line::Row {
-            label: "Defense".into(),
+            label: tr("Defense").into(),
             value: format!("{}–{}", num(min), num(max)),
         });
     }
     if let Some((min, max)) = base.damage_min.zip(base.damage_max) {
         rows.push(Line::Row {
-            label: "Damage".into(),
+            label: tr("Damage").into(),
             value: format!("{}–{}", num(min), num(max)),
         });
     }
     if let Some(block) = base.block_chance {
         rows.push(Line::Row {
-            label: "Block".into(),
+            label: tr("Block").into(),
             value: format!("{}%", num(block)),
         });
     }
     if let Some(speed) = base.attack_speed {
         let (min, max) = speed.as_ranged();
         rows.push(Line::Row {
-            label: "Attacks / sec".into(),
+            label: tr("Attacks / sec").into(),
             value: if min == max {
                 num(min)
             } else {
@@ -539,7 +540,7 @@ pub(crate) fn build_model(
     let granted = granted_skill_entries(base, equipped, stars);
     let granted_names: HashSet<String> = granted
         .iter()
-        .map(|(skill, _, _)| skill.name.trim().to_lowercase())
+        .map(|(skill, _, _)| skill.match_name().trim().to_lowercase())
         .collect();
     {
         for (name, value) in skill_bonus_entries(base, equipped) {
@@ -550,7 +551,9 @@ pub(crate) fn build_model(
             let label = if name == RANDOM_SKILL_NAME {
                 random_skill_label(equipped.and_then(|i| i.random_skill_id.as_deref()))
             } else {
-                name.clone()
+                // `name` is the English key the data is indexed by; the reader
+                // wants the skill's own name.
+                data::display_skill_name(name)
             };
             let star_locked = data::get_item_granted_skill_by_name(name)
                 .is_some_and(|skill| skill.star_rank_locked);
@@ -596,7 +599,7 @@ pub(crate) fn build_model(
 
     if !implicit_lines.is_empty() {
         sections.push(Section::titled(
-            "Implicit",
+            tr("Implicit"),
             HeaderTone::Gold,
             implicit_lines,
         ));
@@ -604,14 +607,14 @@ pub(crate) fn build_model(
 
     if !granted.is_empty() {
         sections.push(Section::titled(
-            "Granted Skill Effects",
+            tr("Granted Skill Effects"),
             HeaderTone::Orange,
             granted
                 .into_iter()
                 .map(|(skill, rank, lines)| Line::Entry {
                     title: skill.name.clone(),
                     style: LineStyle::Implicit,
-                    suffix: Some(format!("rank {rank}")),
+                    suffix: Some(format!("{} {rank}", tr("rank"))),
                     desc: skill
                         .description
                         .clone()
@@ -629,7 +632,7 @@ pub(crate) fn build_model(
         equipped.and_then(|i| i.random_skill_element.as_deref()),
     );
     if !supported.is_empty() {
-        sections.push(Section::titled("Affixes", HeaderTone::Gold, supported));
+        sections.push(Section::titled(tr("Affixes"), HeaderTone::Gold, supported));
     }
     let unholy_slots = base
         .unique_effects
@@ -641,11 +644,11 @@ pub(crate) fn build_model(
     if !unholy.is_empty() || unrolled > 0 {
         let mut lines = unholy;
         lines.extend((0..unrolled).map(|_| Line::Text {
-            text: "Unholy (not rolled)".into(),
+            text: tr("Unholy (not rolled)").into(),
             style: LineStyle::UnholyMissing,
             custom: false,
         }));
-        sections.push(Section::titled("Unholy Affixes", HeaderTone::Pink, lines));
+        sections.push(Section::titled(tr("Unholy Affixes"), HeaderTone::Pink, lines));
     }
 
     if let Some(item) = equipped
@@ -666,7 +669,7 @@ pub(crate) fn build_model(
             .collect();
         if !forged.is_empty() {
             sections.push(Section::titled(
-                "Forged · Satanic Crystal",
+                tr("Forged · Satanic Crystal"),
                 HeaderTone::Red,
                 forged,
             ));
@@ -677,7 +680,7 @@ pub(crate) fn build_model(
         let groups = socket_groups(item, base);
         if !groups.is_empty() {
             sections.push(Section::titled(
-                "From Sockets",
+                tr("From Sockets"),
                 HeaderTone::Gold,
                 groups
                     .into_iter()
@@ -709,7 +712,7 @@ pub(crate) fn build_model(
                     tier.stats.iter().filter(|(_, v)| **v != 0.).collect();
                 stats.sort_by(|a, b| a.0.cmp(b.0));
                 sections.push(Section::titled(
-                    "Angelic Augment",
+                    tr("Angelic Augment"),
                     HeaderTone::Gold,
                     vec![Line::Entry {
                         title: augment.name.clone(),
@@ -758,7 +761,7 @@ pub(crate) fn build_model(
             })
             .collect();
         lines.push(Line::Entry {
-            title: "Set items".into(),
+            title: tr("Set items").into(),
             style: LineStyle::SetItems,
             suffix: None,
             desc: None,
@@ -854,7 +857,7 @@ pub(crate) fn build_model(
         .collect();
     if !special.is_empty() {
         sections.push(Section::titled(
-            "Special Effects",
+            tr("Special Effects"),
             HeaderTone::Gold,
             special,
         ));
@@ -872,7 +875,7 @@ pub(crate) fn build_model(
     );
     if !not_supported.is_empty() {
         sections.push(Section {
-            header: Some(("Not Yet Supported".into(), HeaderTone::Muted, None)),
+            header: Some((tr("Not Yet Supported").into(), HeaderTone::Muted, None)),
             lines: not_supported,
             footnote: Some(NOT_SUPPORTED_FOOTNOTE),
         });
@@ -896,13 +899,13 @@ pub(crate) fn build_model(
         .and_then(|r| r.requires_level)
         .or(base.requires_level)
     {
-        footer.push(format!("Req Level {level}"));
+        footer.push(format!("{} {level}", tr("Req Level")));
     }
     if let Some(level) = base.item_level {
-        footer.push(format!("iLvl {level}"));
+        footer.push(format!("{} {level}", tr("iLvl")));
     }
     if let Some(grade) = &base.grade {
-        footer.push(format!("Tier {grade}"));
+        footer.push(format!("{} {grade}", tr("Tier")));
     }
 
     ItemTooltipModel {
@@ -924,17 +927,17 @@ fn type_line(
     let mut line = format!(
         "{} · {}",
         if runeword {
-            "Runeword".to_owned()
+            tr("Runeword").to_owned()
         } else {
             rarity_label(&base.rarity)
         },
-        base.base_type
+        crate::gear::editor::base_type_label(&base.base_type)
     );
     if base.slot == "weapon" {
         line.push_str(if base.two_handed.unwrap_or(false) {
-            " · 2-Handed"
+            tr(" · 2-Handed")
         } else {
-            " · 1-Handed"
+            tr(" · 1-Handed")
         });
     }
     if let Some(stars) = stars.filter(|stars| *stars > 0) {
@@ -945,7 +948,7 @@ fn type_line(
             .iter()
             .any(|m| m.affix_id == BONUS_SOCKET_MOD_ID)
     }) {
-        line.push_str(" · Tinkered");
+        line.push_str(tr(" · Tinkered"));
     }
     line
 }
@@ -1024,15 +1027,19 @@ fn granted_skill_entries(
                     format!("{}–{}%", num(a), num(b))
                 };
                 let verb = if convert.replaces {
-                    "converted to"
+                    tr("converted to")
                 } else {
-                    "added as"
+                    tr("added as")
                 };
-                lines.push(format!(
-                    "{pct_text} of {} {verb} {}",
-                    stat_name(&convert.from),
-                    stat_name(&convert.to)
-                ));
+                // Word order differs by language, so the catalogue owns the
+                // whole template rather than the connectives alone.
+                lines.push(
+                    tr("{pct} of {from} {verb} {to}")
+                        .replace("{pct}", &pct_text)
+                        .replace("{from}", &stat_name(&convert.from))
+                        .replace("{verb}", verb)
+                        .replace("{to}", &stat_name(&convert.to)),
+                );
             }
         }
         if let Some(stats) = &skill.passive_stats {
@@ -1683,7 +1690,7 @@ pub(crate) fn item_card(
             .text_size(units(11.))
             .italic()
             .text_color(p.faint)
-            .child("empty slot"),
+            .child(tr("empty slot")),
     }
 }
 

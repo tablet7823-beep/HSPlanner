@@ -347,7 +347,7 @@ fn stat_catalog_name(key: &str) -> String {
         .stats
         .iter()
         .find(|d| d.key == key)
-        .map(|d| d.name.clone())
+        .map(|d| d.match_name().to_string())
         .unwrap_or_else(|| key.to_string())
 }
 

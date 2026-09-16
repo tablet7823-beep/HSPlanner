@@ -1,0 +1,7 @@
+{
+  "game-config/slots": {
+    "Armor": "갑옷",
+    "Offhand": "보조 장비",
+    "Weapon": "무기"
+  }
+}

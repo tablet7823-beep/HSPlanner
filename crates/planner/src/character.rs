@@ -1,4 +1,5 @@
 //! Read-only character overview, composed from the shared planner result.
+use hsplanner_engine::calc::i18n::tr;
 use crate::TreeView;
 use gpui_kit::{prelude::*, *};
 use hsplanner_build::{BuildSnapshot, session::Session};
@@ -90,7 +91,7 @@ impl CharacterView {
                     .find(|build| &build.id == id)
             })
             .map(|build| build.name.as_str())
-            .unwrap_or("Unsaved build");
+            .unwrap_or(tr("Unsaved build"));
         let class = snapshot.class_id.as_deref().and_then(data::get_class);
         let attr_spent: u32 = snapshot.allocated.values().sum();
         let skill_spent: u32 = snapshot.skill_ranks.values().sum();
@@ -142,12 +143,16 @@ impl CharacterView {
                         )
                         .child(div().mt_1().child(caption_tracked(
                             "character-identity",
-                            format!(
-                                "{} · Lv {} · Hero Lv {}",
-                                class.map(|c| c.name.as_str()).unwrap_or("No class"),
-                                snapshot.level,
-                                snapshot.allocated_tree_nodes.len()
-                            ),
+                            tr("{class} · Lv {level} · Hero Lv {hero}")
+                                .replace(
+                                    "{class}",
+                                    class.map(|c| c.name.as_str()).unwrap_or(tr("No class")),
+                                )
+                                .replace("{level}", &snapshot.level.to_string())
+                                .replace(
+                                    "{hero}",
+                                    &snapshot.allocated_tree_nodes.len().to_string(),
+                                ),
                             p.muted,
                             11.,
                             0.16,
@@ -160,21 +165,21 @@ impl CharacterView {
                     .gap_2()
                     .child(point_stat(
                         "attr-used",
-                        "Attr used",
+                        tr("Attr used"),
                         attr_spent,
                         Some(snapshot.level * data::game_config().attribute_points_per_level),
                         cx,
                     ))
                     .child(point_stat(
                         "skill-used",
-                        "Skill used",
+                        tr("Skill used"),
                         skill_spent,
                         Some(snapshot.level * data::game_config().skill_points_per_level),
                         cx,
                     ))
                     .child(point_stat(
                         "tree-used",
-                        "Tree nodes",
+                        tr("Tree nodes"),
                         snapshot.allocated_tree_nodes.len() as u32,
                         None,
                         cx,
@@ -289,9 +294,9 @@ impl CharacterView {
                     .child(caption(
                         format!("{key}-delta"),
                         if delta > 0. {
-                            format!("+{delta:.0} added")
+                            tr("+{n} added").replace("{n}", &format!("{delta:.0}"))
                         } else {
-                            "base".into()
+                            tr("base").into()
                         },
                         p.faint,
                         10.,
@@ -343,8 +348,8 @@ impl CharacterView {
             .and_then(|result| result.active_skill_name.as_deref())
             .or_else(|| main.map(|skill| skill.name.as_str()));
         let title = skill_name
-            .map(|name| format!("Total DPS · {name}"))
-            .unwrap_or_else(|| "Total DPS".into());
+            .map(|name| format!("{} · {name}", tr("Total DPS")))
+            .unwrap_or_else(|| tr("Total DPS").into());
         let average = result.and_then(|r| {
             r.damage
                 .as_ref()
@@ -410,9 +415,9 @@ impl CharacterView {
                         .children(
                             [
                                 ("character-average-hit", integer(hit), p.muted),
-                                ("character-average-label", " AVG HIT × ".into(), p.faint),
+                                ("character-average-label", tr(" AVG HIT × ").into(), p.faint),
                                 ("character-cast-rate", decimal(rate), p.muted),
-                                ("character-rate-label", " / SEC".into(), p.faint),
+                                ("character-rate-label", tr(" / SEC").into(), p.faint),
                             ]
                             .into_iter()
                             .map(|(id, text, color)| {
@@ -424,7 +429,7 @@ impl CharacterView {
                         ),
                     None => caption(
                         "character-rate-summary",
-                        "select a main skill to see the breakdown",
+                        tr("select a main skill to see the breakdown"),
                         p.faint,
                         11.,
                     ),
@@ -439,9 +444,9 @@ impl CharacterView {
                     .child(metric(
                         "crit-chance",
                         if is_spell {
-                            "Spell crit chance"
+                            tr("Spell crit chance")
                         } else {
-                            "Crit chance"
+                            tr("Crit chance")
                         },
                         stat_text(result, crit_chance),
                         p.accent_hot,
@@ -450,9 +455,9 @@ impl CharacterView {
                     .child(metric(
                         "crit-damage",
                         if is_spell {
-                            "Spell crit damage"
+                            tr("Spell crit damage")
                         } else {
-                            "Crit damage"
+                            tr("Crit damage")
                         },
                         stat_text(result, crit_damage),
                         p.text,
@@ -461,9 +466,9 @@ impl CharacterView {
                     .child(metric(
                         "rate",
                         if attack_rate {
-                            "Attack rate"
+                            tr("Attack rate")
                         } else {
-                            "Cast rate"
+                            tr("Cast rate")
                         },
                         rate.map(|v| format!("{}/s", decimal(v)))
                             .unwrap_or_else(|| "—".into()),
@@ -472,21 +477,21 @@ impl CharacterView {
                     ))
                     .child(metric(
                         "hit",
-                        "Hit damage",
+                        tr("Hit damage"),
                         hit.map(integer_range).unwrap_or_else(|| "—".into()),
                         p.text,
                         cx,
                     ))
                     .child(metric(
                         "attack-speed",
-                        "Attack speed",
+                        tr("Attack speed"),
                         stat_text(result, "increased_attack_speed"),
                         p.text,
                         cx,
                     ))
                     .child(metric(
                         "enhanced-damage",
-                        "Enhanced dmg",
+                        tr("Enhanced dmg"),
                         stat_text(result, "enhanced_damage"),
                         p.text,
                         cx,
@@ -499,7 +504,7 @@ impl CharacterView {
         let avoidance = [
             ("block_chance", "block"),
             ("dodge_chance", "dodge"),
-            ("dodge_spell_hits", "spell dodge"),
+            ("dodge_spell_hits", tr("spell dodge")),
         ]
         .into_iter()
         .filter_map(|(key, label)| {
@@ -510,12 +515,12 @@ impl CharacterView {
         let mut card =
             panel_with_trailing(
                 "character-defense",
-                "Resistances & Defense",
+                tr("Resistances & Defense"),
                 caption(
                     "resistance-cap",
-                    format!(
-                        "Capped {}",
-                        decimal(
+                    tr("Capped {n}").replace(
+                        "{n}",
+                        &decimal(
                             result
                                 .and_then(|result| defense::effective_cap(
                                     "fire_resistance",
@@ -538,13 +543,13 @@ impl CharacterView {
                     .border_color(p.accent_deep.opacity(0.25))
                     .child(caption(
                         "avoidance",
-                        format!(
-                            "Avoidance: {}",
-                            if avoidance.is_empty() {
-                                "—".into()
+                        tr("Avoidance: {list}").replace(
+                            "{list}",
+                            &if avoidance.is_empty() {
+                                "—".to_string()
                             } else {
                                 avoidance.join(" · ")
-                            }
+                            },
                         ),
                         p.muted,
                         10.,
@@ -574,11 +579,11 @@ impl CharacterView {
             );
         let mut resistance_rows = div().flex().flex_col().gap_2();
         for (key, label) in [
-            ("fire_resistance", "Fire"),
-            ("cold_resistance", "Cold"),
-            ("lightning_resistance", "Lightning"),
-            ("poison_resistance", "Poison"),
-            ("arcane_resistance", "Arcane"),
+            ("fire_resistance", tr("Fire")),
+            ("cold_resistance", tr("Cold")),
+            ("lightning_resistance", tr("Lightning")),
+            ("poison_resistance", tr("Poison")),
+            ("arcane_resistance", tr("Arcane")),
         ] {
             let value = stat_value(result, key).1;
             let cap = result
@@ -654,13 +659,13 @@ impl CharacterView {
             .flex_col()
             .gap(rems(1. / 13.))
             .child(defense_row(
-                "Life",
+                tr("Life"),
                 defense_stat_text(result, "life"),
                 theme::stat_color("life", cx),
                 cx,
             ))
             .child(defense_row(
-                "Mana",
+                tr("Mana"),
                 defense_stat_text(result, "mana"),
                 theme::stat_color("mana", cx),
                 cx,
@@ -676,9 +681,9 @@ impl CharacterView {
             }
         }
         for (key, label) in [
-            ("block_chance", "Block chance"),
-            ("physical_damage_reduction", "Phys reduction"),
-            ("movement_speed", "Movement speed"),
+            ("block_chance", tr("Block chance")),
+            ("physical_damage_reduction", tr("Phys reduction")),
+            ("movement_speed", tr("Movement speed")),
         ] {
             let armor = stat_value(result, "defense");
             defense_rows = defense_rows.child(
@@ -693,7 +698,7 @@ impl CharacterView {
                         |view| {
                             view.child(caption_tracked(
                                 "defense-armor-hint",
-                                format!("armor {}", formatted_stat(armor, "defense")),
+                                format!("{} {}", tr("armor"), formatted_stat(armor, "defense")),
                                 p.faint,
                                 10.,
                                 0.12,
@@ -721,7 +726,7 @@ impl CharacterView {
                 skills.iter().find(|skill| &skill.id == id).map(|skill| {
                     LoadoutEntry::skill(
                         skill,
-                        if ix == 0 { "Main" } else { "Active" },
+                        if ix == 0 { tr("Main") } else { tr("Active") },
                         format!("Lv {}", snapshot.skill_ranks.get(id).unwrap_or(&0)),
                     )
                 })
@@ -734,7 +739,7 @@ impl CharacterView {
         {
             active.push(LoadoutEntry::skill(
                 aura,
-                "Aura",
+                tr("Aura"),
                 format!("Lv {}", snapshot.skill_ranks.get(&aura.id).unwrap_or(&0)),
             ));
         }
@@ -766,7 +771,7 @@ impl CharacterView {
                     id: format!("granted-{}", skill.id),
                     name: skill.name.clone(),
                     icon: None,
-                    sub: "Granted".into(),
+                    sub: tr("Granted").into(),
                     detail: String::new(),
                 });
             }
@@ -783,7 +788,7 @@ impl CharacterView {
             .map(|skill| {
                 LoadoutEntry::skill(
                     skill,
-                    "Buff",
+                    tr("Buff"),
                     skill
                         .effect_duration
                         .map(|duration| format!("{}s", decimal(duration)))
@@ -843,23 +848,23 @@ impl CharacterView {
             .gap_4()
             .child(loadout_card(
                 "active-skills",
-                "Active Skills",
+                tr("Active Skills"),
                 &active,
-                "No active skill selected.",
+                tr("No active skill selected."),
                 cx,
             ))
             .child(loadout_card(
                 "buffs",
-                "Buffs",
+                tr("Buffs"),
                 &buffs,
-                "No buffs active.",
+                tr("No buffs active."),
                 cx,
             ))
             .child(loadout_card(
                 "procs",
-                "Procs",
+                tr("Procs"),
                 &procs,
-                "No procs active.",
+                tr("No procs active."),
                 cx,
             ))
     }
@@ -912,8 +917,8 @@ impl Render for CharacterView {
                     .gap_4()
                     .child(section_heading(
                         "character-heading",
-                        "Summary",
-                        "Character",
+                        tr("Summary"),
+                        tr("Character"),
                         cx,
                     ))
                     .child(self.identity(snapshot, cx))
@@ -1115,7 +1120,7 @@ fn loadout_card(
         title,
         caption(
             format!("{id}-count"),
-            format!("{} active", entries.len()),
+            tr("{n} active").replace("{n}", &entries.len().to_string()),
             p.faint,
             10.,
         ),
@@ -1285,8 +1290,8 @@ fn ehp_rows(result: &defense::EhpResult) -> Vec<(String, Option<f64>)> {
             vec![("eHP".into(), physical)]
         } else {
             vec![
-                ("Physical eHP".into(), physical),
-                ("Elemental eHP".into(), first.ehp),
+                (tr("Physical eHP").into(), physical),
+                (tr("Elemental eHP").into(), first.ehp),
             ]
         };
     }

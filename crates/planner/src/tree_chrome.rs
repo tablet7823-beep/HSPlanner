@@ -1,4 +1,5 @@
 //! Floating tree controls keep the graph as the main surface, as in Tauri.
+use hsplanner_engine::calc::i18n::tr;
 use super::*;
 use gpui_kit::component::{Icon, IconName, Selectable};
 use gpui_kit::{
@@ -62,8 +63,8 @@ impl TreeView {
                                             .planner_style(cx)
                                             .small()
                                             .label(format!("{}", self.search_matches.len()))
-                                            .accessibility_label("Next matching node")
-                                            .cursor_tooltip("Next matching node (Enter)")
+                                            .accessibility_label(tr("Next matching node"))
+                                            .cursor_tooltip(tr("Next matching node (Enter)"))
                                             .disabled(self.search_matches.is_empty())
                                             .text_color(tree.accent())
                                             .on_click(cx.listener(|this, _, _, cx| {
@@ -75,8 +76,8 @@ impl TreeView {
                                             .planner_style(cx)
                                             .small()
                                             .icon(IconName::Close)
-                                            .accessibility_label("Clear search")
-                                            .cursor_tooltip("Clear search")
+                                            .accessibility_label(tr("Clear search"))
+                                            .cursor_tooltip(tr("Clear search"))
                                             .on_click(cx.listener(|this, _, window, cx| {
                                                 this.search.update(cx, |input, cx| {
                                                     input.set_value("", window, cx)
@@ -98,7 +99,7 @@ impl TreeView {
                         hsplanner_ui::controls::ButtonTone::Neutral,
                         cx,
                     )
-                    .label("Summary")
+                    .label(tr("Summary"))
                     .small()
                     .selected(self.summary_open)
                     .text_color(if self.summary_open {
@@ -126,15 +127,15 @@ impl TreeView {
                         hsplanner_ui::controls::ButtonTone::Neutral,
                         cx,
                     )
-                    .label("Suggest")
+                    .label(tr("Suggest"))
                     .small()
                     .selected(self.suggest_open)
-                    .cursor_tooltip("Suggest nodes that raise DPS within a point budget")
+                    .cursor_tooltip(tr("Suggest nodes that raise DPS within a point budget"))
                     .on_click(cx.listener(|this, _, window, cx| this.toggle_suggest(window, cx))),
                 )
             })
-            .child(self.button("Fit", Command::Fit, cx))
-            .child(self.button("Reset", Command::Reset, cx))
+            .child(self.button(tr("Fit"), Command::Fit, cx))
+            .child(self.button(tr("Reset"), Command::Reset, cx))
     }
 
     pub(super) fn status_bar(&self, cx: &Context<Self>) -> impl IntoElement {
@@ -178,27 +179,27 @@ impl TreeView {
             .line_height(relative(1.5))
             .occlude()
             .child(status(
-                "Nodes",
+                tr("Nodes"),
                 self.scene.graph.nodes.len().to_string(),
                 palette.text,
             ))
             .child(separator())
-            .child(status("Allocated", self.selected.len().to_string(), accent))
+            .child(status(tr("Allocated"), self.selected.len().to_string(), accent))
             .child(separator())
             .child(status(
-                "Zoom",
+                tr("Zoom"),
                 format!("{:.0}%", self.camera.scale * 100.),
                 accent,
             ))
             .when_some(self.build.error.clone(), |bar, error| {
                 bar.child(separator())
                     .child(div().text_color(palette.negative).child(error))
-                    .child(self.button("Retry calculation", Command::RetryCalculation, cx))
+                    .child(self.button(tr("Retry calculation"), Command::RetryCalculation, cx))
             })
             .when(std::env::var_os("HSPLANNER_DIAGNOSTICS").is_some(), |bar| {
                 let stats = self.paint_stats.get();
                 let calculation = if self.build.in_flight {
-                    "calculating…".to_owned()
+                    tr("calculating…").to_owned()
                 } else if let Some(result) = &self.build.result {
                     format!("calc {:.1} ms", result.milliseconds)
                 } else {
@@ -211,9 +212,9 @@ impl TreeView {
                     )))
                     .child(self.button(
                         if self.motion_test.is_some() {
-                            "Stop motion test"
+                            tr("Stop motion test")
                         } else {
-                            "Run motion test"
+                            tr("Run motion test")
                         },
                         Command::Motion,
                         cx,
@@ -273,7 +274,7 @@ impl TreeView {
                                 .italic()
                                 .text_center()
                                 .text_color(palette.muted)
-                                .child("Allocate nodes to see totals."),
+                                .child(tr("Allocate nodes to see totals.")),
                         )
                     })
                     .children(groups.into_iter().map(|(name, entries)| {
@@ -392,7 +393,7 @@ impl TreeView {
                             .child(div().text_size(rems(5. / 13.)).child("◆"))
                             .child(TooltipText::new(
                                 "ether-summary-title",
-                                "STAT SUMMARY",
+                                tr("STAT SUMMARY"),
                                 0.18,
                             )),
                     )
@@ -419,7 +420,7 @@ impl TreeView {
                     .border_b_1()
                     .border_color(palette.border)
                     .text_size(rems(12. / 13.))
-                    .child(div().font_weight(FontWeight::MEDIUM).child("Magic Find"))
+                    .child(div().font_weight(FontWeight::MEDIUM).child(tr("Magic Find")))
                     .child(
                         div()
                             .font_family(theme::MONO_FONT_FAMILY)

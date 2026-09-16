@@ -1,3 +1,4 @@
+use hsplanner_engine::calc::i18n::tr;
 use std::{
     collections::BTreeMap,
     fs::{self, File},
@@ -40,7 +41,7 @@ impl MigrationExport {
     pub fn into_state(self) -> Result<WorkspaceState, String> {
         if self.version != 1 {
             return Err(
-                "Unsupported migration version. Install the matching HSPlanner version.".into(),
+                tr("Unsupported migration version. Install the matching HSPlanner version.").into(),
             );
         }
         self.library.validate()?;
@@ -90,11 +91,11 @@ pub fn data_directory() -> Result<PathBuf, String> {
         return Ok(PathBuf::from(path));
     }
     #[cfg(target_os = "macos")]
-    let base = PathBuf::from(std::env::var_os("HOME").ok_or("Home directory is unavailable.")?)
+    let base = PathBuf::from(std::env::var_os("HOME").ok_or(tr("Home directory is unavailable."))?)
         .join("Library/Application Support");
     #[cfg(target_os = "windows")]
     let base = PathBuf::from(
-        std::env::var_os("APPDATA").ok_or("Application data directory is unavailable.")?,
+        std::env::var_os("APPDATA").ok_or(tr("Application data directory is unavailable."))?,
     );
     #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     let base = std::env::var_os("XDG_DATA_HOME")
@@ -108,11 +109,11 @@ pub fn data_directory() -> Result<PathBuf, String> {
 pub fn read_migration(directory: &Path) -> Result<MigrationExport, String> {
     let path = directory
         .parent()
-        .ok_or("Invalid data directory.")?
+        .ok_or(tr("Invalid data directory."))?
         .join("migration-v1.json");
     if !path.exists() {
         return Err(
-            "No transfer file found. Open the transitional Tauri release once, then check again."
+            tr("No transfer file found. Open the transitional Tauri release once, then check again.")
                 .into(),
         );
     }
@@ -154,7 +155,7 @@ fn read_json<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T, String> {
         .read_to_end(&mut bytes)
         .map_err(|e| e.to_string())?;
     if bytes.len() as u64 > MAX_STATE_BYTES {
-        return Err("The saved data exceeds the supported file size.".into());
+        return Err(tr("The saved data exceeds the supported file size.").into());
     }
     serde_json::from_slice(&bytes).map_err(|e| {
         format!(
@@ -166,13 +167,13 @@ fn read_json<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T, String> {
 
 fn validate(state: &WorkspaceState) -> Result<(), String> {
     if state.version != 1 {
-        return Err("Unsupported saved-data version. The original file is unchanged.".into());
+        return Err(tr("Unsupported saved-data version. The original file is unchanged.").into());
     }
     state.library.validate()
 }
 
 fn replace_file(path: &Path, bytes: &[u8]) -> Result<(), String> {
-    let parent = path.parent().ok_or("Invalid data path.")?;
+    let parent = path.parent().ok_or(tr("Invalid data path."))?;
     let mut file = tempfile::NamedTempFile::new_in(parent).map_err(|e| e.to_string())?;
     file.write_all(bytes)
         .and_then(|_| file.as_file().sync_all())
@@ -190,7 +191,7 @@ pub fn write_atomic(directory: &Path, state: &WorkspaceState) -> Result<(), Stri
     validate(state)?;
     let bytes = serde_json::to_vec(state).map_err(|e| e.to_string())?;
     if bytes.len() as u64 > MAX_STATE_BYTES {
-        return Err("The library is too large to save.".into());
+        return Err(tr("The library is too large to save.").into());
     }
     fs::create_dir_all(directory).map_err(|e| format!("Cannot create data directory: {e}"))?;
     let path = directory.join("state.json");
@@ -234,7 +235,7 @@ impl Writer {
             .open(directory.join("state.lock"))
             .map_err(|e| e.to_string())?;
         lock.try_lock_exclusive().map_err(|_| {
-            "HSPlanner is already using this library. Switch to the open window.".to_owned()
+            tr("HSPlanner is already using this library. Switch to the open window.").to_owned()
         })?;
         let state = if recover {
             restore_backup(&directory)?

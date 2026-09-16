@@ -1,3 +1,4 @@
+use hsplanner_engine::calc::i18n::tr;
 use crate::{TreeView, build_panel::format_range, gear::GearView};
 use gpui_kit::base::Disableable;
 use gpui_kit::component::{
@@ -103,7 +104,7 @@ impl MercenaryView {
                             .to_string(),
                     ),
                 )
-                .child(" POINTS"),
+                .child(tr(" POINTS")),
             cx,
         )
         .child(
@@ -312,7 +313,7 @@ impl MercenaryView {
                     .font_family(theme::MONO_FONT_FAMILY)
                     .text_size(rems(10. / 13.))
                     .text_color(p.positive)
-                    .child("◆  SHARED WITH HERO"),
+                    .child(tr("◆  SHARED WITH HERO")),
             )
             .child(
                 div()
@@ -324,7 +325,7 @@ impl MercenaryView {
                     .border_b_1()
                     .border_color(p.border)
                     .text_size(rems(12. / 13.))
-                    .child("Magic Find")
+                    .child(tr("Magic Find"))
                     .child(
                         div()
                             .font_family(theme::MONO_FONT_FAMILY)
@@ -350,10 +351,10 @@ impl MercenaryView {
             .flex()
             .flex_col()
             .gap_1p5()
-            .child(heading("ITEM BUFFS"));
+            .child(heading(tr("ITEM BUFFS")));
         if no_buffs {
             buffs = buffs.child(div().text_size(rems(11. / 13.)).text_color(p.muted).child(
-                "No shared item buffs — equip uniques with effects (e.g. Pearlescent Dream).",
+                tr("No shared item buffs — equip uniques with effects (e.g. Pearlescent Dream)."),
             ));
         }
         for (key, (name, source)) in auras {
@@ -407,14 +408,14 @@ impl MercenaryView {
                 .pt_2()
                 .border_t_1()
                 .border_color(p.border)
-                .child(heading("SKILL EFFECTS")),
+                .child(heading(tr("SKILL EFFECTS"))),
         );
         if shared.is_empty() {
             buffs = buffs.child(
                 div()
                     .text_size(rems(11. / 13.))
                     .text_color(p.muted)
-                    .child("No hero-affecting skills leveled yet."),
+                    .child(tr("No hero-affecting skills leveled yet.")),
             );
         }
         for skill in shared {
@@ -442,9 +443,9 @@ impl MercenaryView {
                 .small()
                 .m_3()
                 .label(if self.show_equipment_stats {
-                    "Hide equipment stats"
+                    tr("Hide equipment stats")
                 } else {
-                    "Equipment stats"
+                    tr("Equipment stats")
                 })
                 .on_click(cx.listener(|this, _, _, cx| {
                     this.show_equipment_stats = !this.show_equipment_stats;
@@ -492,10 +493,10 @@ impl Render for MercenaryView {
         let spent: u32 = snapshot.merc_skill_ranks.values().copied().sum();
         let wide = window.viewport_size().width >= window.rem_size() * (1024. / 13.);
         div().size_full().bg(p.background).child(div().id("mercenary-overview").size_full().track_scroll(&self.scroll).overflow_y_scroll().child(div().p_6().flex().flex_col().gap_4()
-            .child(div().flex().items_end().justify_between().gap_3().child(section_heading("merc-heading","Loadout","Mercenary",cx))
+            .child(div().flex().items_end().justify_between().gap_3().child(section_heading("merc-heading",tr("Loadout"),tr("Mercenary"),cx))
                 .when(selected.is_some(),|v|v.child(div().flex().gap_3().items_center().font_family(theme::MONO_FONT_FAMILY).text_size(rems(10./13.)).text_color(p.faint)
                     .child(format!("{used} / {} equipped  ·  {spent} skill points",mercenary::data().slots.len()))
-                    .child(Button::new("reset-mercenary").planner_style(cx).small().label("Dismiss")
+                    .child(Button::new("reset-mercenary").planner_style(cx).small().label(tr("Dismiss"))
                         .on_click(cx.listener(|this,_,_,cx|this.edit(cx,|s|{s.merc_class_id=None;s.merc_skill_ranks.clear();s.merc_inventory.clear();s.merc_disabled_auras.clear();})))))))
             .child(div().flex().flex_wrap().gap_2p5().children(mercenary::data().classes.iter().map(|class|{
                 let id=class.id.clone();let chosen=selected==Some(id.as_str());
@@ -512,7 +513,7 @@ impl Render for MercenaryView {
                     .on_click(cx.listener(move|this,_,_,cx|this.edit(cx,|s|s.set_mercenary_class(Some(&id)))))
             })))
             .when(selected.is_none(),|v|v.child(div().border_1().rounded_sm().border_color(p.border).px_4().py_10().text_center().text_color(p.muted)
-                .child("No mercenary hired — pick a class above.").child(div().mt_1p5().text_size(rems(11./13.)).text_color(p.faint).child("Mercenaries fight beside your hero. Their Magic Find counts for your drops, and buffs from their items are shared with you."))))
+                .child(tr("No mercenary hired — pick a class above.")).child(div().mt_1p5().text_size(rems(11./13.)).text_color(p.faint).child(tr("Mercenaries fight beside your hero. Their Magic Find counts for your drops, and buffs from their items are shared with you.")))))
             .when(selected.is_some(),|v|v.child(div().flex().when(!wide, |v| v.flex_col()).items_start().gap_4()
                 .child(div().min_w_0().when(wide, |v| v.flex_grow(2.).flex_shrink(1.).flex_basis(px(0.))).when(!wide, |v| v.w_full()).flex().flex_col().gap_4().child(self.gear.clone()).child(self.skill_panel(cx)))
                 .child(div().min_w_0().when(wide, |v| v.flex_grow(1.).flex_shrink(1.).flex_basis(px(0.))).when(!wide, |v| v.w_full()).child(self.shared_panel(cx)))))))

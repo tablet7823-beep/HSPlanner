@@ -1,3 +1,4 @@
+use hsplanner_engine::calc::i18n::tr;
 use anyhow::Context as _;
 use futures::AsyncReadExt;
 use gpui_kit::component::{WindowExt, button::Button};
@@ -167,12 +168,12 @@ async fn fetch_latest(http: Arc<dyn HttpClient>) -> anyhow::Result<Release> {
     let request = Request::get(format!(
         "https://api.github.com/repos/{REPO}/releases/latest"
     ))
-    .header("Accept", "application/vnd.github+json")
+    .header(tr("Accept"), tr("application/vnd.github+json"))
     .follow_redirects(RedirectPolicy::FollowAll)
     .timeout(CHECK_TIMEOUT)
     .body(AsyncBody::default())?;
     let body = read(http.send(request).await?).await?;
-    serde_json::from_slice(&body).context("unexpected release JSON")
+    serde_json::from_slice(&body).context(tr("unexpected release JSON"))
 }
 
 async fn download(http: Arc<dyn HttpClient>, asset: &Asset) -> anyhow::Result<std::path::PathBuf> {
@@ -181,7 +182,7 @@ async fn download(http: Arc<dyn HttpClient>, asset: &Asset) -> anyhow::Result<st
         .as_deref()
         .and_then(|digest| digest.strip_prefix("sha256:"))
         .context(
-            "GitHub published no checksum for this installer; download it from the release page",
+            tr("GitHub published no checksum for this installer; download it from the release page"),
         )?;
     let request = Request::get(&asset.browser_download_url)
         .follow_redirects(RedirectPolicy::FollowAll)
@@ -216,7 +217,7 @@ fn install(dmg: &Path) -> anyhow::Result<()> {
     let Some(bundle) = bundle else {
         run("open", &[dmg.as_os_str()])?;
         anyhow::bail!(
-            "not running from an app bundle; the disk image was opened for manual installation"
+            tr("not running from an app bundle; the disk image was opened for manual installation")
         );
     };
     let mount = std::env::temp_dir().join("hsplanner-update-mount");
@@ -238,7 +239,7 @@ fn install(dmg: &Path) -> anyhow::Result<()> {
     );
     if let Err(error) = replaced {
         let _ = run("open", &[dmg.as_os_str()]);
-        return Err(error.context("the disk image was opened for manual installation"));
+        return Err(error.context(tr("the disk image was opened for manual installation")));
     }
     // ponytail: the new copy launches after this process exits; if the delay is too
     // short the user simply reopens the app from Applications.
@@ -256,7 +257,7 @@ fn replace_bundle(mount: &Path, bundle: &Path) -> anyhow::Result<()> {
         .filter_map(Result::ok)
         .map(|entry| entry.path())
         .find(|path| path.extension().is_some_and(|extension| extension == "app"))
-        .context("no application in the disk image")?;
+        .context(tr("no application in the disk image"))?;
     let staged = bundle.with_extension("app.update");
     let old = bundle.with_extension("app.old");
     let _ = std::fs::remove_dir_all(&staged);
@@ -291,13 +292,13 @@ fn bundle_of(exe: &Path) -> Option<std::path::PathBuf> {
 fn install(installer: &Path) -> anyhow::Result<()> {
     std::process::Command::new(installer)
         .spawn()
-        .context("starting the installer")?;
+        .context(tr("starting the installer"))?;
     Ok(())
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
 fn install(_: &Path) -> anyhow::Result<()> {
-    anyhow::bail!("in-app installation is not available on this platform")
+    anyhow::bail!(tr("in-app installation is not available on this platform"))
 }
 
 pub fn open_dialog(updater: Entity<Updater>, window: &mut Window, cx: &mut App) {
@@ -312,21 +313,21 @@ pub fn open_dialog(updater: Entity<Updater>, window: &mut Window, cx: &mut App) 
         let Some(update) = update else {
             let message = match state {
                 State::Failed(message) => message,
-                _ => "HSPlanner is up to date.".to_string(),
+                _ => tr("HSPlanner is up to date.").to_string(),
             };
-            return dialog.title("Updates").child(message);
+            return dialog.title(tr("Updates")).child(message);
         };
         let explanation = if update.installer.is_some() {
-            "The installer is downloaded from GitHub, verified against its published checksum and started. HSPlanner closes to finish the update."
+            tr("The installer is downloaded from GitHub, verified against its published checksum and started. HSPlanner closes to finish the update.")
         } else {
-            "Download the package for your platform from the release page and reinstall."
+            tr("Download the package for your platform from the release page and reinstall.")
         };
         let action = if installing {
-            "Downloading…"
+            tr("Downloading…")
         } else if update.installer.is_some() {
-            "Install and restart"
+            tr("Install and restart")
         } else {
-            "Open release page"
+            tr("Open release page")
         };
         let page = update.page.clone();
         let install = updater.clone();
@@ -336,8 +337,8 @@ pub fn open_dialog(updater: Entity<Updater>, window: &mut Window, cx: &mut App) 
                 .child(format!("You are running v{}.", current_version()))
                 .child(div().text_color(palette.muted).child(explanation)))
             .footer(div().flex().items_center().justify_between().gap_3()
-                .child(gpui_kit::base::Link::new("update-release-page").child("Release notes").href(page)
-                    .text_color(palette.accent).underline().accessibility_label("Release notes on GitHub")
+                .child(gpui_kit::base::Link::new("update-release-page").child(tr("Release notes")).href(page)
+                    .text_color(palette.accent).underline().accessibility_label(tr("Release notes on GitHub"))
                     .open_with(|url, _, _, cx| cx.open_url(url)))
                 .child(Button::new("install-update").planner_style(cx).label(action).loading(installing)
                     .on_click(move |_, _, cx| install.update(cx, |updater, cx| updater.install(cx)))))

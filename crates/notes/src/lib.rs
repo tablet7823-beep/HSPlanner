@@ -1,3 +1,4 @@
+use hsplanner_engine::calc::i18n::tr;
 use gpui_kit::base::Selectable;
 use gpui_kit::component::{
     Sizable,
@@ -53,7 +54,7 @@ impl NotesView {
         let editor = cx.new(|cx| {
             let mut state = TextareaState::new(window, cx)
                 .rows(24)
-                .placeholder("Write Markdown notes…");
+                .placeholder(tr("Write Markdown notes…"));
             state.set_value(markdown, window, cx);
             state
         });
@@ -140,15 +141,15 @@ impl Render for NotesView {
             .border_color(palette.border)
             .bg(palette.panel);
         for (id, label, title, prefix, suffix) in [
-            ("bold", "B", "Bold", "**", "**"),
-            ("italic", "I", "Italic", "*", "*"),
-            ("strike", "S", "Strikethrough", "~~", "~~"),
-            ("heading", "H2", "Heading", "## ", ""),
-            ("subheading", "H3", "Subheading", "### ", ""),
-            ("bullet", "•⁝", "Bullet list", "- ", ""),
-            ("numbered", "1.", "Numbered list", "1. ", ""),
-            ("link", "↗", "Link", "[", "](https://)"),
-            ("code", "</>", "Inline code", "`", "`"),
+            ("bold", "B", tr("Bold"), "**", "**"),
+            ("italic", "I", tr("Italic"), "*", "*"),
+            ("strike", "S", tr("Strikethrough"), "~~", "~~"),
+            ("heading", "H2", tr("Heading"), "## ", ""),
+            ("subheading", "H3", tr("Subheading"), "### ", ""),
+            ("bullet", "•⁝", tr("Bullet list"), "- ", ""),
+            ("numbered", "1.", tr("Numbered list"), "1. ", ""),
+            ("link", "↗", tr("Link"), "[", tr("](https://)")),
+            ("code", "</>", tr("Inline code"), "`", "`"),
         ] {
             toolbar = toolbar.child(
                 Button::new(id)
@@ -171,7 +172,7 @@ impl Render for NotesView {
                 .planner_style(cx)
                 .small()
                 .ml_auto()
-                .label(if self.preview { "Edit" } else { "Preview" })
+                .label(if self.preview { tr("Edit") } else { tr("Preview") })
                 .selected(self.preview)
                 .on_click(cx.listener(|this, _, _, cx| {
                     this.preview = !this.preview;
@@ -197,7 +198,7 @@ impl Render for NotesView {
                     Textarea::new(&self.editor)
                         .h_full()
                         .bordered(false)
-                        .aria_label("Markdown notes")
+                        .aria_label(tr("Markdown notes"))
                         .p_4()
                         .text_sm()
                         .line_height(relative(1.625))
@@ -224,8 +225,8 @@ impl Render for NotesView {
                     .gap_3()
                     .child(hsplanner_ui::components::section_heading(
                         "notes-heading",
-                        "Journal",
-                        "Notes",
+                        tr("Journal"),
+                        tr("Notes"),
                         cx,
                     ))
                     .child(toolbar)
@@ -247,13 +248,13 @@ impl Render for NotesView {
                             .gap_3()
                             .text_size(rems(10. / 13.))
                             .text_color(palette.muted)
-                            .child("Markdown · notes are shared across all profiles in this build.")
+                            .child(tr("Markdown · notes are shared across all profiles in this build."))
                             .when_some(notes.original_html.clone(), |view, html| {
                                 view.child(
                                     Button::new("copy-original-notes")
                                         .planner_style(cx)
                                         .small()
-                                        .label("Copy original HTML")
+                                        .label(tr("Copy original HTML"))
                                         .on_click(move |_, _, cx| {
                                             cx.write_to_clipboard(ClipboardItem::new_string(
                                                 html.clone(),

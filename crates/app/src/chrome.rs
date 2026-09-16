@@ -1,3 +1,4 @@
+use hsplanner_engine::calc::i18n::tr;
 use crate::shell::{OpenSettings, Section, SelectSection};
 use gpui_kit::base::Disableable;
 use gpui_kit::component::{
@@ -71,7 +72,7 @@ impl TopBar {
             on_library,
             on_share,
             build_name: String::new(),
-            library_location: "Recent".into(),
+            library_location: tr("Recent").into(),
             auto_save: true,
             profile_controls: false,
             ui_zoom: 1.,
@@ -225,7 +226,7 @@ impl RenderOnce for TopBar {
                 .child(img(self.logo.clone()).size(web_px(22.)))
                 .child(mono_label(
                     "library-brand",
-                    "HSPlanner",
+                    tr("HSPlanner"),
                     11.,
                     0.18,
                     Some(accent_hot),
@@ -239,9 +240,9 @@ impl RenderOnce for TopBar {
                     Some(accent_hot),
                 ))
                 .child(
-                    chrome_button("return-to-planner", "Planner", cx)
+                    chrome_button("return-to-planner", tr("Planner"), cx)
                         .ml_auto()
-                        .label("← Planner")
+                        .label(tr("← Planner"))
                         .on_click(move |_, window, cx| on_select(Section::Tree, window, cx)),
                 )
                 .into_any_element();
@@ -310,11 +311,11 @@ impl RenderOnce for TopBar {
                                 .px_3p5()
                                 .gap_2()
                                 .custom(ButtonCustomVariant::new(cx).foreground(palette.muted))
-                                .accessibility_label("Filters")
-                                .cursor_tooltip("Filters are not yet available in the native app")
+                                .accessibility_label(tr("Filters"))
+                                .cursor_tooltip(tr("Filters are not yet available in the native app"))
                                 .child(diamond(palette.faint, 4.875, None))
                                 .child(
-                                    mono_label("nav-filters-label", "Filters", 11., 0.16, None)
+                                    mono_label("nav-filters-label", tr("Filters"), 11., 0.16, None)
                                         .font_family(theme::FONT_FAMILY)
                                         .font_weight(FontWeight::NORMAL)
                                         .line_height(relative(1.5)),
@@ -324,12 +325,12 @@ impl RenderOnce for TopBar {
             )
             .when(navigation_overflows, |view| {
                 view.child(
-                    chrome_button("all-views", "All views", cx)
+                    chrome_button("all-views", tr("All views"), cx)
                         .flex_none()
                         .ml_1()
                         .p_1p5()
                         .child(Icon::new(IconName::ChevronDown).size_3p5())
-                        .cursor_tooltip("All views")
+                        .cursor_tooltip(tr("All views"))
                         .dropdown_menu(move |menu, _, _| {
                             Section::NAV.into_iter().fold(menu, |menu, section| {
                                 menu.menu_with_check(
@@ -350,9 +351,9 @@ impl RenderOnce for TopBar {
                     .pl_2()
                     .child(divider(border))
                     .child(
-                        chrome_button("open-library", "Builds", cx)
+                        chrome_button("open-library", tr("Builds"), cx)
                             .child(chrome_icon("bookmark"))
-                            .child("Builds")
+                            .child(tr("Builds"))
                             .when(!compact && !self.build_name.is_empty(), |button| {
                                 button
                                     .child(div().text_color(palette.faint).child("·"))
@@ -377,38 +378,38 @@ impl RenderOnce for TopBar {
                         )
                         .small()
                         .gap_1p5()
-                        .accessibility_label("Share")
+                        .accessibility_label(tr("Share"))
                         .child(chrome_icon("share"))
-                        .child("Share")
-                        .cursor_tooltip("Copy the build code to the clipboard")
+                        .child(tr("Share"))
+                        .cursor_tooltip(tr("Copy the build code to the clipboard"))
                         .on_click(self.on_share),
                     )
                     .child(
-                        chrome_button("help", "Help", cx)
+                        chrome_button("help", tr("Help"), cx)
                             .label("?")
-                            .cursor_tooltip("Keyboard shortcuts")
+                            .cursor_tooltip(tr("Keyboard shortcuts"))
                             .on_click(|_, window, cx| {
                                 window.open_dialog(cx, |dialog, _, _| {
-                                    dialog.title("Keyboard shortcuts").child(
+                                    dialog.title(tr("Keyboard shortcuts")).child(
                                         div()
                                             .flex()
                                             .flex_col()
                                             .gap_2()
-                                            .child("Save: Cmd/Ctrl+S · Undo: Cmd/Ctrl+Z")
+                                            .child(tr("Save: Cmd/Ctrl+S · Undo: Cmd/Ctrl+Z"))
                                             .child(
-                                                "Tree: F to fit · +/− to zoom · Enter to allocate",
+                                                tr("Tree: F to fit · +/− to zoom · Enter to allocate"),
                                             )
-                                            .child("Search: Enter to center the next match")
-                                            .child("Escape closes the active panel"),
+                                            .child(tr("Search: Enter to center the next match"))
+                                            .child(tr("Escape closes the active panel")),
                                     )
                                 })
                             }),
                     )
                     .child(
-                        chrome_button("settings", "Settings", cx)
+                        chrome_button("settings", tr("Settings"), cx)
                             .p_1p5()
                             .child(Icon::new(IconName::Settings).size_3p5())
-                            .cursor_tooltip("Settings")
+                            .cursor_tooltip(tr("Settings"))
                             .on_click(|_, window, cx| {
                                 window.dispatch_action(Box::new(OpenSettings), cx)
                             }),
@@ -490,12 +491,12 @@ impl RenderOnce for BottomBar {
         );
         let rem = window.rem_size();
         let (dot_color, save_label, save_tooltip) = match self.save {
-            SaveState::Saving => (faint, "Saving…", None),
-            SaveState::Auto => (positive, "Auto-saved", None),
-            SaveState::Saved => (positive, "Saved", None),
+            SaveState::Saving => (faint, tr("Saving…"), None),
+            SaveState::Auto => (positive, tr("Auto-saved"), None),
+            SaveState::Saved => (positive, tr("Saved"), None),
             SaveState::Manual => (
                 accent_hot,
-                "Manual · ",
+                tr("Manual · "),
                 Some(format!("Auto-save is off — press {SAVE_SHORTCUT} to save")),
             ),
         };
@@ -537,7 +538,7 @@ impl RenderOnce for BottomBar {
                     .child(diamond(accent_deep, 4., Some(accent_deep)))
                     .child(mono_label(
                         "footer-brand",
-                        "HSPlanner",
+                        tr("HSPlanner"),
                         10.,
                         0.18,
                         Some(accent_deep),
@@ -549,8 +550,8 @@ impl RenderOnce for BottomBar {
                     .custom(ButtonCustomVariant::new(cx).foreground(faint))
                     .h_auto()
                     .p_0()
-                    .accessibility_label("View changelog")
-                    .cursor_tooltip("View changelog")
+                    .accessibility_label(tr("View changelog"))
+                    .cursor_tooltip(tr("View changelog"))
                     .child(mono_label(
                         "footer-version",
                         format!("v{}", env!("CARGO_PKG_VERSION")),
@@ -583,11 +584,11 @@ impl RenderOnce for BottomBar {
                     .map(|status| div().text_xs().text_color(muted).child(status)),
             )
             .child(
-                chrome_button("report-bug", "Report a bug…", cx)
+                chrome_button("report-bug", tr("Report a bug…"), cx)
                     .ml_auto()
                     .child(chrome_icon("bug"))
-                    .child("Report a bug…")
-                    .cursor_tooltip("Report a problem with optional screenshots and build")
+                    .child(tr("Report a bug…"))
+                    .cursor_tooltip(tr("Report a problem with optional screenshots and build"))
                     .on_click(move |_, window, cx| {
                         crate::bug_report::open(self.session.clone(), window, cx)
                     }),
@@ -612,7 +613,7 @@ impl RenderOnce for BottomBar {
                     .child(chrome_icon("coffee"))
                     .child(mono_label(
                         "footer-kofi",
-                        "Support on Ko-fi",
+                        tr("Support on Ko-fi"),
                         10.,
                         0.14,
                         Some(accent_hot),
@@ -649,32 +650,32 @@ fn update_button(updater: Entity<crate::update::Updater>, cx: &App) -> Button {
     let state = updater.read(cx).state.clone();
     let (label, tooltip, tone) = match &state {
         State::Idle => (
-            "Check for updates".to_string(),
-            "Check GitHub for a newer version".to_string(),
+            tr("Check for updates").to_string(),
+            tr("Check GitHub for a newer version").to_string(),
             ButtonTone::Neutral,
         ),
         State::Checking => (
-            "Checking…".to_string(),
-            "Checking GitHub releases".to_string(),
+            tr("Checking…").to_string(),
+            tr("Checking GitHub releases").to_string(),
             ButtonTone::Neutral,
         ),
         State::UpToDate => (
-            "Up to date".to_string(),
-            "Check again".to_string(),
+            tr("Up to date").to_string(),
+            tr("Check again").to_string(),
             ButtonTone::Neutral,
         ),
         State::Available(update) => (
             format!("Update v{}", update.version),
-            "A newer version is available".to_string(),
+            tr("A newer version is available").to_string(),
             ButtonTone::Primary,
         ),
         State::Installing(_) => (
-            "Installing…".to_string(),
-            "Downloading the update".to_string(),
+            tr("Installing…").to_string(),
+            tr("Downloading the update").to_string(),
             ButtonTone::Primary,
         ),
         State::Failed(message) => (
-            "Update failed".to_string(),
+            tr("Update failed").to_string(),
             message.clone(),
             ButtonTone::Danger,
         ),
@@ -686,7 +687,7 @@ fn update_button(updater: Entity<crate::update::Updater>, cx: &App) -> Button {
     hsplanner_ui::controls::planner_button("check-updates", tone, cx)
         .small()
         .gap_1p5()
-        .accessibility_label("Check for updates")
+        .accessibility_label(tr("Check for updates"))
         .label(label)
         .cursor_tooltip(tooltip)
         .on_click(move |_, window, cx| {

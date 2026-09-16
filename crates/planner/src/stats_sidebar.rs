@@ -1,4 +1,5 @@
 //! Persistent character summary matching the reference's left planner panel.
+use hsplanner_engine::calc::i18n::tr;
 use crate::TreeView;
 use gpui_kit::component::button::Button;
 use gpui_kit::{prelude::*, *};
@@ -168,8 +169,8 @@ fn ehp_rows(ehp: &EhpResult) -> Vec<(String, Option<f64>)> {
             return vec![("eHP".into(), physical)];
         }
         return vec![
-            ("Physical eHP".into(), physical),
-            ("Elemental eHP".into(), first.ehp),
+            (tr("Physical eHP").into(), physical),
+            (tr("Elemental eHP").into(), first.ehp),
         ];
     }
     ehp.entries
@@ -239,13 +240,13 @@ impl StatsSidebar {
         if active.is_empty() {
             return section(
                 "sidebar-active-skills",
-                "Active Skills",
+                tr("Active Skills"),
                 content.child(
                     div()
                         .font_family(theme::MONO_FONT_FAMILY)
                         .text_size(units(11.))
                         .text_color(p.muted)
-                        .child("No skills for this class"),
+                        .child(tr("No skills for this class")),
                 ),
                 cx,
             );
@@ -253,13 +254,13 @@ impl StatsSidebar {
         if snapshot.active_skill_ids.is_empty() {
             return section(
                 "sidebar-active-skills",
-                "Active Skills",
+                tr("Active Skills"),
                 content.child(
                     div()
                         .font_family(theme::MONO_FONT_FAMILY)
                         .text_size(units(11.))
                         .text_color(p.muted)
-                        .child("Pick active skills in the Skills tab"),
+                        .child(tr("Pick active skills in the Skills tab")),
                 ),
                 cx,
             );
@@ -328,7 +329,7 @@ impl StatsSidebar {
             .first()
             .and_then(|id| active.iter().find(|skill| &skill.id == id));
         let Some(skill) = primary else {
-            return section("sidebar-active-skills", "Active Skills", content, cx);
+            return section("sidebar-active-skills", tr("Active Skills"), content, cx);
         };
         let rank = snapshot.skill_ranks.get(&skill.id).copied().unwrap_or(0);
         let performance = result.map(|result| &result.current);
@@ -358,7 +359,7 @@ impl StatsSidebar {
                 .gap_2()
                 .py(rems(0.1875))
                 .text_size(units(12.))
-                .child(div().flex_1().min_w_0().text_color(p.muted).child("Rank"))
+                .child(div().flex_1().min_w_0().text_color(p.muted).child(tr("Rank")))
                 .child(
                     div()
                         .flex()
@@ -378,7 +379,7 @@ impl StatsSidebar {
         );
         if let Some(cost) = cost {
             content = content.child(row(
-                "Mana / cast",
+                tr("Mana / cast"),
                 cost.mana_min
                     .zip(cost.mana_max)
                     .map(precise)
@@ -391,22 +392,22 @@ impl StatsSidebar {
                 .zip(cost.life_max)
                 .filter(|value| value.1 > 0.)
             {
-                content = content.child(row("Life / cast", precise(life), p.muted, p.negative));
+                content = content.child(row(tr("Life / cast"), precise(life), p.muted, p.negative));
             }
             if let Some(rate) = cost.entity_rate {
                 content = content.child(row(
-                    "Attack rate",
+                    tr("Attack rate"),
                     format!("{}/s", precise((rate.min, rate.max))),
                     p.muted,
                     p.text,
                 ));
             }
             let rate_label = if cost.entity_rate.is_some() {
-                "Spawn rate"
+                tr("Spawn rate")
             } else if skill.uses_attack_speed {
-                "Attack rate"
+                tr("Attack rate")
             } else {
-                "Cast rate"
+                tr("Cast rate")
             };
             content = content
                 .child(row(
@@ -419,7 +420,7 @@ impl StatsSidebar {
                     p.text,
                 ))
                 .child(row(
-                    "Mana / sec",
+                    tr("Mana / sec"),
                     cost.mana_per_sec_min
                         .zip(cost.mana_per_sec_max)
                         .map(precise)
@@ -434,14 +435,14 @@ impl StatsSidebar {
                     },
                 ))
                 .child(row(
-                    "Mana regen",
+                    tr("Mana regen"),
                     precise((cost.mana_regen_min, cost.mana_regen_max)),
                     p.muted,
                     theme::mana_color(),
                 ));
             if let Some(net) = cost.net_min.zip(cost.net_max) {
                 content = content.child(row(
-                    "Net mana / sec",
+                    tr("Net mana / sec"),
                     format!("{}{}", if net.0 >= 0. { "+" } else { "" }, precise(net)),
                     p.muted,
                     if net.0 >= 0. {
@@ -455,7 +456,7 @@ impl StatsSidebar {
             }
             if let Some(uptime) = cost.uptime_min.zip(cost.uptime_max) {
                 content = content.child(row(
-                    "Uptime",
+                    tr("Uptime"),
                     format!("{}%", precise((uptime.0.round(), uptime.1.round()))),
                     p.muted,
                     if uptime.0 >= 100. {
@@ -491,7 +492,7 @@ impl StatsSidebar {
                         .map(|damage| (damage.final_min as f64, damage.final_max as f64))
                 });
             content = content.child(row(
-                "Hit damage",
+                tr("Hit damage"),
                 damage
                     .map(|value| compact_range(value, scale))
                     .unwrap_or_else(|| "—".into()),
@@ -500,20 +501,20 @@ impl StatsSidebar {
             ));
             if let Some(count) = value.entity_count {
                 content = content.child(row(
-                    "Entity count",
+                    tr("Entity count"),
                     format!("×{}", precise(count)),
                     p.muted,
                     p.accent_hot,
                 ));
             }
             for (label, range) in [
-                ("Hit DPS", value.hit_dps_min.zip(value.hit_dps_max)),
+                (tr("Hit DPS"), value.hit_dps_min.zip(value.hit_dps_max)),
                 (
-                    "Ailment DPS",
+                    tr("Ailment DPS"),
                     value.ailment_dps_min.zip(value.ailment_dps_max),
                 ),
                 (
-                    "Combined DPS",
+                    tr("Combined DPS"),
                     value.combined_dps_min.zip(value.combined_dps_max),
                 ),
             ] {
@@ -530,7 +531,7 @@ impl StatsSidebar {
                 ));
             }
         }
-        section("sidebar-active-skills", "Active Skills", content, cx)
+        section("sidebar-active-skills", tr("Active Skills"), content, cx)
     }
     fn stat_line(&self, key: &str, result: Option<&PlannerPerformance>, cx: &App) -> Div {
         let p = cx.global::<TooltipTheme>();
@@ -619,7 +620,7 @@ impl Render for StatsSidebar {
                             .text_size(units(10.))
                             .text_color(p.faint)
                             .child(div().text_color(p.accent_hot).child("◆"))
-                            .child(TooltipText::new("sidebar-character", "CHARACTER", 0.18)),
+                            .child(TooltipText::new("sidebar-character", tr("Character"), 0.18)),
                     )
                     .child(
                         div()
@@ -629,7 +630,7 @@ impl Render for StatsSidebar {
                             .child(
                                 TooltipText::new(
                                     "sidebar-class",
-                                    class.map(|class| class.name.as_str()).unwrap_or("No class"),
+                                    class.map(|class| class.name.as_str()).unwrap_or(tr("No class")),
                                     0.02,
                                 )
                                 .glow(Some(p.accent_hot.opacity(0.18))),
@@ -652,13 +653,13 @@ impl Render for StatsSidebar {
                     ))
                     .child(TooltipText::new(
                         "sidebar-hero-level",
-                        format!("HERO LV {hero}"),
+                        tr("Hero Lv {n}").replace("{n}", &hero.to_string()),
                         0.18,
                     )),
             );
         let points = section_body()
             .child(row(
-                "Attr used",
+                tr("Attr used"),
                 format!(
                     "{}/{}",
                     snapshot.allocated.values().sum::<u32>(),
@@ -670,7 +671,7 @@ impl Render for StatsSidebar {
                 p.text,
             ))
             .child(row(
-                "Skill used",
+                tr("Skill used"),
                 format!(
                     "{}/{}",
                     snapshot.skill_ranks.values().sum::<u32>(),
@@ -681,7 +682,7 @@ impl Render for StatsSidebar {
                 p.muted,
                 p.text,
             ))
-            .child(row("Tree nodes", hero.to_string(), p.muted, p.text));
+            .child(row(tr("Tree nodes"), hero.to_string(), p.muted, p.text));
         let mut attributes = section_body();
         for key in ATTRIBUTES {
             if let Some(attribute) = data::game_config()
@@ -731,11 +732,11 @@ impl Render for StatsSidebar {
         }
         let mut resistances = section_body();
         for (key, label, tone) in [
-            ("fire_resistance", "Fire", "red"),
-            ("cold_resistance", "Cold", "blue"),
-            ("lightning_resistance", "Lightning", "orange"),
-            ("poison_resistance", "Poison", "green"),
-            ("arcane_resistance", "Arcane", "purple"),
+            ("fire_resistance", tr("Fire"), "red"),
+            ("cold_resistance", tr("Cold"), "blue"),
+            ("lightning_resistance", tr("Lightning"), "orange"),
+            ("poison_resistance", tr("Poison"), "green"),
+            ("arcane_resistance", tr("Arcane"), "purple"),
         ] {
             let value = performance
                 .and_then(|value| value.current.stats.get(key))
@@ -788,13 +789,13 @@ impl Render for StatsSidebar {
                     .scrollbar_width(units(if self.has_vertical_scroll { 10. } else { 0. }))
                     .child(header)
                     .child(self.active_skills(snapshot, performance, cx))
-                    .child(section("sidebar-points", "Points", points, cx))
-                    .child(section("sidebar-attributes", "Attributes", attributes, cx))
-                    .child(section("sidebar-offense", "Offense", offense, cx))
-                    .child(section("sidebar-defense", "Defense", defense, cx))
+                    .child(section("sidebar-points", tr("Points"), points, cx))
+                    .child(section("sidebar-attributes", tr("Attributes"), attributes, cx))
+                    .child(section("sidebar-offense", tr("Offense"), offense, cx))
+                    .child(section("sidebar-defense", tr("Defense"), defense, cx))
                     .child(section(
                         "sidebar-resistances",
-                        "Resistances",
+                        tr("Resistances"),
                         resistances,
                         cx,
                     ))

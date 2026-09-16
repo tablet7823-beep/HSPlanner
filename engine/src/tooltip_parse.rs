@@ -259,11 +259,11 @@ fn capitalize(word: &str) -> String {
 fn stat_name(key: &str) -> String {
     let defs = &data::game_config().stats;
     if let Some(def) = defs.iter().find(|d| d.key == key) {
-        return def.name.clone();
+        return def.match_name().to_string();
     }
     if let Some(base) = key.strip_suffix("_more") {
         if let Some(def) = defs.iter().find(|d| d.key == base) {
-            return format!("Total {}", def.name);
+            return format!("Total {}", def.match_name());
         }
     }
     key.split('_')

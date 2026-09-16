@@ -561,7 +561,7 @@ pub fn apply_item_granted_passive_stats(
         }
     }
     for granted in data::item_granted_skills().iter() {
-        let key = normalize_skill_name(&granted.name);
+        let key = normalize_skill_name(granted.match_name());
         let (rank_min, rank_max) = ranks.get(&key).copied().unwrap_or((0.0, 0.0));
         if rank_max <= 0.0 {
             continue;

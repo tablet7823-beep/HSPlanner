@@ -7,6 +7,7 @@ use std::sync::Mutex;
 
 use std::sync::LazyLock;
 
+use super::i18n;
 use super::season;
 use super::types::{
     Affix, AffixTag, AngelicAugment, CharacterClass, DifficultyDef, EquippedItem, GameConfig, Gem,
@@ -154,6 +155,9 @@ fn from_value<T: serde::de::DeserializeOwned>(value: serde_json::Value, ctx: &st
     serde_json::from_value(value).unwrap_or_else(|e| panic!("invalid {ctx} shape after patch: {e}"))
 }
 
+// Translation runs after patching and before deserialisation, so a season that
+// adds an entry gets it translated too, and every collection localises here
+// rather than at each of the ~230 render sites.
 fn load_patched<T: serde::de::DeserializeOwned>(
     json: &str,
     patches: &HashMap<String, serde_json::Value>,
@@ -162,7 +166,7 @@ fn load_patched<T: serde::de::DeserializeOwned>(
     ctx: &str,
 ) -> T {
     let value = patched_value(parse_value(json, ctx), patches, name, kind);
-    from_value(value, name)
+    from_value(i18n::localize_current(value, name), name)
 }
 
 // Array files contribute their elements; scalar files contribute themselves.
@@ -189,11 +193,15 @@ fn load_patched_many<T: serde::de::DeserializeOwned>(
         name,
         PatchKind::List("id"),
     );
-    from_value(value, name)
+    from_value(i18n::localize_current(value, name), name)
 }
 
-fn load_for(season_id: &str) -> GameData {
+fn load_for(season_id: &str, locale: &str) -> GameData {
     use includes::*;
+
+    // Installed for the whole load so every load_patched call below picks it up
+    // without threading the locale through fifteen call sites.
+    let _locale = i18n::LocaleScope::enter(Some(locale.to_string()));
 
     let patches = season::patches_for(season_id);
 
@@ -323,17 +331,57 @@ fn load_for(season_id: &str) -> GameData {
     }
 }
 
+// Season and locale both reshape the parsed data, so both belong in the key.
+// Untranslated locales collapse onto "en" the same way patchless seasons
+// collapse onto BASE_CACHE_KEY, so a garbage id cannot grow the cache.
+fn data_cache_key(season_id: &str, locale: &str) -> String {
+    format!("{}|{}", season::cache_key(season_id), i18n::cache_key(locale))
+}
+
+pub fn data_for_locale(season_id: &str, locale: &str) -> &'static GameData {
+    let key = data_cache_key(season_id, locale);
+    {
+        let cache = GAME_DATA_BY_SEASON.lock().expect("game data cache poisoned");
+        if let Some(found) = cache.get(&key) {
+            return found;
+        }
+    }
+    let built = load_for(season::load_id(season::cache_key(season_id)), locale);
+    let mut cache = GAME_DATA_BY_SEASON.lock().expect("game data cache poisoned");
+    if let Some(found) = cache.get(&key) {
+        return found;
+    }
+    let leaked: &'static GameData = Box::leak(Box::new(built));
+    cache.insert(key, leaked);
+    leaked
+}
+
 pub fn data_for(season_id: &str) -> &'static GameData {
-    season::cached_per_season(&GAME_DATA_BY_SEASON, season_id, load_for)
+    i18n::with_current_locale(|locale| data_for_locale(season_id, locale))
 }
 
 thread_local! {
     static LAST_DATA: RefCell<Option<(String, &'static GameData)>> = const { RefCell::new(None) };
 }
 
-/// Reads the SeasonScope thread-local; without a scope, serves DEFAULT_SEASON_ID data.
+/// Reads the SeasonScope and LocaleScope thread-locals; without either, serves
+/// DEFAULT_SEASON_ID data in the untranslated source language.
 pub fn data() -> &'static GameData {
-    season::memoized_current_season(&LAST_DATA, data_for)
+    // The per-thread memo is keyed by season alone, so it has to carry the
+    // locale too or a locale switch would keep serving the previous language.
+    i18n::with_current_locale(|locale| {
+        LAST_DATA.with(|cell| {
+            let key = data_cache_key(&season::current_season_id(), locale);
+            if let Some((cached_key, ptr)) = cell.borrow().as_ref() {
+                if cached_key == &key {
+                    return *ptr;
+                }
+            }
+            let ptr = season::with_current_season(|season| data_for_locale(season, locale));
+            *cell.borrow_mut() = Some((key, ptr));
+            ptr
+        })
+    })
 }
 
 // ---------- lookup helpers ----------
@@ -376,7 +424,7 @@ pub fn skill_name_by_id(skill_id: &str) -> Option<&'static str> {
         .values()
         .flatten()
         .find(|s| s.id == skill_id)
-        .map(|s| s.name.as_str())
+        .map(|s| s.match_name())
 }
 
 pub fn get_skills_by_class(class_id: &str) -> &'static [SkillSpec] {
@@ -490,12 +538,45 @@ pub fn skill_bonus_entries<'a>(
         .chain(runeword.into_iter().flatten())
 }
 
+/// Callers pass an item's `skillBonuses` key, which is English, so the match is
+/// against `match_name` rather than the displayed name. Comparing `name` here
+/// made every lookup miss in a translated locale and the granted-skill block
+/// vanished from item tooltips.
 pub fn get_item_granted_skill_by_name(name: &str) -> Option<&'static ItemGrantedSkill> {
     let needle = name.trim().to_lowercase();
     data()
         .item_granted_skills
         .iter()
-        .find(|s| s.name.trim().to_lowercase() == needle)
+        .find(|s| s.match_name().trim().to_lowercase() == needle)
+}
+
+/// The name to show for an item's English `skillBonuses` key.
+pub fn display_skill_name(english: &str) -> String {
+    let needle = english.trim().to_lowercase();
+    let matches = |candidate: &str| candidate.trim().to_lowercase() == needle;
+    if let Some(granted) = data()
+        .item_granted_skills
+        .iter()
+        .find(|s| matches(s.match_name()))
+    {
+        return granted.name.clone();
+    }
+    if let Some(skill) = data()
+        .skills_by_class
+        .values()
+        .flatten()
+        .find(|s| matches(s.match_name()))
+    {
+        return skill.name.clone();
+    }
+    // Synergy sources can be an attribute rather than a skill.
+    data()
+        .game_config
+        .attributes
+        .iter()
+        .find(|a| matches(&a.key) || matches(a.name.as_str()))
+        .map(|a| a.name.clone())
+        .unwrap_or_else(|| english.to_string())
 }
 
 #[cfg(test)]

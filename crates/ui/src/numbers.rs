@@ -4,6 +4,7 @@
 //! are verified against Intl.NumberFormat; other locales currently use English.
 //! Scale thresholds are chosen before rounding, and are independent of locale.
 
+use hsplanner_engine::calc::i18n::tr;
 use std::sync::OnceLock;
 
 #[derive(Clone, Copy)]
@@ -82,7 +83,7 @@ fn compact_in(value: f64, scale: &str, locale: NumberLocale) -> String {
 
 fn number_in(value: f64, fraction_digits: usize, locale: NumberLocale) -> String {
     if value.is_nan() {
-        return "NaN".into();
+        return tr("NaN").into();
     }
     if value.is_infinite() {
         return if value.is_sign_negative() {

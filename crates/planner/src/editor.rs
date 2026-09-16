@@ -1,3 +1,4 @@
+use hsplanner_engine::calc::i18n::tr;
 use crate::{TreeView, build_panel::format_range};
 use gpui_kit::base::Selectable;
 use gpui_kit::component::{
@@ -34,7 +35,7 @@ impl EditorView {
         cx: &mut Context<Self>,
     ) -> Self {
         let level = cx.new(|cx| {
-            let mut input = InputState::new(window, cx).placeholder("Character level");
+            let mut input = InputState::new(window, cx).placeholder(tr("Character level"));
             input.set_value(session.read(cx).snapshot().level.to_string(), window, cx);
             input
         });
@@ -82,7 +83,7 @@ impl EditorView {
             .flex()
             .flex_col()
             .gap_4()
-            .child(div().text_2xl().child("Character"))
+            .child(div().text_2xl().child(tr("Character")))
             .child(
                 div()
                     .flex()
@@ -100,7 +101,7 @@ impl EditorView {
                     })),
             )
             .child(
-                div().flex().items_center().gap_3().child("Level").child(
+                div().flex().items_center().gap_3().child(tr("Level")).child(
                     div()
                         .w(rems(8.))
                         .child(Input::new(&self.level).planner_style(cx)),
@@ -164,7 +165,7 @@ impl EditorView {
             .flex()
             .flex_col()
             .gap_3()
-            .child(div().text_2xl().child("Skills"));
+            .child(div().text_2xl().child(tr("Skills")));
         for skill in data::get_skills_by_class(snapshot.class_id.as_deref().unwrap_or("")) {
             let id = skill.id.clone();
             let minus = id.clone();
@@ -211,7 +212,7 @@ impl EditorView {
                         .when(kind != SkillKind::Passive, |row| {
                             row.child(
                                 Checkbox::new("active")
-                                    .label("Active")
+                                    .label(tr("Active"))
                                     .checked(enabled)
                                     .on_click(cx.listener(move |this, checked: &bool, _, cx| {
                                         this.edit(cx, |s| match kind {
@@ -288,9 +289,9 @@ impl EditorView {
             .flex()
             .flex_col()
             .gap_3()
-            .child(div().text_2xl().child("Stats"));
+            .child(div().text_2xl().child(tr("Stats")));
         let Some(performance) = self.tree.read(cx).performance() else {
-            return content.child("Calculating…");
+            return content.child(tr("Calculating…"));
         };
         for skill in &performance.per_skill {
             content = content.child(div().text_lg().child(format!(
@@ -311,12 +312,12 @@ impl EditorView {
         }
         for (group, stats, sources) in [
             (
-                "Attributes",
+                tr("Attributes"),
                 &performance.computed.attributes,
                 &performance.computed.attribute_sources,
             ),
             (
-                "Statistics",
+                tr("Statistics"),
                 &performance.computed.stats,
                 &performance.computed.stat_sources,
             ),
@@ -372,7 +373,7 @@ impl EditorView {
             .flex()
             .flex_col()
             .gap_3()
-            .child(div().text_2xl().child("Encounter configuration"));
+            .child(div().text_2xl().child(tr("Encounter configuration")));
         for key in [
             "burning",
             "poisoned",

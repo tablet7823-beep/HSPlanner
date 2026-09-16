@@ -1,4 +1,5 @@
 //! Presentation blocks for the Skills view detail panel, after the reference SkillDetailsPanel.
+use hsplanner_engine::calc::i18n::{tr, tr_owned};
 use gpui_kit::{prelude::*, *};
 use hsplanner_build::BuildSnapshot;
 use hsplanner_engine::calc::{
@@ -284,28 +285,28 @@ pub(crate) fn empty_state(cx: &App) -> Div {
         .gap_4()
         .child(
             div()
-                .child(section("details-heading", "Details", p.accent_hot))
+                .child(section("details-heading", tr("Details"), p.accent_hot))
                 .child(
                     div()
                         .font_family(theme::MONO_FONT_FAMILY)
                         .text_size(units(11.))
                         .line_height(relative(1.6))
                         .text_color(p.muted)
-                        .child("Click a skill to inspect its damage, mana cost, synergies, and subtree bonuses."),
+                        .child(tr("Click a skill to inspect its damage, mana cost, synergies, and subtree bonuses.")),
                 ),
         )
         .child(
             div()
-                .child(section("controls-heading", "Controls", p.accent_deep))
+                .child(section("controls-heading", tr("Controls"), p.accent_deep))
                 .child(
                     div().flex().flex_col().gap_2().children(
                         [
-                            ("L-CLICK", "Select skill"),
-                            ("+", "Add a point"),
-                            ("R-CLICK", "Remove a point"),
+                            (tr("L-CLICK"), tr("Select skill")),
+                            ("+", tr("Add a point")),
+                            (tr("R-CLICK"), tr("Remove a point")),
                             ("SHIFT", "5 points at a time"),
-                            ("CTRL/CMD+SHIFT", "All the points"),
-                            ("⚙", "Open subtree"),
+                            (tr("CTRL/CMD+SHIFT"), tr("All the points")),
+                            ("⚙", tr("Open subtree")),
                         ]
                         .into_iter()
                         .map(|(key, label)| {
@@ -326,7 +327,7 @@ pub(crate) fn empty_state(cx: &App) -> Div {
         )
         .child(
             div()
-                .child(section("damage-heading", "Damage Types", p.accent_deep))
+                .child(section("damage-heading", tr("Damage Types"), p.accent_deep))
                 .child(
                     div().flex().flex_wrap().gap_y_2().children(
                         [
@@ -352,9 +353,11 @@ pub(crate) fn empty_state(cx: &App) -> Div {
                                         .border_1()
                                         .border_color(theme::damage_color(kind)),
                                 )
+                                // `kind` is both the colour lookup key and the
+                                // label; only the label goes through the catalogue.
                                 .child(caption(
                                     SharedString::from(format!("legend-{kind}")),
-                                    kind,
+                                    tr(kind),
                                     p.muted,
                                 ))
                         }),
@@ -411,8 +414,8 @@ pub(crate) fn header(skill: &SkillSpec, icon: Div, cx: &App) -> Div {
                     "skill-kind",
                     format!(
                         "{} · {}",
-                        skill.damage_type.as_deref().unwrap_or("—"),
-                        kind_label(skill.kind)
+                        skill.damage_type.as_deref().map(tr_owned).unwrap_or("—".into()),
+                        tr(kind_label(skill.kind))
                     ),
                     p.muted,
                 )),
@@ -429,7 +432,7 @@ pub(crate) fn rank_row(details: &DetailsContext, cx: &App) -> Div {
         .gap_2()
         .font_family(theme::MONO_FONT_FAMILY)
         .text_size(units(12.))
-        .child(caption("skill-rank-label", "Rank", p.muted))
+        .child(caption("skill-rank-label", tr("Rank"), p.muted))
         .child(div().text_color(p.accent_hot).child(format_pair(min, max)))
         .child(
             div()
@@ -566,7 +569,7 @@ pub(crate) fn bonuses_block(details: &DetailsContext, cx: &App) -> Option<Div> {
     if has_bonus {
         let all = details.stat("all_skills");
         if all != (0., 0.) {
-            rows = rows.child(row("+ to All Skills", value(all.0, all.1), cx));
+            rows = rows.child(row(tr("+ to All Skills"), value(all.0, all.1), cx));
         }
         if let Some(kind) = skill.damage_type.as_deref() {
             let element = details.stat(&format!("{kind}_skills"));
@@ -613,7 +616,7 @@ pub(crate) fn bonuses_block(details: &DetailsContext, cx: &App) -> Option<Div> {
     }
     if has_aura {
         rows = rows.child(row(
-            "Buffing Aura Effectiveness",
+            tr("Buffing Aura Effectiveness"),
             div()
                 .font_family(theme::MONO_FONT_FAMILY)
                 .text_color(p.accent_hot)
@@ -625,7 +628,7 @@ pub(crate) fn bonuses_block(details: &DetailsContext, cx: &App) -> Option<Div> {
             cx,
         ));
     }
-    Some(detail_block("skill-bonuses", "Skill bonuses", None, None, cx).child(rows))
+    Some(detail_block("skill-bonuses", tr("Skill bonuses"), None, None, cx).child(rows))
 }
 
 fn passive_skill(skill: &SkillSpec) -> PassiveSkill {
@@ -738,7 +741,7 @@ pub(crate) fn stats_block(details: &DetailsContext, cx: &App) -> Option<Div> {
         .text_color(p.muted)
         .flex()
         .gap_1()
-        .child(format!("rank {}", format_pair(cur_min, cur_max)))
+        .child(format!("{} {}", tr("rank"), format_pair(cur_min, cur_max)))
         .children(next.map(|(a, b)| {
             div()
                 .flex()
@@ -750,7 +753,7 @@ pub(crate) fn stats_block(details: &DetailsContext, cx: &App) -> Option<Div> {
     if let (Some(min), Some(max)) = (base_min, base_max) {
         let label = match (skill.attack_kind, skill.damage_type.as_deref()) {
             (Some(AttackKindSpec::Attack), Some(kind)) => format!("{} damage", capitalize(kind)),
-            _ => "Base damage".into(),
+            _ => tr("Base damage").into(),
         };
         let next_label = next.and_then(|(a, b)| {
             Some(damage_range_label(
@@ -769,8 +772,8 @@ pub(crate) fn stats_block(details: &DetailsContext, cx: &App) -> Option<Div> {
     }
     if let Some(scaling) = skill.attack_scaling {
         for (label, f) in [
-            ("Attack damage", scaling.weapon_damage_pct),
-            ("Attack rating", scaling.attack_rating_pct),
+            (tr("Attack damage"), scaling.weapon_damage_pct),
+            (tr("Attack rating"), scaling.attack_rating_pct),
         ] {
             let Some(f) = f else { continue };
             let pct = |a: f64, b: f64| {
@@ -793,7 +796,7 @@ pub(crate) fn stats_block(details: &DetailsContext, cx: &App) -> Option<Div> {
     }
     if let (Some(a), Some(b)) = (mana(cur_min), mana(cur_max)) {
         rows = rows.child(eff_row(
-            "Mana cost",
+            tr("Mana cost"),
             format_pair(a, b),
             next.and_then(|(x, y)| Some(format_pair(mana(x)?, mana(y)?))),
             None,
@@ -821,20 +824,20 @@ pub(crate) fn stats_block(details: &DetailsContext, cx: &App) -> Option<Div> {
         ));
     }
     let plain = [
-        ("Base cast rate", skill.base_cast_rate, Some("/s")),
-        ("Movement during use", skill.movement_during_use, Some("%")),
-        ("Range", skill.range, None),
-        ("Cooldown", skill.base_cooldown, Some("s")),
-        ("Effect duration", skill.effect_duration, Some("s")),
+        (tr("Base cast rate"), skill.base_cast_rate, Some("/s")),
+        (tr("Movement during use"), skill.movement_during_use, Some("%")),
+        (tr("Range"), skill.range, None),
+        (tr("Cooldown"), skill.base_cooldown, Some("s")),
+        (tr("Effect duration"), skill.effect_duration, Some("s")),
         (
-            "Hit interval",
+            tr("Hit interval"),
             skill
                 .hit_model
                 .as_ref()
                 .and_then(|model| model.tick_frequency),
             Some("s"),
         ),
-        ("Requires level", skill.requires_level.map(f64::from), None),
+        (tr("Requires level"), skill.requires_level.map(f64::from), None),
     ];
     for (label, value, suffix) in plain {
         if let Some(value) = value {
@@ -852,7 +855,7 @@ pub(crate) fn stats_block(details: &DetailsContext, cx: &App) -> Option<Div> {
                 .child(
                     div()
                         .text_color(p.text.opacity(0.8))
-                        .child("Requires skill"),
+                        .child(tr("Requires skill")),
                 )
                 .child(
                     div()
@@ -866,9 +869,9 @@ pub(crate) fn stats_block(details: &DetailsContext, cx: &App) -> Option<Div> {
         detail_block(
             "skill-stats",
             if allocated {
-                "Stats"
+                tr("Stats")
             } else {
-                "Preview (not learned)"
+                tr("Preview (not learned)")
             },
             Some(trailing.into_any_element()),
             None,
@@ -939,7 +942,10 @@ pub(crate) fn synergy_blocks(details: &DetailsContext, cx: &App) -> Vec<Div> {
     } else {
         (1., 1.)
     };
-    let me = normalize_skill_name(&skill.name);
+    // bonus_sources name their source skill in English, so the comparison has
+    // to be against match_name; using the displayed name made this block empty
+    // in every translated locale.
+    let me = normalize_skill_name(skill.match_name());
     let mut blocks = Vec::new();
     let provided: Vec<_> = details
         .class_skills
@@ -962,14 +968,14 @@ pub(crate) fn synergy_blocks(details: &DetailsContext, cx: &App) -> Vec<Div> {
                 &other.name,
                 format_stat_pair(&bs.stat, bs.value * cur_min, bs.value * cur_max),
                 if allocated { p.stat_orange } else { p.muted },
-                format!("{}% per rank", round2(bs.value)),
+                format!("{}% / {}", round2(bs.value), tr("rank")),
                 cx,
             ));
         }
         blocks.push(
             detail_block(
                 "provides-synergy",
-                "Provides synergy to",
+                tr("Provides synergy to"),
                 None,
                 Some(p.stat_orange),
                 cx,
@@ -985,7 +991,7 @@ pub(crate) fn synergy_blocks(details: &DetailsContext, cx: &App) -> Vec<Div> {
                     details
                         .class_skills
                         .iter()
-                        .find(|s| normalize_skill_name(&s.name) == normalize_skill_name(&bs.source))
+                        .find(|s| normalize_skill_name(s.match_name()) == normalize_skill_name(&bs.source))
                 })
                 .flatten();
             let matched = if !allocated {
@@ -1031,9 +1037,9 @@ pub(crate) fn synergy_blocks(details: &DetailsContext, cx: &App) -> Vec<Div> {
                 None
             };
             let unit = if bs.per == "skill_level" {
-                "rank"
+                tr("rank")
             } else {
-                "point"
+                tr("point")
             };
             list = list.child(synergy_row(
                 if source_skill.is_some() {
@@ -1042,7 +1048,7 @@ pub(crate) fn synergy_blocks(details: &DetailsContext, cx: &App) -> Vec<Div> {
                     p.faint
                 },
                 source_skill.is_some(),
-                &bs.source,
+                &data::display_skill_name(&bs.source),
                 matched
                     .map(|(a, b)| format_stat_pair(&bs.stat, a, b))
                     .unwrap_or_else(|| "—".into()),
@@ -1052,7 +1058,7 @@ pub(crate) fn synergy_blocks(details: &DetailsContext, cx: &App) -> Vec<Div> {
                     p.faint
                 },
                 format!(
-                    "{} {} per {unit}",
+                    "{} {} / {unit}",
                     format_value(bs.value, &bs.stat, true),
                     stat_name(&bs.stat)
                 ),
@@ -1062,7 +1068,7 @@ pub(crate) fn synergy_blocks(details: &DetailsContext, cx: &App) -> Vec<Div> {
         blocks.push(
             detail_block(
                 "receives-synergy",
-                "Receives synergy from",
+                tr("Receives synergy from"),
                 None,
                 Some(p.synergy),
                 cx,
@@ -1107,7 +1113,7 @@ pub(crate) fn subtree_block(details: &DetailsContext, cx: &App) -> Option<Div> {
     if stats.is_empty() && procs.is_empty() {
         return None;
     }
-    let mut block = detail_block("subtree-bonuses", "Subtree bonuses", None, None, cx);
+    let mut block = detail_block("subtree-bonuses", tr("Subtree bonuses"), None, None, cx);
     if !stats.is_empty() {
         block = block.child(div().flex().flex_col().gap_1().children(stats.iter().map(
             |(key, value)| {

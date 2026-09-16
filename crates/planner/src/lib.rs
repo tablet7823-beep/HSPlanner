@@ -1,3 +1,4 @@
+use hsplanner_engine::calc::i18n::tr;
 use hsplanner_ui::controls::PlannerControl;
 use hsplanner_ui::tooltip::CursorTooltipExt;
 mod build_panel;
@@ -185,9 +186,9 @@ impl TreeView {
             node_tooltip::load_lines()
         };
         let placeholder = if scene.graph.kind == TreeKind::Ether {
-            "Search ether nodes…"
+            tr("Search ether nodes…")
         } else {
-            "Search nodes or #id…"
+            tr("Search nodes or #id…")
         };
         let search = cx.new(|cx| InputState::new(window, cx).placeholder(placeholder));
         let focus = cx.focus_handle();
@@ -678,13 +679,13 @@ impl TreeView {
             .disabled(matches!(command, Command::ToggleNode) && self.inspected.is_none())
             .small()
             .cursor_tooltip(match command {
-                Command::TooltipExample => "Next tooltip example (T)",
+                Command::TooltipExample => tr("Next tooltip example (T)"),
                 Command::TextEffects => {
-                    "Toggle glow, letter spacing and fade (E). Font stays Inter."
+                    tr("Toggle glow, letter spacing and fade (E). Font stays Inter.")
                 }
-                Command::ToggleNode => "Apply the inspected node's path change (Enter)",
-                Command::ZoomIn => "Zoom in (+)",
-                Command::ZoomOut => "Zoom out (−)",
+                Command::ToggleNode => tr("Apply the inspected node's path change (Enter)"),
+                Command::ZoomIn => tr("Zoom in (+)"),
+                Command::ZoomOut => tr("Zoom out (−)"),
                 _ => label,
             })
             .on_click(cx.listener(move |this, _, window, cx| {
@@ -897,7 +898,7 @@ impl Render for TreeView {
             .text_color(cx.global::<theme::TooltipTheme>().text)
             .font_family(theme::FONT_FAMILY)
             .track_focus(&self.focus)
-            .key_context("TreePrototype")
+            .key_context(tr("TreePrototype"))
             .on_action(
                 cx.listener(|this, _: &ShowTooltipExample, _, cx| this.show_tooltip_example(cx)),
             )

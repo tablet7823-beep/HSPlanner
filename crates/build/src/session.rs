@@ -1,3 +1,4 @@
+use hsplanner_engine::calc::i18n::tr;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -197,7 +198,7 @@ impl Session {
             .profiles
             .iter_mut()
             .find(|p| &p.id == profile_id)
-            .ok_or("Profile no longer exists.")?;
+            .ok_or(tr("Profile no longer exists."))?;
         profile.snapshot = Some(draft.snapshot.clone());
         profile.code = code;
         profile.updated_at = now();
@@ -218,10 +219,10 @@ impl Session {
             .state
             .library
             .build(build_id)
-            .ok_or("Build no longer exists.")?;
+            .ok_or(tr("Build no longer exists."))?;
         let profile = build
             .profile(profile_id.unwrap_or(&build.active_profile_id))
-            .ok_or("Profile no longer exists.")?;
+            .ok_or(tr("Profile no longer exists."))?;
         let draft = Draft {
             build_id: Some(build.id.clone()),
             profile_id: Some(profile.id.clone()),
@@ -283,14 +284,14 @@ impl Session {
             .draft
             .build_id
             .clone()
-            .ok_or("Save this build first.")?;
+            .ok_or(tr("Save this build first."))?;
         let snapshot = match copy_from {
             Some(profile) => self
                 .state
                 .library
                 .build(&id)
                 .and_then(|b| b.profile(profile))
-                .ok_or("Profile no longer exists.")?
+                .ok_or(tr("Profile no longer exists."))?
                 .snapshot()?,
             None => self.snapshot().clone(),
         };
@@ -298,7 +299,7 @@ impl Session {
         let profile_id = profile.id.clone();
         let build = self.state.library.build_mut(&id)?;
         if build.profiles.len() >= 100 {
-            return Err("This build already contains 100 profiles.".into());
+            return Err(tr("This build already contains 100 profiles.").into());
         }
         build.profiles.push(profile);
         self.open(&id, Some(&profile_id))
@@ -309,13 +310,13 @@ impl Session {
             .draft
             .build_id
             .clone()
-            .ok_or("Save this build first.")?;
+            .ok_or(tr("Save this build first."))?;
         let build = self.state.library.build_mut(&build_id)?;
         build
             .profiles
             .iter_mut()
             .find(|p| p.id == id)
-            .ok_or("Profile no longer exists.")?
+            .ok_or(tr("Profile no longer exists."))?
             .name = clean_name(name)?;
         self.changed();
         Ok(())
@@ -326,10 +327,10 @@ impl Session {
             .draft
             .build_id
             .clone()
-            .ok_or("Save this build first.")?;
+            .ok_or(tr("Save this build first."))?;
         let build = self.state.library.build_mut(&build_id)?;
         if build.profiles.len() <= 1 {
-            return Err("Keep at least one profile.".into());
+            return Err(tr("Keep at least one profile.").into());
         }
         build.profiles.retain(|p| p.id != id);
         if build.active_profile_id == id {
@@ -356,7 +357,7 @@ impl Session {
         export: crate::storage::MigrationExport,
     ) -> Result<(), String> {
         if self.state.migrated_from.is_some() {
-            return Err("This library has already imported its transfer.".into());
+            return Err(tr("This library has already imported its transfer.").into());
         }
         let mut incoming = export.into_state()?;
         if self.state.is_pristine() {
@@ -415,7 +416,7 @@ impl Session {
                 serde_json::to_string(&incoming.draft).map_err(|e| e.to_string())?,
             );
             next.library.create(
-                "Recovered Tauri document",
+                tr("Recovered Tauri document"),
                 &incoming.draft.snapshot,
                 &incoming.draft.notes,
                 &incoming.draft.stash,

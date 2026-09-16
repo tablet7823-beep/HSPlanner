@@ -1,4 +1,5 @@
 //! Import an item from a game tooltip screenshot, after ImportScreenshotModal.tsx.
+use hsplanner_engine::calc::i18n::tr;
 use super::*;
 use gpui_kit::base::Disableable;
 use gpui_kit::component::WindowExt;
@@ -75,7 +76,7 @@ impl ImportView {
             files: true,
             directories: false,
             multiple: false,
-            prompt: Some("Import screenshot".into()),
+            prompt: Some(tr("Import screenshot").into()),
         });
         cx.spawn(async move |this, cx| {
             let bytes = match paths.await {
@@ -85,7 +86,7 @@ impl ImportView {
                     None => Ok(None),
                 },
                 Ok(Ok(None)) => Ok(None),
-                _ => Err("Could not open the image picker.".into()),
+                _ => Err(tr("Could not open the image picker.").into()),
             };
             let _ = this.update(cx, |this, cx| match bytes {
                 Ok(Some(bytes)) => this.analyze(bytes, cx),
@@ -115,7 +116,7 @@ impl ImportView {
             let _ = this.update(cx, |this, cx| match bytes {
                 Some(bytes) => this.analyze(bytes, cx),
                 None => {
-                    this.error = Some("Copy a tooltip screenshot first, then paste it.".into());
+                    this.error = Some(tr("Copy a tooltip screenshot first, then paste it.").into());
                     cx.notify();
                 }
             });
@@ -177,7 +178,7 @@ impl ImportView {
             return;
         };
         let Some(slot) = self.target_slot(base, cx) else {
-            self.error = Some("No slot can take this item right now.".into());
+            self.error = Some(tr("No slot can take this item right now.").into());
             cx.notify();
             return;
         };
@@ -286,9 +287,9 @@ impl Render for ImportView {
                         modal_button(
                             "import-choose",
                             if self.busy {
-                                "Reading…"
+                                tr("Reading…")
                             } else {
-                                "Choose image"
+                                tr("Choose image")
                             },
                             ButtonTone::Neutral,
                             cx,
@@ -297,7 +298,7 @@ impl Render for ImportView {
                         .on_click(cx.listener(|this, _, _, cx| this.choose_file(cx))),
                     )
                     .child(
-                        modal_button("import-paste", "Paste image", ButtonTone::Neutral, cx)
+                        modal_button("import-paste", tr("Paste image"), ButtonTone::Neutral, cx)
                             .disabled(self.busy)
                             .on_click(cx.listener(|this, _, _, cx| this.paste(cx))),
                     )
@@ -306,7 +307,7 @@ impl Render for ImportView {
                             .font_family(theme::MONO_FONT_FAMILY)
                             .text_size(rems(10. / 13.))
                             .text_color(p.faint)
-                            .child("from a file or the clipboard"),
+                            .child(tr("from a file or the clipboard")),
                     ),
             );
         if let Some(image) = &self.image {
@@ -383,8 +384,8 @@ impl Render for ImportView {
             .flex()
             .flex_col()
             .child(modal_header(
-                modal_eyebrow("import-eyebrow", "Import"),
-                "Import from screenshot",
+                modal_eyebrow("import-eyebrow", tr("Import")),
+                tr("Import from screenshot"),
                 Some(subtitle.into()),
                 cx,
             ))
@@ -394,7 +395,7 @@ impl Render for ImportView {
                     .child(
                         command_button(
                             "import-stash",
-                            "Add to stash",
+                            tr("Add to stash"),
                             ButtonTone::Neutral,
                             ButtonSize::Regular,
                             cx,

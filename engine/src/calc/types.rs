@@ -31,6 +31,19 @@ impl RangedValue {
     }
 }
 
+/// Types whose `name` doubles as a lookup key somewhere. `name` is what the
+/// user reads and may be translated; `match_name` is the English text the
+/// matching code has to compare against.
+macro_rules! match_name {
+    ($ty:ident) => {
+        impl $ty {
+            pub fn match_name(&self) -> &str {
+                self.name_en.as_deref().unwrap_or(&self.name)
+            }
+        }
+    };
+}
+
 // ---------- affix ----------
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Default)]
@@ -387,6 +400,9 @@ pub struct ItemGrantedSkill {
     pub id: String,
     #[serde(default)]
     pub name: String,
+    /// Untranslated `name`; see `SkillSpec::name_en`.
+    #[serde(default)]
+    pub name_en: Option<String>,
     #[serde(default)]
     pub description: Option<String>,
     #[serde(default)]
@@ -613,6 +629,11 @@ pub struct SkillSpec {
     pub class_id: String,
     #[serde(default)]
     pub name: String,
+    /// Untranslated `name`, written by the i18n overlay. Item `skillBonuses`
+    /// is keyed by English skill name, so rank matching must read this rather
+    /// than the displayed name. Absent in the source language.
+    #[serde(default)]
+    pub name_en: Option<String>,
     #[serde(default)]
     pub kind: SkillKind,
     #[serde(default)]
@@ -687,6 +708,11 @@ pub struct AttributeDef {
 pub struct StatDef {
     pub key: String,
     pub name: String,
+    /// Untranslated `name`. The loot-filter encoder normalises stat names with
+    /// English-word regexes and the OCR tooltip parser reads the English game
+    /// client, so both read this instead. Absent in the source language.
+    #[serde(default)]
+    pub name_en: Option<String>,
     #[serde(default)]
     pub category: String,
     #[serde(default)]
@@ -898,6 +924,10 @@ pub enum TreeSocketContent {
         affixes: Vec<EquippedAffix>,
     },
 }
+
+match_name!(SkillSpec);
+match_name!(ItemGrantedSkill);
+match_name!(StatDef);
 
 #[cfg(test)]
 mod item_presentation_metadata_tests {

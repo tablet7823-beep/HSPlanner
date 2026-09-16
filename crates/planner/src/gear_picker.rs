@@ -1,4 +1,5 @@
 //! Item picker (Change item) after the Tauri ItemListRail: search, sort, rarity groups, tooltips.
+use hsplanner_engine::calc::i18n::tr;
 use super::*;
 use crate::gear_sections::{chip, ghost_button, icon_button, units};
 use crate::item_tooltip;
@@ -103,9 +104,9 @@ fn sort_values(base: &ItemBase) -> HashMap<String, f64> {
 }
 
 fn base_meta(base: &ItemBase) -> String {
-    let mut parts = vec![base.base_type.clone()];
+    let mut parts = vec![crate::gear::editor::base_type_label(&base.base_type)];
     if let Some(grade) = &base.grade {
-        parts.push(format!("Grade {grade}"));
+        parts.push(format!("{} {grade}", tr("Grade")));
     }
     if base.base_type == "Charm" {
         parts.push(format!(
@@ -115,7 +116,7 @@ fn base_meta(base: &ItemBase) -> String {
         ));
     }
     if let (Some(min), Some(max)) = (base.defense_min, base.defense_max) {
-        parts.push(format!("Def {min}–{max}"));
+        parts.push(format!("{} {min}–{max}", tr("Def")));
     }
     if let (Some(min), Some(max)) = (base.damage_min, base.damage_max) {
         parts.push(format!("Dmg {min}–{max}"));
@@ -135,8 +136,14 @@ fn base_meta(base: &ItemBase) -> String {
 }
 
 fn base_search(base: &ItemBase) -> String {
-    let mut parts = vec![base.name.clone(), base.base_type.clone()];
-    parts.extend(base.grade.iter().map(|g| format!("Grade {g}")));
+    // Both spellings, so a Korean build still finds an item by its English
+    // base type and vice versa.
+    let mut parts = vec![
+        base.name.clone(),
+        base.base_type.clone(),
+        crate::gear::editor::base_type_label(&base.base_type),
+    ];
+    parts.extend(base.grade.iter().map(|g| format!("{} {g}", tr("Grade"))));
     for (key, value) in base.implicit.iter().flatten() {
         parts.push(stat_name(key));
         parts.push(item_tooltip::format_ranged(value.as_ranged(), key));
@@ -161,10 +168,10 @@ fn base_search(base: &ItemBase) -> String {
 
 fn sort_label(key: &str) -> String {
     match key {
-        "defense" => "Defense".into(),
-        "weapon_damage" => "Weapon Damage".into(),
-        "block_chance" => "Block Chance".into(),
-        "sockets" => "Sockets".into(),
+        "defense" => tr("Defense").into(),
+        "weapon_damage" => tr("Weapon Damage").into(),
+        "block_chance" => tr("Block Chance").into(),
+        "sockets" => tr("Sockets").into(),
         _ => stat_name(key),
     }
 }
@@ -272,7 +279,7 @@ impl GearView {
                         rarity: base.rarity.clone(),
                         meta: format!(
                             "{} · {} stars · {} sockets",
-                            base.base_type,
+                            crate::gear::editor::base_type_label(&base.base_type),
                             entry.item.stars.unwrap_or(0),
                             entry.item.socket_count
                         ),
@@ -310,7 +317,7 @@ impl GearView {
             .map(|(key, count)| (key.to_owned(), sort_label(key), count))
             .collect();
         stats.sort_by(|a, b| b.2.cmp(&a.2).then_with(|| a.1.cmp(&b.1)));
-        let mut options = vec![("default".to_owned(), "Default".to_owned())];
+        let mut options = vec![("default".to_owned(), tr("Default").to_owned())];
         if !self.mercenary {
             options.push(("dps".into(), "DPS".into()));
         }
@@ -422,7 +429,7 @@ impl GearView {
                         .text_center()
                         .text_size(units(13.))
                         .text_color(muted)
-                        .child("No items match"),
+                        .child(tr("No items match")),
                 )
             })
             .when(!self.visible_items.is_empty(), |view| {
@@ -453,13 +460,13 @@ impl GearView {
                             .flex()
                             .items_center()
                             .gap_2()
-                            .child(self.picker_tab("items", "Items", Picker::Items, cx))
+                            .child(self.picker_tab("items", tr("Items"), Picker::Items, cx))
                             .when(!self.is_relic_slot(), |v| {
-                                v.child(self.picker_tab("stash", "Stash", Picker::Stash, cx))
+                                v.child(self.picker_tab("stash", tr("Stash"), Picker::Stash, cx))
                             })
                             .child(div().flex_1())
                             .when(self.candidate.is_some(), |v| {
-                                v.child(ghost_button("back-to-configure", "← Back", cx).on_click(
+                                v.child(ghost_button("back-to-configure", tr("← Back"), cx).on_click(
                                     cx.listener(|this, _, _, cx| {
                                         this.choosing = false;
                                         cx.notify();
@@ -483,7 +490,7 @@ impl GearView {
                                         .font_family(theme::MONO_FONT_FAMILY)
                                         .text_size(units(9.))
                                         .text_color(faint)
-                                        .child(TooltipText::new("sort-label", "SORT", 0.18)),
+                                        .child(TooltipText::new("sort-label", tr("Sort"), 0.18)),
                                 )
                                 .children(self.sort_select.as_ref().map(|state| {
                                     div()
@@ -498,7 +505,7 @@ impl GearView {
                                             .text_color(faint)
                                             .child(TooltipText::new(
                                                 "sort-computing",
-                                                "COMPUTING…",
+                                                tr("COMPUTING…"),
                                                 0.14,
                                             )),
                                     )
@@ -658,7 +665,7 @@ impl GearView {
                         "×",
                         cx,
                     )
-                    .cursor_tooltip("Remove from stash")
+                    .cursor_tooltip(tr("Remove from stash"))
                     .on_click(cx.listener(move |this, _, window, cx| {
                         this.session.update(cx, |session, cx| {
                             session.edit(|draft| draft.stash.retain(|entry| entry.id != remove));

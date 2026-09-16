@@ -65,15 +65,22 @@ impl Graph {
         let raw: RawGraph =
             serde_json::from_str(include_str!("../../../data/incarnation-tree.json"))
                 .expect("valid incarnation tree");
-        let info = serde_json::from_str(include_str!("../../../data/incarnation-nodes.json"))
-            .expect("valid node descriptions");
+        // Through the overlay, not serde_json directly: the tree view reads this
+        // copy rather than GameData, so parsing it raw left every node title and
+        // description English while the rest of the app was translated.
+        let info = hsplanner_engine::calc::i18n::parse_localized(
+            include_str!("../../../data/incarnation-nodes.json"),
+            "incarnation-nodes",
+        );
         Self::from_raw(TreeKind::Incarnation, raw, info)
     }
 
     pub fn load_ether() -> Self {
-        let value: serde_json::Value =
-            serde_json::from_str(include_str!("../../../data/ether-tree.json"))
-                .expect("valid Ether tree");
+        // Same reason as `load`: the ether view reads this copy, not GameData.
+        let value: serde_json::Value = hsplanner_engine::calc::i18n::parse_localized(
+            include_str!("../../../data/ether-tree.json"),
+            "ether-tree",
+        );
         let raw: RawGraph = serde_json::from_value(value.clone()).expect("valid Ether geometry");
         let info = value["nodes"]
             .as_array()

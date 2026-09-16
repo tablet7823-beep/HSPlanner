@@ -86,7 +86,7 @@ pub fn apply_skill_ranks(
             let v = sum_ranged_from_map(stat_sources, key);
             (acc.0 + v.0, acc.1 + v.1)
         });
-        let key_norm = normalize_skill_name(&skill.name);
+        let key_norm = normalize_skill_name(skill.match_name());
         let item_bonus = item_skill_bonuses
             .get(&key_norm)
             .copied()

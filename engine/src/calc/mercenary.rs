@@ -27,10 +27,14 @@ pub struct MercenarySkill {
     pub shared: bool,
     pub description: String,
 }
-static DATA: LazyLock<MercenaryData> = LazyLock::new(|| {
-    serde_json::from_str(include_str!("../../../data/mercenaries.json"))
-        .expect("valid mercenary catalog")
-});
+// Same as the ether tree: loaded outside GameData, so it caches per locale here.
+const MERCENARIES_JSON: &str = include_str!("../../../data/mercenaries.json");
+static DATA_BY_LOCALE: LazyLock<
+    std::sync::Mutex<std::collections::HashMap<String, &'static MercenaryData>>,
+> = LazyLock::new(|| std::sync::Mutex::new(std::collections::HashMap::new()));
+
 pub fn data() -> &'static MercenaryData {
-    &DATA
+    crate::calc::i18n::cached_per_locale(&DATA_BY_LOCALE, || {
+        crate::calc::i18n::parse_localized(MERCENARIES_JSON, "mercenaries.json")
+    })
 }

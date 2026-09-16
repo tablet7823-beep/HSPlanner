@@ -1,4 +1,5 @@
 //! A retained report draft. Nothing leaves the device until Send report is activated.
+use hsplanner_engine::calc::i18n::tr;
 use crate::bug_report_transport::{self as transport, MAX_SHOTS, Report, Shot};
 use gpui_kit::{
     base::Disableable,
@@ -95,11 +96,11 @@ struct ReportEditor {
 }
 impl ReportEditor {
     fn new(build: Option<(String, String)>, window: &mut Window, cx: &mut Context<Self>) -> Self {
-        let title = cx.new(|cx| InputState::new(window, cx).placeholder("Frost Nova shows 0 DPS"));
+        let title = cx.new(|cx| InputState::new(window, cx).placeholder(tr("Frost Nova shows 0 DPS")));
         let description = cx.new(|cx| {
             TextareaState::new(window, cx)
                 .rows(4)
-                .placeholder("When I click here, this happens")
+                .placeholder(tr("When I click here, this happens"))
         });
         let steps = cx.new(|cx| {
             TextareaState::new(window, cx)
@@ -109,10 +110,10 @@ impl ReportEditor {
         let expected = cx.new(|cx| {
             TextareaState::new(window, cx)
                 .rows(2)
-                .placeholder("A clear and concise description of what you expected to happen.")
+                .placeholder(tr("A clear and concise description of what you expected to happen."))
         });
         let contact = cx
-            .new(|cx| InputState::new(window, cx).placeholder("So I can ask follow-up questions"));
+            .new(|cx| InputState::new(window, cx).placeholder(tr("So I can ask follow-up questions")));
         let kind_select = cx.new(|cx| {
             SelectState::new(
                 SearchableVec::new((0..KINDS.len()).map(Kind).collect::<Vec<_>>()),
@@ -241,7 +242,7 @@ impl ReportEditor {
             files: true,
             directories: false,
             multiple: true,
-            prompt: Some("Add screenshots".into()),
+            prompt: Some(tr("Add screenshots").into()),
         });
         cx.spawn(async move |this, cx| {
             let results = match paths.await {
@@ -256,7 +257,7 @@ impl ReportEditor {
                     .await
                 }
                 Ok(Ok(None)) => vec![],
-                _ => vec![Err("Could not open the image picker.".into())],
+                _ => vec![Err(tr("Could not open the image picker.").into())],
             };
             let _ = this.update(cx, |this, cx| this.accept(results, cx));
         })
@@ -284,13 +285,13 @@ impl ReportEditor {
             };
             let results = if incoming.is_empty() {
                 vec![Err(
-                    "Copy a screenshot image, then choose Paste image.".into()
+                    tr("Copy a screenshot image, then choose Paste image.").into()
                 )]
             } else {
                 cx.background_spawn(async move {
                     incoming
                         .into_iter()
-                        .map(|bytes| Shot::from_bytes("Pasted screenshot".into(), bytes))
+                        .map(|bytes| Shot::from_bytes(tr("Pasted screenshot").into(), bytes))
                         .collect::<Vec<_>>()
                 })
                 .await
@@ -301,19 +302,19 @@ impl ReportEditor {
     }
     fn status(&self, validation: Option<&String>) -> String {
         if self.endpoint.is_none() {
-            "Reporting is not configured in this build.".into()
+            tr("Reporting is not configured in this build.").into()
         } else if self.sent {
-            "Report sent — thank you!".into()
+            tr("Report sent — thank you!").into()
         } else if self.busy {
-            "Sending…".into()
+            tr("Sending…").into()
         } else if self.loading {
-            "Reading screenshots…".into()
+            tr("Reading screenshots…").into()
         } else if let Some(error) = self.error.as_ref().or(validation) {
             error.clone()
         } else if self.attach && self.build.is_some() {
-            "Sends app version, OS and your build code.".into()
+            tr("Sends app version, OS and your build code.").into()
         } else {
-            "Sends app version and OS.".into()
+            tr("Sends app version and OS.").into()
         }
     }
 }
@@ -341,65 +342,65 @@ impl Render for ReportEditor {
             .gap_2p5()
             .text_size(rems(12. / 13.))
             .child(field(
-                "Type",
+                tr("Type"),
                 Select::new(&self.kind_select)
                     .planner_style(cx)
-                    .accessibility_label("Type")
+                    .accessibility_label(tr("Type"))
                     .disabled(locked)
                     .w_full(),
                 cx,
             ))
             .child(field(
-                "Title",
+                tr("Title"),
                 Input::new(&self.title)
-                    .aria_label("Title")
+                    .aria_label(tr("Title"))
                     .planner_style(cx)
                     .disabled(locked),
                 cx,
             ))
             .child(field(
-                "Describe your issue",
+                tr("Describe your issue"),
                 Textarea::new(&self.description)
                     .h_24()
-                    .aria_label("Describe your issue")
+                    .aria_label(tr("Describe your issue"))
                     .planner_style(cx)
                     .disabled(locked),
                 cx,
             ))
             .when(self.kind != IDEA, |view| {
                 view.child(field(
-                    "Steps to reproduce (optional)",
+                    tr("Steps to reproduce (optional)"),
                     Textarea::new(&self.steps)
                         .h_24()
-                        .aria_label("Steps to reproduce")
+                        .aria_label(tr("Steps to reproduce"))
                         .planner_style(cx)
                         .disabled(locked),
                     cx,
                 ))
                 .child(field(
-                    "What did you expect instead (optional)",
+                    tr("What did you expect instead (optional)"),
                     Textarea::new(&self.expected)
                         .h_16()
-                        .aria_label("What did you expect instead")
+                        .aria_label(tr("What did you expect instead"))
                         .planner_style(cx)
                         .disabled(locked),
                     cx,
                 ))
             })
             .child(field(
-                "Screenshots (optional)",
+                tr("Screenshots (optional)"),
                 div()
                     .flex()
                     .flex_wrap()
                     .items_center()
                     .gap_2()
                     .child(
-                        modal_button("report-add-images", "Add image", ButtonTone::Neutral, cx)
+                        modal_button("report-add-images", tr("Add image"), ButtonTone::Neutral, cx)
                             .disabled(locked || self.loading || self.shots.len() >= MAX_SHOTS)
                             .on_click(cx.listener(|this, _, _, cx| this.choose_images(cx))),
                     )
                     .child(
-                        modal_button("report-paste-image", "Paste image", ButtonTone::Neutral, cx)
+                        modal_button("report-paste-image", tr("Paste image"), ButtonTone::Neutral, cx)
                             .disabled(locked || self.loading || self.shots.len() >= MAX_SHOTS)
                             .on_click(cx.listener(|this, _, _, cx| this.paste_image(cx))),
                     )
@@ -438,9 +439,9 @@ impl Render for ReportEditor {
             );
         }
         fields = fields.child(field(
-            "Discord name (optional)",
+            tr("Discord name (optional)"),
             Input::new(&self.contact)
-                .aria_label("Discord name")
+                .aria_label(tr("Discord name"))
                 .planner_style(cx)
                 .disabled(locked),
             cx,
@@ -464,9 +465,9 @@ impl Render for ReportEditor {
             .flex()
             .flex_col()
             .child(modal_header(
-                modal_eyebrow("bug-report-eyebrow", "Feedback"),
-                "Report a problem",
-                Some("Goes straight to the dev — no GitHub account needed.".into()),
+                modal_eyebrow("bug-report-eyebrow", tr("Feedback")),
+                tr("Report a problem"),
+                Some(tr("Goes straight to the dev — no GitHub account needed.").into()),
                 cx,
             ))
             .child(fields)
@@ -475,7 +476,7 @@ impl Render for ReportEditor {
                     .child(modal_status(status, status_color))
                     .when(self.sent, |view| {
                         view.child(
-                            modal_button("report-done", "Done", ButtonTone::Primary, cx)
+                            modal_button("report-done", tr("Done"), ButtonTone::Primary, cx)
                                 .on_click(|_, window, cx| window.close_dialog(cx)),
                         )
                     })
@@ -484,9 +485,9 @@ impl Render for ReportEditor {
                             modal_button(
                                 "report-send",
                                 if self.busy {
-                                    "Sending…"
+                                    tr("Sending…")
                                 } else {
-                                    "Send report"
+                                    tr("Send report")
                                 },
                                 ButtonTone::Primary,
                                 cx,

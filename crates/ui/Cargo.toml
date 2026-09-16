@@ -6,6 +6,7 @@ publish.workspace = true
 
 [dependencies]
 gpui-kit.workspace = true
+hsplanner-engine.workspace = true
 log.workspace = true
 unicode-segmentation = "1.13"
 

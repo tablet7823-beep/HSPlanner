@@ -1,4 +1,5 @@
 //! Budgeted path and beam-search optimizer for the Incarnation tree.
+use hsplanner_engine::calc::i18n::tr;
 use super::*;
 use gpui_kit::component::slider::SliderState;
 use gpui_kit::{Div, Entity, FontWeight, SharedString, Window, relative, rems, uniform_list};
@@ -291,12 +292,12 @@ impl TreeView {
                 .child(tooltip_text::TooltipText::new(id, text, 0.14))
         };
         let status = match &self.suggest.phase {
-            Phase::Idle => "Path and synergy search".to_string(),
+            Phase::Idle => tr("Path and synergy search").to_string(),
             Phase::Computing => format!("Search {current} / {total}"),
             Phase::Done => self.suggest.result.as_ref().map_or(String::new(), |r| {
                 format!("Used {} of {}", r.budget_used, r.budget_requested)
             }),
-            Phase::Failed(_) => "Last run errored".to_string(),
+            Phase::Failed(_) => tr("Last run errored").to_string(),
         };
         let can_apply = self
             .suggest
@@ -323,7 +324,7 @@ impl TreeView {
                     .gap_3()
                     .child(mono(
                         "suggest-eyebrow",
-                        "TALENT TREE OPTIMIZER".into(),
+                        tr("TALENT TREE OPTIMIZER").into(),
                         p.faint,
                     ))
                     .child(
@@ -331,7 +332,7 @@ impl TreeView {
                             .text_lg()
                             .font_weight(FontWeight::SEMIBOLD)
                             .text_color(p.accent_hot)
-                            .child("Suggest Nodes"),
+                            .child(tr("Suggest Nodes")),
                     )
                     .child(
                         div()
@@ -340,7 +341,7 @@ impl TreeView {
                             .justify_between()
                             .child(mono(
                                 "suggest-budget-label",
-                                "NODES TO ALLOCATE".into(),
+                                tr("NODES TO ALLOCATE").into(),
                                 p.faint,
                             ))
                             .child(
@@ -373,7 +374,7 @@ impl TreeView {
                                                 cx,
                                             )
                                             .small()
-                                            .label("Reset")
+                                            .label(tr("Reset"))
                                             .on_click(
                                                 cx.listener(|this, _, _, cx| {
                                                     this.suggest.clear();
@@ -394,9 +395,9 @@ impl TreeView {
                                         )
                                         .small()
                                         .label(match self.suggest.phase {
-                                            Phase::Computing => "Cancel",
-                                            Phase::Done => "Recalculate",
-                                            _ => "Calculate",
+                                            Phase::Computing => tr("Cancel"),
+                                            Phase::Done => tr("Recalculate"),
+                                            _ => tr("Calculate"),
                                         })
                                         .on_click(
                                             cx.listener(move |this, _, _, cx| {
@@ -461,7 +462,7 @@ impl TreeView {
                         Phase::Done => format!("{} NODES READY", self.suggest.added.len()),
                         Phase::Computing => "OPTIMIZING".into(),
                         Phase::Failed(_) => "ERROR".into(),
-                        Phase::Idle => "CONFIGURE BUDGET".into(),
+                        Phase::Idle => tr("CONFIGURE BUDGET").into(),
                     },
                     match &self.suggest.phase {
                         Phase::Done => p.accent_hot,
@@ -476,7 +477,7 @@ impl TreeView {
                         cx,
                     )
                     .small()
-                    .label("Apply")
+                    .label(tr("Apply"))
                     .disabled(!can_apply)
                     .on_click(cx.listener(|this, _, _, cx| this.apply_suggest(cx))),
                 ),
@@ -517,8 +518,8 @@ impl TreeView {
                 .py_3()
                 .border_b_1()
                 .border_color(p.border)
-                .child(stat("BASE DPS", dps(result.base_dps), None, p.text))
-                .child(stat("FINAL DPS", dps(result.final_dps), None, p.accent_hot))
+                .child(stat(tr("BASE DPS"), dps(result.base_dps), None, p.text))
+                .child(stat(tr("FINAL DPS"), dps(result.final_dps), None, p.accent_hot))
                 .child(stat(
                     "GAIN",
                     format!("{}{}", if gain > 0. { "+" } else { "" }, dps(gain)),
@@ -536,7 +537,7 @@ impl TreeView {
                             .text_center()
                             .text_sm()
                             .text_color(p.muted)
-                            .child("No improvements found within budget"),
+                            .child(tr("No improvements found within budget")),
                     )
                 })
                 .when(!result.sequence.is_empty(), |view| {
@@ -613,7 +614,7 @@ impl TreeView {
         };
         let scale = self.session.read(cx).state().settings.number_scale.clone();
         let (gain, gain_color) = if step.is_filler {
-            ("Path".to_string(), p.faint)
+            (tr("Path").to_string(), p.faint)
         } else {
             (
                 format!("+{} DPS", hsplanner_ui::numbers::compact(step.gain, &scale)),

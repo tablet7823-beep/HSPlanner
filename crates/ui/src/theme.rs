@@ -1,3 +1,4 @@
+use hsplanner_engine::calc::i18n::tr;
 use gpui_kit::component::{Theme, ThemeMode};
 use gpui_kit::{App, Global, Hsla, px, rgb};
 use std::{borrow::Cow, time::Duration};
@@ -170,20 +171,20 @@ impl TreeTheme {
 /// Region labels and colors match the Ether summary in the reference app.
 pub fn ether_region(key: &str) -> (&'static str, Hsla) {
     let regions = [
-        ("Un", "Universal", 0xa574c9),
-        ("Ow", "Overworld", 0x7fd966),
-        ("Ct", "Chaos Tower", 0xe05c5c),
-        ("Cp", "Chaos Pillars", 0xe0985c),
-        ("SR", "Shadow Realm", 0x7a8ce0),
-        ("Pe", "Prime Evil", 0xc94f6d),
-        ("Ur", "Unstable Rift", 0x5cd8d0),
-        ("Min", "Mining", 0xc98a3a),
-        ("EB", "Eternal Battlefield", 0xb8b04a),
-        ("CS", "Cursed Spirit", 0x66d9a8),
-        ("US", "Unholy Siege", 0xe07adb),
-        ("Dng", "Dungeons", 0x8f9bb0),
-        ("Rg", "Ruby Gardens", 0xf27a9d),
-        ("Cc", "Colossal Creatures", 0xe8d84a),
+        (tr("Un"), tr("Universal"), 0xa574c9),
+        (tr("Ow"), tr("Overworld"), 0x7fd966),
+        (tr("Ct"), tr("Chaos Tower"), 0xe05c5c),
+        (tr("Cp"), tr("Chaos Pillars"), 0xe0985c),
+        ("SR", tr("Shadow Realm"), 0x7a8ce0),
+        (tr("Pe"), tr("Prime Evil"), 0xc94f6d),
+        (tr("Ur"), tr("Unstable Rift"), 0x5cd8d0),
+        (tr("Min"), tr("Mining"), 0xc98a3a),
+        ("EB", tr("Eternal Battlefield"), 0xb8b04a),
+        ("CS", tr("Cursed Spirit"), 0x66d9a8),
+        ("US", tr("Unholy Siege"), 0xe07adb),
+        (tr("Dng"), tr("Dungeons"), 0x8f9bb0),
+        (tr("Rg"), tr("Ruby Gardens"), 0xf27a9d),
+        (tr("Cc"), tr("Colossal Creatures"), 0xe8d84a),
     ];
     let region = key.strip_prefix("ether").unwrap_or(key);
     regions
@@ -194,7 +195,7 @@ pub fn ether_region(key: &str) -> (&'static str, Hsla) {
                 .filter(|suffix| suffix.starts_with("Small") || suffix.starts_with("Big"))
                 .map(|_| (name, rgb(color).into()))
         })
-        .unwrap_or(("Other", rgb(0x9aa0ab).into()))
+        .unwrap_or((tr("Other"), rgb(0x9aa0ab).into()))
 }
 
 // Product colour roles for tooltip tones.

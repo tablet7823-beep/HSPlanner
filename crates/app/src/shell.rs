@@ -1,3 +1,4 @@
+use hsplanner_engine::calc::i18n::tr;
 use crate::chrome::{self, BottomBar, SaveState, TopBar};
 use gpui_kit::base::Selectable;
 use gpui_kit::component::{
@@ -55,16 +56,16 @@ impl Section {
 
     pub fn label(self) -> &'static str {
         match self {
-            Section::Library => "Library",
-            Section::Character => "Character",
-            Section::Tree => "Tree",
-            Section::Ether => "Ether",
-            Section::Skills => "Skills",
-            Section::Gear => "Gear",
-            Section::Merc => "Merc",
-            Section::Stats => "Stats",
-            Section::Config => "Config",
-            Section::Notes => "Notes",
+            Section::Library => tr("Library"),
+            Section::Character => tr("Character"),
+            Section::Tree => tr("Tree"),
+            Section::Ether => tr("Ether"),
+            Section::Skills => tr("Skills"),
+            Section::Gear => tr("Gear"),
+            Section::Merc => tr("Merc"),
+            Section::Stats => tr("Stats"),
+            Section::Config => tr("Config"),
+            Section::Notes => tr("Notes"),
         }
     }
 }
@@ -163,7 +164,7 @@ impl Shell {
                 cx,
             )
         });
-        let name = cx.new(|cx| InputState::new(window, cx).placeholder("Build / profile name"));
+        let name = cx.new(|cx| InputState::new(window, cx).placeholder(tr("Build / profile name")));
         let updater = cx.new(crate::update::Updater::new);
         let subscriptions = vec![
             cx.subscribe(&updater, |this, _, _: &crate::update::Installed, cx| {
@@ -228,7 +229,7 @@ impl Shell {
             name,
             logo: chrome::logo(),
             updater,
-            status: "Ready".into(),
+            status: tr("Ready").into(),
             error: None,
             save_task: None,
             saved_flash: None,
@@ -267,7 +268,7 @@ impl Shell {
         if !self.session.read(cx).is_dirty() || self.closing {
             return;
         }
-        self.status = "Unsaved changes".into();
+        self.status = tr("Unsaved changes").into();
         self.save_task = Some(cx.spawn(async move |this, cx| {
             cx.background_executor()
                 .timer(Duration::from_millis(800))
@@ -296,7 +297,7 @@ impl Shell {
             cx.notify();
             return;
         }
-        self.status = "Saving…".into();
+        self.status = tr("Saving…").into();
         let writer = self.writer.clone();
         let flush = cx.background_spawn(async move { writer.flush() });
         cx.spawn(async move |this, cx| {
@@ -313,9 +314,9 @@ impl Shell {
                             let manual = std::mem::take(&mut this.manual_save_pending);
                             this.persist(this.closing, manual, cx);
                         } else if dirty {
-                            this.status = "Unsaved changes".into();
+                            this.status = tr("Unsaved changes").into();
                         } else {
-                            this.status = "Saved".into();
+                            this.status = tr("Saved").into();
                             this.error = None;
                             if manual {
                                 this.flash_saved(cx);
@@ -353,7 +354,7 @@ impl Shell {
         match hsplanner_build::codec::encode(&draft.snapshot, &draft.notes) {
             Ok(code) => {
                 cx.write_to_clipboard(ClipboardItem::new_string(code));
-                self.status = "Build code copied".into();
+                self.status = tr("Build code copied").into();
             }
             Err(error) => self.error = Some(error),
         }
@@ -478,7 +479,7 @@ impl Render for Shell {
             .text_color(text)
             .font_family(hsplanner_ui::theme::FONT_FAMILY)
             .line_height(relative(1.5))
-            .key_context("Planner")
+            .key_context(tr("Planner"))
             .track_focus(&self.focus)
             .on_action(cx.listener(|this, action: &SelectSection, window, cx| {
                 this.switch(action.section, window, cx);
@@ -564,7 +565,7 @@ impl Render for Shell {
                             Button::new("save")
                                 .planner_style(cx)
                                 .small()
-                                .label("Save")
+                                .label(tr("Save"))
                                 .on_click(
                                     cx.listener(|this, _, _, cx| this.persist(false, true, cx)),
                                 ),
@@ -573,7 +574,7 @@ impl Render for Shell {
                             Button::new("save-as")
                                 .planner_style(cx)
                                 .small()
-                                .label("Save as")
+                                .label(tr("Save as"))
                                 .on_click(cx.listener(|this, _, _, cx| {
                                     let name = this.name.read(cx).value().to_string();
                                     this.apply(cx, |s| s.save_as(&name).map(|_| ()));
@@ -583,7 +584,7 @@ impl Render for Shell {
                             Button::new("new-profile")
                                 .planner_style(cx)
                                 .small()
-                                .label("Add profile")
+                                .label(tr("Add profile"))
                                 .on_click(cx.listener(|this, _, _, cx| {
                                     let name = this.name.read(cx).value().to_string();
                                     this.apply(cx, |s| s.add_profile(&name, None));
@@ -593,7 +594,7 @@ impl Render for Shell {
                             Button::new("rename-profile")
                                 .planner_style(cx)
                                 .small()
-                                .label("Rename profile")
+                                .label(tr("Rename profile"))
                                 .on_click(cx.listener(|this, _, _, cx| {
                                     let name = this.name.read(cx).value().to_string();
                                     let id = this.session.read(cx).draft().profile_id.clone();
@@ -606,7 +607,7 @@ impl Render for Shell {
                             Button::new("delete-profile")
                                 .planner_style(cx)
                                 .small()
-                                .label("Delete profile")
+                                .label(tr("Delete profile"))
                                 .on_click(cx.listener(|this, _, _, cx| {
                                     let id = this.session.read(cx).draft().profile_id.clone();
                                     if let Some(id) = id {
@@ -670,9 +671,9 @@ pub fn run(
                     .expect("http client"),
             ));
             cx.bind_keys([
-                KeyBinding::new("secondary-s", Save, Some("Planner")),
-                KeyBinding::new("secondary-z", Undo, Some("Planner")),
-                KeyBinding::new("secondary-shift-z", Redo, Some("Planner")),
+                KeyBinding::new("secondary-s", Save, Some(tr("Planner"))),
+                KeyBinding::new("secondary-z", Undo, Some(tr("Planner"))),
+                KeyBinding::new("secondary-shift-z", Redo, Some(tr("Planner"))),
                 KeyBinding::new("secondary-q", Quit, None),
                 #[cfg(debug_assertions)]
                 KeyBinding::new("secondary-shift-d", ToggleDebugOverlay, None),
@@ -698,9 +699,9 @@ pub fn run(
                     is_resizable: !lock_review_size,
                     titlebar: Some(TitlebarOptions {
                         title: Some(if lock_review_size {
-                            "HSPlanner · Visual review".into()
+                            tr("HSPlanner · Visual review").into()
                         } else {
-                            "HSPlanner".into()
+                            tr("HSPlanner").into()
                         }),
                         ..Default::default()
                     }),
@@ -715,7 +716,7 @@ pub fn run(
                         let _ = quit.update(cx, |shell, cx| shell.request_close(cx));
                     });
                     cx.set_menus([
-                        Menu::new("HSPlanner").items([MenuItem::action("Quit HSPlanner", Quit)])
+                        Menu::new(tr("HSPlanner")).items([MenuItem::action(tr("Quit HSPlanner"), Quit)])
                     ]);
                     window.on_window_should_close(cx, move |_, cx| {
                         let _ = weak.update(cx, |shell, cx| shell.request_close(cx));

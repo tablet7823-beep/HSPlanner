@@ -3859,6 +3859,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.9",
+ "sys-locale",
  "uuid",
 ]
 
@@ -3894,6 +3895,7 @@ dependencies = [
 name = "hsplanner-notes"
 version = "1.1.0"
 dependencies = [
+ "HSPlanner",
  "gpui-kit",
  "hsplanner-build",
  "hsplanner-ui",
@@ -3918,6 +3920,7 @@ dependencies = [
 name = "hsplanner-ui"
 version = "1.1.0"
 dependencies = [
+ "HSPlanner",
  "gpui-kit",
  "log",
  "sys-locale",

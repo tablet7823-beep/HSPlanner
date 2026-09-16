@@ -1,3 +1,4 @@
+use hsplanner_engine::calc::i18n::tr;
 use serde::{Deserialize, Serialize};
 
 use crate::{BuildSnapshot, codec, notes::Notes};
@@ -116,7 +117,7 @@ impl Default for Library {
 impl Library {
     pub fn validate(&self) -> Result<(), String> {
         if self.version != 3 {
-            return Err("Unsupported library version. The original data was not changed.".into());
+            return Err(tr("Unsupported library version. The original data was not changed.").into());
         }
         let mut ids = std::collections::HashSet::new();
         for build in &self.builds {
@@ -134,18 +135,18 @@ impl Library {
         let folders: std::collections::HashMap<_, _> =
             self.folders.iter().map(|f| (f.id.as_str(), f)).collect();
         if folders.len() != self.folders.len() {
-            return Err("Duplicate folder identifiers.".into());
+            return Err(tr("Duplicate folder identifiers.").into());
         }
         for folder in &self.folders {
             let mut seen = std::collections::HashSet::from([folder.id.as_str()]);
             let mut parent = folder.parent_id.as_deref();
             while let Some(id) = parent {
                 if !seen.insert(id) {
-                    return Err("The folder hierarchy contains a cycle.".into());
+                    return Err(tr("The folder hierarchy contains a cycle.").into());
                 }
                 parent = folders
                     .get(id)
-                    .ok_or("A parent folder is missing.")?
+                    .ok_or(tr("A parent folder is missing."))?
                     .parent_id
                     .as_deref();
             }
@@ -170,15 +171,15 @@ impl Library {
         folder_id: Option<String>,
     ) -> Result<String, String> {
         if self.builds.len() >= 1_000 {
-            return Err("The library already contains 1,000 builds.".into());
+            return Err(tr("The library already contains 1,000 builds.").into());
         }
         if folder_id
             .as_ref()
             .is_some_and(|id| !self.folders.iter().any(|f| &f.id == id))
         {
-            return Err("Folder no longer exists.".into());
+            return Err(tr("Folder no longer exists.").into());
         }
-        let profile = Profile::new("Default", snapshot)?;
+        let profile = Profile::new(tr("Default"), snapshot)?;
         let id = new_id("b");
         self.builds.push(SavedBuild {
             id: id.clone(),
@@ -200,9 +201,9 @@ impl Library {
     }
     pub fn duplicate(&mut self, id: &str) -> Result<String, String> {
         if self.builds.len() >= 1_000 {
-            return Err("The library already contains 1,000 builds.".into());
+            return Err(tr("The library already contains 1,000 builds.").into());
         }
-        let mut build = self.build(id).ok_or("Build no longer exists.")?.clone();
+        let mut build = self.build(id).ok_or(tr("Build no longer exists."))?.clone();
         build.id = new_id("b");
         build.name = duplicate_name(&build.name, self.builds.iter().map(|b| b.name.as_str()));
         for profile in &mut build.profiles {
@@ -243,13 +244,13 @@ impl Library {
         parent_id: Option<String>,
     ) -> Result<String, String> {
         if self.folders.len() >= 500 {
-            return Err("The library already contains 500 folders.".into());
+            return Err(tr("The library already contains 500 folders.").into());
         }
         if parent_id
             .as_ref()
             .is_some_and(|id| !self.folders.iter().any(|f| &f.id == id))
         {
-            return Err("Parent folder no longer exists.".into());
+            return Err(tr("Parent folder no longer exists.").into());
         }
         let id = new_id("f");
         self.folders.push(Folder {
@@ -264,7 +265,7 @@ impl Library {
         self.folders
             .iter_mut()
             .find(|f| f.id == id)
-            .ok_or("Folder no longer exists.")?
+            .ok_or(tr("Folder no longer exists."))?
             .name = clean_name(name)?;
         Ok(())
     }
@@ -312,7 +313,7 @@ impl Library {
 pub fn clean_name(name: &str) -> Result<String, String> {
     let value: String = name.trim().chars().take(500).collect();
     if value.is_empty() {
-        Err("Enter a name.".into())
+        Err(tr("Enter a name.").into())
     } else {
         Ok(value)
     }

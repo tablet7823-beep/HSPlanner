@@ -1,3 +1,4 @@
+use hsplanner_engine::calc::i18n::tr;
 use super::*;
 use gpui_kit::component::{WindowExt, dialog::Confirm};
 
@@ -18,14 +19,14 @@ impl LibraryView {
         cx: &mut Context<Self>,
     ) {
         let title = match kind {
-            EditKind::NewBuild => "New build",
-            EditKind::NewFolder => "New folder",
-            EditKind::RenameFolder => "Rename folder",
-            EditKind::Rename => "Rename build",
-            EditKind::AddProfile => "Add profile",
+            EditKind::NewBuild => tr("New build"),
+            EditKind::NewFolder => tr("New folder"),
+            EditKind::RenameFolder => tr("Rename folder"),
+            EditKind::Rename => tr("Rename build"),
+            EditKind::AddProfile => tr("Add profile"),
         };
         self.error = None;
-        let input = cx.new(|cx| InputState::new(window, cx).placeholder("Name"));
+        let input = cx.new(|cx| InputState::new(window, cx).placeholder(tr("Name")));
         let build_id = self.selected.clone();
         if matches!(kind, EditKind::Rename) {
             let name = build_id
@@ -88,20 +89,20 @@ impl LibraryView {
                             }),
                             EditKind::RenameFolder => session.edit_library(|library| {
                                 library.rename_folder(
-                                    folder.as_deref().ok_or("Select a folder")?,
+                                    folder.as_deref().ok_or(tr("Select a folder"))?,
                                     &name,
                                 )
                             }),
                             EditKind::Rename => session.edit_library(|library| {
-                                library.rename(build_id.as_deref().ok_or("Select a build")?, &name)
+                                library.rename(build_id.as_deref().ok_or(tr("Select a build"))?, &name)
                             }),
                             EditKind::AddProfile => session.edit_library(|library| {
                                 let build = library
-                                    .build_mut(build_id.as_deref().ok_or("Select a build")?)?;
+                                    .build_mut(build_id.as_deref().ok_or(tr("Select a build"))?)?;
                                 let snapshot = build
                                     .profile(&build.active_profile_id)
                                     .or_else(|| build.profiles.first())
-                                    .ok_or("Build has no profile")?
+                                    .ok_or(tr("Build has no profile"))?
                                     .snapshot()?;
                                 build.profiles.push(hsplanner_build::library::Profile::new(
                                     &name, &snapshot,

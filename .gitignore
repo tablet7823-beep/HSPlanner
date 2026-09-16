@@ -58,3 +58,8 @@ CLAUDE.md
 # Local migration experiments and visual comparison tools
 /prototypes/
 /tools/ui-parity/
+
+# Generated translation indexes. tools/i18n_build.py rebuilds them from the
+# data files on every run, so only the catalogues themselves are tracked.
+data/i18n/sources.json
+data/i18n/ui/sources.json

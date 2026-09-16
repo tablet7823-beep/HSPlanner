@@ -1,3 +1,4 @@
+use hsplanner_engine::calc::i18n::tr;
 use crate::build_session::DocumentKey;
 use gpui_kit::base::Disableable;
 use gpui_kit::component::{
@@ -238,8 +239,8 @@ impl GearView {
         cx: &mut Context<Self>,
     ) -> Self {
         let search = cx
-            .new(|cx| InputState::new(window, cx).placeholder("Search by name, affix, or effect…"));
-        let stash_search = cx.new(|cx| InputState::new(window, cx).placeholder("Search stash…"));
+            .new(|cx| InputState::new(window, cx).placeholder(tr("Search by name, affix, or effect…")));
+        let stash_search = cx.new(|cx| InputState::new(window, cx).placeholder(tr("Search stash…")));
         let document = DocumentKey::from_session(session.read(cx));
         let subscriptions = vec![
             cx.subscribe(&stash_search, |this, _, event: &InputEvent, cx| {
@@ -457,8 +458,8 @@ impl GearView {
                 .map(|a| {
                     use hsplanner_engine::calc::types::AffixKind;
                     let (kind, group) = match a.kind {
-                        Some(AffixKind::Prefix) => ("PREFIX", "Prefixes"),
-                        Some(AffixKind::Suffix) => ("SUFFIX", "Suffixes"),
+                        Some(AffixKind::Prefix) => ("PREFIX", tr("Prefixes")),
+                        Some(AffixKind::Suffix) => ("SUFFIX", tr("Suffixes")),
                         None => ("AFFIX", ""),
                     };
                     Row::new(&a.id, &a.name, &a.description)
@@ -512,10 +513,10 @@ impl GearView {
                             .icon(crate::skills::skill_icon(&s.class_id, &s.id))
                     })
                     .collect::<Vec<_>>();
-                rows.push(Row::new("", "No skill", ""));
+                rows.push(Row::new("", tr("No skill"), ""));
                 rows
             }
-            Picker::RandomElement => std::iter::once(Row::new("", "No element", ""))
+            Picker::RandomElement => std::iter::once(Row::new("", tr("No element"), ""))
                 .chain(
                     ["fire", "cold", "lightning", "poison", "arcane"]
                         .into_iter()
@@ -532,7 +533,7 @@ impl GearView {
                 .classes
                 .values()
                 .map(|c| Row::new(&c.id, &c.name, ""))
-                .chain(std::iter::once(Row::new("", "No class", "")))
+                .chain(std::iter::once(Row::new("", tr("No class"), "")))
                 .collect(),
         };
         if self.picker == Picker::Affix {
@@ -678,7 +679,7 @@ impl GearView {
                         _ => unreachable!(),
                     }
                 } else {
-                    Err("Choose an item first.".into())
+                    Err(tr("Choose an item first.").into())
                 }
             }
         };

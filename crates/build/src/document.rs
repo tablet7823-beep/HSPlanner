@@ -163,6 +163,8 @@ impl BuildSnapshot {
                 && (s.contains("melee weapons") || s.contains("swords, maces and axes"))
         });
         let grip_type = |item: &hsplanner_engine::calc::types::ItemBase| {
+            // `base_type` is data, not a label: it stays English so runewords
+            // and the offhand rules keep matching. Do not wrap these in tr().
             ["Sword", "Mace", "Axe", "Polearm", "Claw"].contains(&item.base_type.as_str())
         };
         if base.two_handed.unwrap_or(false) || main.is_some_and(|b| b.two_handed.unwrap_or(false)) {

@@ -289,14 +289,23 @@ struct EtherStat {
     desc: String,
     value: String,
 }
-static ETHER: LazyLock<EtherData> = LazyLock::new(|| {
-    serde_json::from_str(include_str!("../../../data/ether-tree.json")).expect("valid Ether data")
-});
+// Ether loads outside GameData, so it misses the season-patch path where every
+// other collection gets translated; it caches per locale on its own instead.
+const ETHER_JSON: &str = include_str!("../../../data/ether-tree.json");
+static ETHER_BY_LOCALE: LazyLock<std::sync::Mutex<HashMap<String, &'static EtherData>>> =
+    LazyLock::new(|| std::sync::Mutex::new(HashMap::new()));
+
+fn ether() -> &'static EtherData {
+    super::i18n::cached_per_locale(&ETHER_BY_LOCALE, || {
+        super::i18n::parse_localized(ETHER_JSON, "ether-tree.json")
+    })
+}
 
 pub fn summarize_ether(ids: &[u32]) -> Vec<EtherSummary> {
     let mut counts: BTreeMap<&str, u32> = BTreeMap::new();
     let unique: std::collections::HashSet<_> = ids.iter().collect();
-    for node in &ETHER.nodes {
+    let ether = ether();
+    for node in &ether.nodes {
         if unique.contains(&node.id) {
             *counts.entry(&node.key).or_default() += 1;
         }
@@ -304,7 +313,7 @@ pub fn summarize_ether(ids: &[u32]) -> Vec<EtherSummary> {
     let mut out: Vec<_> = counts
         .into_iter()
         .filter_map(|(key, count)| {
-            let stat = ETHER.stats.get(key)?;
+            let stat = ether.stats.get(key)?;
             let number = stat
                 .value
                 .trim()

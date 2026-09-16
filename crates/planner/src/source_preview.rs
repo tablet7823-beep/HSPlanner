@@ -1,4 +1,5 @@
 //! Read-only source previews use the same item cards and tree renderer as the planner.
+use hsplanner_engine::calc::i18n::tr;
 use crate::{
     item_tooltip,
     scene::{Scene, Selection},
@@ -31,7 +32,7 @@ fn item_name(source: &SourceContribution) -> &str {
         return &forge.item_name;
     }
     let label = source.label.trim();
-    if let Some((_, tail)) = label.rsplit_once(" in ")
+    if let Some((_, tail)) = label.rsplit_once(tr(" in "))
         && let Some((name, suffix)) = tail.rsplit_once(" #")
         && suffix.starts_with(|c: char| c.is_ascii_digit())
     {

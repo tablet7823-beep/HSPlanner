@@ -1,4 +1,5 @@
 //! Read-only planner results, with view-local search, filters and source disclosures.
+use hsplanner_engine::calc::i18n::tr;
 use crate::{TreeView, build_panel::format_range};
 use gpui_kit::base::Selectable;
 use gpui_kit::component::{
@@ -34,10 +35,10 @@ enum Filter {
 impl Filter {
     fn name(self) -> &'static str {
         match self {
-            Self::All => "All",
-            Self::Damage => "Damage",
-            Self::Stats => "Stats",
-            Self::Skills => "Skills",
+            Self::All => tr("All"),
+            Self::Damage => tr("Damage"),
+            Self::Stats => tr("Stats"),
+            Self::Skills => tr("Skills"),
         }
     }
 }
@@ -94,13 +95,13 @@ enum Group {
 impl Group {
     fn title(self) -> &'static str {
         match self {
-            Self::Offense => "Offense",
-            Self::Mitigation => "Mitigation",
-            Self::Resistances => "Resistances",
-            Self::Resources => "Resources",
-            Self::Skills => "Skill Bonuses",
-            Self::World => "World & Loot",
-            Self::Other => "Other",
+            Self::Offense => tr("Offense"),
+            Self::Mitigation => tr("Mitigation"),
+            Self::Resistances => tr("Resistances"),
+            Self::Resources => tr("Resources"),
+            Self::Skills => tr("Skill Bonuses"),
+            Self::World => tr("World & Loot"),
+            Self::Other => tr("Other"),
         }
     }
     fn visible(self, filter: Filter) -> bool {
@@ -248,33 +249,33 @@ fn decimal_range(value: (f64, f64)) -> String {
 /// Presentation-only overview; the full engine trace remains available below it.
 fn calculation_overview(step: &CalculationStep) -> Option<(&'static str, &'static str)> {
     let (label, operator) = match step.label() {
-        "Base damage" => ("Base damage", ""),
-        "Flat added" => ("Added damage", "+"),
-        "Physical base" => ("Weapon & added damage", ""),
-        "Synergy multiplier" => ("Synergies", "×"),
-        "Increased skill damage multiplier" => ("Increased damage", "×"),
-        "More skill damage multiplier" => ("More damage", "×"),
-        "Attack damage multiplier" => ("Attack damage & synergies", "×"),
-        "Skill weapon multiplier" => ("Skill scaling", "×"),
-        "Crushing blow + armor break" => ("Crushing blow & armor break", "×"),
-        "Deadly blow multiplier" => ("Deadly blow", "×"),
-        "Extra damage multiplier" => ("Extra damage", "×"),
-        "Enemy damage taken multiplier" => ("Enemy vulnerability", "×"),
-        "Elemental break multiplier" => ("Elemental break", "×"),
-        "Element resistance break multiplier" => ("Element resistance break", "×"),
-        "Resistance multiplier" => ("Enemy resistance", "×"),
-        "Hit damage" | "Physical hit" => ("Single hit", "="),
-        "Average critical multiplier" => ("Critical average", "×"),
-        "Multicast multiplier" => ("Multicast", "×"),
-        "Projectiles" => ("Projectiles", "×"),
-        "Average physical damage" => ("Average physical damage", "="),
-        "Actions per second" | "Entity actions per second" => ("Actions per second", ""),
-        "Entity count" => ("Entities", "×"),
-        "Hits per cast" => ("Hits per cast", "×"),
-        "Average hit DPS" => ("Hit DPS", ""),
-        "Proc DPS" => ("Procs", "+"),
-        "Ailment DPS" => ("Damage over time", "+"),
-        "Execute multiplier" => ("Execute", "×"),
+        "Base damage" => (tr("Base damage"), ""),
+        "Flat added" => (tr("Added damage"), "+"),
+        "Physical base" => (tr("Weapon & added damage"), ""),
+        "Synergy multiplier" => (tr("Synergies"), "×"),
+        "Increased skill damage multiplier" => (tr("Increased damage"), "×"),
+        "More skill damage multiplier" => (tr("More damage"), "×"),
+        "Attack damage multiplier" => (tr("Attack damage & synergies"), "×"),
+        "Skill weapon multiplier" => (tr("Skill scaling"), "×"),
+        "Crushing blow + armor break" => (tr("Crushing blow & armor break"), "×"),
+        "Deadly blow multiplier" => (tr("Deadly blow"), "×"),
+        "Extra damage multiplier" => (tr("Extra damage"), "×"),
+        "Enemy damage taken multiplier" => (tr("Enemy vulnerability"), "×"),
+        "Elemental break multiplier" => (tr("Elemental break"), "×"),
+        "Element resistance break multiplier" => (tr("Element resistance break"), "×"),
+        "Resistance multiplier" => (tr("Enemy resistance"), "×"),
+        "Hit damage" | "Physical hit" => (tr("Single hit"), "="),
+        "Average critical multiplier" => (tr("Critical average"), "×"),
+        "Multicast multiplier" => (tr("Multicast"), "×"),
+        "Projectiles" => (tr("Projectiles"), "×"),
+        "Average physical damage" => (tr("Average physical damage"), "="),
+        "Actions per second" | "Entity actions per second" => (tr("Actions per second"), ""),
+        "Entity count" => (tr("Entities"), "×"),
+        "Hits per cast" => (tr("Hits per cast"), "×"),
+        "Average hit DPS" => (tr("Hit DPS"), ""),
+        "Proc DPS" => (tr("Procs"), "+"),
+        "Ailment DPS" => (tr("Damage over time"), "+"),
+        "Execute multiplier" => (tr("Execute"), "×"),
         _ => return None,
     };
     let neutral = match operator {
@@ -346,7 +347,7 @@ impl StatsView {
         cx: &mut Context<Self>,
     ) -> Self {
         let query = cx.new(|cx| {
-            InputState::new(window, cx).placeholder("Search stats, attributes, or skills…")
+            InputState::new(window, cx).placeholder(tr("Search stats, attributes, or skills…"))
         });
         let calculation_revision = session.read(cx).calculation_revision();
         let observed_performance = tree.read(cx).performance();
@@ -611,7 +612,7 @@ impl StatsView {
                 self.session.clone(),
             ));
         }
-        Some(panel("attributes-title", "Attributes", cx).child(strip))
+        Some(panel("attributes-title", tr("Attributes"), cx).child(strip))
     }
     fn calculation_section(
         &self,
@@ -839,9 +840,9 @@ impl StatsView {
                     command_button(
                         SharedString::from(format!("{id}-details")),
                         if all_details {
-                            "Show summary"
+                            tr("Show summary")
                         } else {
-                            "Show all details"
+                            tr("Show all details")
                         },
                         ButtonTone::Ghost,
                         ButtonSize::Small,
@@ -860,9 +861,9 @@ impl StatsView {
             content = content.child(self.calculation_section(
                 &format!("{id}-element"),
                 if value.attack_damage.is_some() {
-                    "Elemental damage per cast"
+                    tr("Elemental damage per cast")
                 } else {
-                    "Damage per cast"
+                    tr("Damage per cast")
                 },
                 damage.calculation(),
                 value,
@@ -872,7 +873,7 @@ impl StatsView {
         if let Some(damage) = &value.attack_damage {
             content = content.child(self.calculation_section(
                 &format!("{id}-physical"),
-                "Damage per swing",
+                tr("Damage per swing"),
                 damage.calculation(),
                 value,
                 cx,
@@ -880,7 +881,7 @@ impl StatsView {
         }
         content.child(self.calculation_section(
             &format!("{id}-dps"),
-            "Damage per second",
+            tr("Damage per second"),
             value.calculation(),
             value,
             cx,
@@ -904,25 +905,25 @@ impl StatsView {
         let (label, headline) = if let Some(d) = &value.attack_damage {
             metrics.extend([
                 (
-                    "Hit damage",
+                    tr("Hit damage"),
                     format_range(
                         (d.combined_hit_min as f64, d.combined_hit_max as f64),
                         false,
                     ),
                 ),
                 (
-                    "Attack damage",
+                    tr("Attack damage"),
                     format_range((d.weapon_damage_pct_min, d.weapon_damage_pct_max), true),
                 ),
                 (
-                    "Physical hit",
+                    tr("Physical hit"),
                     format_range(
                         (d.physical_hit_min as f64, d.physical_hit_max as f64),
                         false,
                     ),
                 ),
                 (
-                    "Elemental hit",
+                    tr("Elemental hit"),
                     if d.poison_hit_max > 0 {
                         format_range((d.poison_hit_min as f64, d.poison_hit_max as f64), false)
                     } else {
@@ -931,7 +932,7 @@ impl StatsView {
                 ),
             ]);
             (
-                "AVERAGE HIT",
+                tr("AVERAGE HIT"),
                 format_range(
                     (d.combined_avg_min as f64, d.combined_avg_max as f64),
                     false,
@@ -940,11 +941,11 @@ impl StatsView {
         } else if let Some(d) = &value.damage {
             metrics.extend([
                 (
-                    "Hit damage",
+                    tr("Hit damage"),
                     format_range((d.hit_min as f64, d.hit_max as f64), false),
                 ),
                 (
-                    "Crit damage",
+                    tr("Crit damage"),
                     if d.crit_chance > 0. {
                         format_range((d.crit_min as f64, d.crit_max as f64), false)
                     } else {
@@ -952,7 +953,7 @@ impl StatsView {
                     },
                 ),
                 (
-                    "Crit chance",
+                    tr("Crit chance"),
                     if d.crit_chance > 0. {
                         format_range((d.crit_chance, d.crit_chance), true)
                     } else {
@@ -960,7 +961,7 @@ impl StatsView {
                     },
                 ),
                 (
-                    "Crit multi",
+                    tr("Crit multi"),
                     if d.crit_chance > 0. {
                         format!(
                             "+{}",
@@ -973,17 +974,17 @@ impl StatsView {
             ]);
             if d.crit_chance > 0. {
                 (
-                    "AVERAGE HIT",
+                    tr("AVERAGE HIT"),
                     format_range((d.avg_min as f64, d.avg_max as f64), false),
                 )
             } else {
                 (
-                    "HIT DAMAGE",
+                    tr("HIT DAMAGE"),
                     format_range((d.hit_min as f64, d.hit_max as f64), false),
                 )
             }
         } else {
-            ("HIT DAMAGE", "—".into())
+            (tr("HIT DAMAGE"), "—".into())
         };
         let mut summary = div()
             .flex()
@@ -1127,7 +1128,7 @@ impl StatsView {
                     )
                     .find(|skill| &skill.skill_id == id)
             });
-            let mut main_panel = panel("main-skill-title", "Main Skill", cx);
+            let mut main_panel = panel("main-skill-title", tr("Main Skill"), cx);
             if let Some(main) = main {
                 let name = main
                     .performance
@@ -1136,7 +1137,7 @@ impl StatsView {
                     .unwrap_or(&main.skill_id);
                 main_panel = panel_with_trailing(
                     "main-skill-title",
-                    "Main Skill",
+                    tr("Main Skill"),
                     div()
                         .font_family(theme::MONO_FONT_FAMILY)
                         .text_size(units(9.))
@@ -1157,7 +1158,7 @@ impl StatsView {
                         .text_color(p.muted)
                         .text_size(units(12.))
                         .child(
-                            "Pick an active skill in the Skills tab to see its damage breakdown.",
+                            tr("Pick an active skill in the Skills tab to see its damage breakdown."),
                         ),
                 );
             }
@@ -1216,7 +1217,7 @@ impl StatsView {
                     })
             });
             let damage_label = if rank == 0 {
-                "Not learned".into()
+                tr("Not learned").into()
             } else {
                 damage
                     .map(|value| {
@@ -1363,7 +1364,7 @@ impl StatsView {
                 div()
                     .py_2()
                     .text_color(p.muted)
-                    .child("No skills match your search."),
+                    .child(tr("No skills match your search.")),
             );
         }
         content.push(
@@ -1376,7 +1377,7 @@ impl StatsView {
                 .font_weight(FontWeight::SEMIBOLD)
                 .text_color(p.muted)
                 .child(div().w_3p5().h(px(1.)).bg(p.accent_deep))
-                .child(TooltipText::new("per-skill-title", "PER-SKILL DAMAGE", 0.2)),
+                .child(TooltipText::new("per-skill-title", tr("PER-SKILL DAMAGE"), 0.2)),
         );
         content.push(
             div()
@@ -1403,9 +1404,9 @@ impl StatsView {
         }
         if !query.is_empty()
             && ![
-                "effective hp",
+                tr("effective hp"),
                 "ehp",
-                "hit pool",
+                tr("hit pool"),
                 "life",
                 "physical",
                 "fire",
@@ -1414,7 +1415,7 @@ impl StatsView {
                 "poison",
                 "arcane",
                 "resistance",
-                "damage reduction",
+                tr("damage reduction"),
             ]
             .iter()
             .any(|term| term.contains(query))
@@ -1487,14 +1488,14 @@ impl StatsView {
                     ));
                 }
                 disclosures = disclosures.child(value_row(
-                    "Damage multiplier",
+                    tr("Damage multiplier"),
                     format!("×{:.3}", entry.multiplier),
                     cx,
                 ));
             }
         }
         Some(
-            panel("ehp-title", "Effective HP", cx)
+            panel("ehp-title", tr("Effective HP"), cx)
                 .child(rows)
                 .child(disclosures),
         )
@@ -1591,7 +1592,7 @@ impl StatsView {
                 .px_6()
                 .py_5()
                 .text_color(p.muted)
-                .child("Calculating…")
+                .child(tr("Calculating…"))
                 .into_any_element(),
             (Row::Top, Some(result)) => {
                 let logical_width =
@@ -1617,7 +1618,7 @@ impl StatsView {
             (Row::StatsStart, _) => div()
                 .mx_6()
                 .child(
-                    panel("all-stats-title", "All Stats", cx)
+                    panel("all-stats-title", tr("All Stats"), cx)
                         .rounded_b_none()
                         .border_b_0()
                         .pb_0(),
@@ -1629,7 +1630,7 @@ impl StatsView {
                     div()
                         .py_3()
                         .text_color(p.muted)
-                        .child("No stats match your search."),
+                        .child(tr("No stats match your search.")),
                 )
                 .into_any_element(),
             (Row::StatsPair { left, right }, Some(result)) => self
@@ -1676,7 +1677,7 @@ impl StatsView {
                             .text_size(units(22.))
                             .font_weight(FontWeight::SEMIBOLD)
                             .text_color(p.accent_hot)
-                            .child(TooltipText::new("stats-title", "Stats", 0.04)),
+                            .child(TooltipText::new("stats-title", tr("Stats"), 0.04)),
                     )
                     .child(
                         div().flex().items_center().gap_1p5().children(
@@ -1710,7 +1711,7 @@ impl StatsView {
                 Input::new(&self.query)
                     .planner_style(cx)
                     .cleanable(true)
-                    .aria_label("Search stats, attributes, or skills")
+                    .aria_label(tr("Search stats, attributes, or skills"))
                     .prefix(Icon::new(IconName::Search).size_3p5().text_color(p.faint))
                     .px_3()
                     .py_2()

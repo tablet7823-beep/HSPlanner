@@ -1,3 +1,4 @@
+use hsplanner_engine::calc::i18n::tr;
 use gpui_kit::{
     App, Div, FontWeight, InteractiveElement, ParentElement, Stateful, Styled, div, relative, rems,
 };
@@ -84,13 +85,13 @@ pub fn preview_changes(
                 .text_xs()
                 .font_weight(FontWeight::SEMIBOLD)
                 .text_color(palette.muted)
-                .child("NET CHANGE"),
+                .child(tr("NET CHANGE")),
         );
     let Some(preview) = preview else {
         return panel.child(div().text_color(palette.faint).child(if pending {
-            "Calculating changes…"
+            tr("Calculating changes…")
         } else {
-            "Changes unavailable"
+            tr("Changes unavailable")
         }));
     };
     let path_label = if preview.removed > 0 {
@@ -98,7 +99,7 @@ pub fn preview_changes(
     } else {
         format!("Allocating {} nodes:", preview.added)
     };
-    let mut groups = vec![("This node:".to_owned(), &preview.single)];
+    let mut groups = vec![(tr("This node:").to_owned(), &preview.single)];
     if preview.added > 1 || preview.removed > 1 {
         groups.push((path_label, &preview.path));
     }
@@ -113,7 +114,7 @@ pub fn preview_changes(
             group = group.child(
                 div()
                     .text_color(palette.faint)
-                    .child("No calculated change"),
+                    .child(tr("No calculated change")),
             );
         } else {
             let count = limit.unwrap_or(changes.len()).min(changes.len());

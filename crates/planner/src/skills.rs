@@ -1,4 +1,5 @@
 //! Class skill trees and their inspector. The document owns ranks; this view owns selection.
+use hsplanner_engine::calc::i18n::tr;
 use hsplanner_ui::tooltip::CursorTooltipExt;
 use std::{
     collections::HashMap,
@@ -597,7 +598,7 @@ impl SkillsView {
                         .text_color(palette.accent_hot)
                         .label("+")
                         .accessibility_label(format!("Add point to {}", skill.name))
-                        .cursor_tooltip("Add a point · Shift ×5 · Ctrl/Cmd+Shift all")
+                        .cursor_tooltip(tr("Add a point · Shift ×5 · Ctrl/Cmd+Shift all"))
                         .on_mouse_down(MouseButton::Right, |_, _, cx| cx.stop_propagation())
                         .on_click(cx.listener(move |this, event: &ClickEvent, _, cx| {
                             this.change_rank(&add, true, event.modifiers(), cx)
@@ -619,7 +620,7 @@ impl SkillsView {
                         .p_0()
                         .child(Icon::new(IconName::Settings).size_3())
                         .accessibility_label(format!("Open {} subtree", skill.name))
-                        .cursor_tooltip("Open subtree…")
+                        .cursor_tooltip(tr("Open subtree…"))
                         .on_mouse_down(MouseButton::Right, |_, _, cx| cx.stop_propagation())
                         .on_click(cx.listener(move |this, _, window, cx| {
                             this.subtree(&subtree, window, cx)
@@ -683,7 +684,7 @@ impl SkillsView {
                 div()
                     .text_size(units(12.))
                     .text_color(p.muted)
-                    .child("Return to the full build to inspect skill details."),
+                    .child(tr("Return to the full build to inspect skill details.")),
             );
         }
         let Some(skill) = skill else {
@@ -735,7 +736,7 @@ impl SkillsView {
             .child(
                 icon_button("detail-less", "−", false, cx)
                     .disabled(rank == 0)
-                    .accessibility_label("Remove skill point")
+                    .accessibility_label(tr("Remove skill point"))
                     .on_click(cx.listener(move |this, event: &ClickEvent, _, cx| {
                         this.change_rank(&minus, false, event.modifiers(), cx)
                     })),
@@ -743,7 +744,7 @@ impl SkillsView {
             .child(
                 icon_button("detail-more", "+", false, cx)
                     .disabled(rank >= skill.max_rank || available == 0 || !prerequisite_met)
-                    .accessibility_label("Add skill point")
+                    .accessibility_label(tr("Add skill point"))
                     .on_click(cx.listener(move |this, event: &ClickEvent, _, cx| {
                         this.change_rank(&plus, true, event.modifiers(), cx)
                     })),
@@ -751,7 +752,7 @@ impl SkillsView {
         let toggle = (kind != SkillKind::Passive).then(|| {
             segment(
                 "toggle-active",
-                if enabled { "✓ Active" } else { "+ Active" },
+                if enabled { tr("✓ Active") } else { tr("+ Active") },
                 enabled,
                 cx,
             )
@@ -807,7 +808,7 @@ impl SkillsView {
             content = content.child(
                 Button::new("open-subtree")
                     .planner_style(cx)
-                    .label(format!("Subtree… · {spent} points"))
+                    .label(format!("{} · {spent} {}", tr("Subtree…"), tr("points")))
                     .disabled(nodes.is_empty())
                     .on_click(
                         cx.listener(move |this, _, window, cx| this.subtree(&subtree, window, cx)),
@@ -834,7 +835,7 @@ impl Render for SkillsView {
         let spent: u32 = snapshot.skill_ranks.values().sum();
         let mut trees: Vec<(&str, Vec<&SkillSpec>)> = Vec::new();
         for skill in skills {
-            let name = skill.tree.as_deref().unwrap_or("Skills");
+            let name = skill.tree.as_deref().unwrap_or(tr("Skills"));
             if let Some((_, skills)) = trees.iter_mut().find(|(key, _)| *key == name) {
                 skills.push(skill);
             } else {
@@ -869,7 +870,7 @@ impl Render for SkillsView {
                     .py_3()
                     .border_b_1()
                     .border_color(p.border)
-                    .child(caption("skills-title", "◆ SKILLS", p.faint))
+                    .child(caption("skills-title", tr("◆ SKILLS"), p.faint))
                     .child(
                         div()
                             .text_size(units(15.))
@@ -893,14 +894,14 @@ impl Render for SkillsView {
                             ))
                             .child(caption(
                                 "skill-modifier-hint",
-                                "SHIFT ×5 · CTRL/CMD+SHIFT ALL",
+                                tr("SHIFT ×5 · CTRL/CMD+SHIFT ALL"),
                                 p.faint,
                             ))
                             .child(
                                 Button::new("reset-skills")
                                     .planner_style(cx)
                                     .small()
-                                    .label("Reset")
+                                    .label(tr("Reset"))
                                     .disabled(spent == 0)
                                     .on_click(cx.listener(|this, _, _, cx| {
                                         this.edit(cx, |s| s.skill_ranks.clear())
@@ -977,7 +978,7 @@ impl Render for SkillsView {
                                             }))
                                             .when(trees.is_empty(), |v| {
                                                 v.child(
-                                                    "Choose a class in Config to view its skills.",
+                                                    tr("Choose a class in Config to view its skills."),
                                                 )
                                             }),
                                     ),
@@ -1603,7 +1604,7 @@ impl Render for SubtreeView {
                                     .child(div().size(rems(0.25)).rounded_full().bg(p.accent))
                                     .child(TooltipText::new(
                                         "subtree-eyebrow",
-                                        "SKILL SUBTREE",
+                                        tr("SKILL SUBTREE"),
                                         0.12,
                                     )),
                             )
@@ -1622,7 +1623,7 @@ impl Render for SubtreeView {
                                     .mt_1()
                                     .text_size(units(12.))
                                     .text_color(p.muted)
-                                    .child("Specialize · Boost · Change how this skill works"),
+                                    .child(tr("Specialize · Boost · Change how this skill works")),
                             ),
                     )
                     .child(
@@ -1640,7 +1641,7 @@ impl Render for SubtreeView {
                                     .font_family(theme::MONO_FONT_FAMILY)
                                     .text_size(units(11.))
                                     .text_color(p.faint)
-                                    .child("Points")
+                                    .child(tr("Points"))
                                     .child(
                                         div()
                                             .text_size(units(13.))
@@ -1655,7 +1656,7 @@ impl Render for SubtreeView {
                                         } else if remaining > 0 {
                                             format!("{remaining} LEFT")
                                         } else {
-                                            "ALL SPENT".into()
+                                            tr("ALL SPENT").into()
                                         },
                                         if spent > total {
                                             p.negative
@@ -1667,7 +1668,7 @@ impl Render for SubtreeView {
                                     )),
                             )
                             .child(
-                                modal_button("reset-subtree", "Reset", ButtonTone::Neutral, cx)
+                                modal_button("reset-subtree", tr("Reset"), ButtonTone::Neutral, cx)
                                     .disabled(spent == 0)
                                     .on_click(cx.listener(move |this, _, _, cx| {
                                         let prefix = format!("{skill_id}:");
@@ -1683,7 +1684,7 @@ impl Render for SubtreeView {
                                     })),
                             )
                             .child(
-                                modal_button("close-subtree", "Close", ButtonTone::Neutral, cx)
+                                modal_button("close-subtree", tr("Close"), ButtonTone::Neutral, cx)
                                     .on_click(|_, window, cx| window.close_dialog(cx)),
                             ),
                     ),
@@ -1769,8 +1770,8 @@ impl Render for SubtreeView {
                     .py_2p5()
                     .border_t_1()
                     .border_color(p.border)
-                    .child(hint("subtree-hint-click", "L-Click add · R-Click remove"))
-                    .child(hint("subtree-hint-mods", "Shift ×5 · Ctrl/Cmd+Shift all")),
+                    .child(hint("subtree-hint-click", tr("L-Click add · R-Click remove")))
+                    .child(hint("subtree-hint-mods", tr("Shift ×5 · Ctrl/Cmd+Shift all"))),
             )
     }
 }
@@ -1968,7 +1969,7 @@ impl Render for SubskillTooltip {
                         .flex_wrap()
                         .items_center()
                         .gap_1()
-                        .child(Self::section_label("subskill-tags", "Tags".into(), cx))
+                        .child(Self::section_label("subskill-tags", tr("Tags").into(), cx))
                         .children(tags.add.iter().map(|tag| {
                             chip(format!("+{tag}"), p.accent_hot, p.accent_hot.opacity(0.7))
                         }))
@@ -2033,7 +2034,7 @@ impl Render for SubskillTooltip {
                     }),
             );
             section = section.child(Self::stat(
-                "Proc Chance",
+                tr("Proc Chance"),
                 Self::rank_value(
                     percent(chance),
                     next_value(chance, chance_next, &percent),

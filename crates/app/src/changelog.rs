@@ -1,3 +1,4 @@
+use hsplanner_engine::calc::i18n::tr;
 use gpui_kit::base::Link;
 use gpui_kit::component::{
     WindowExt,
@@ -46,7 +47,7 @@ pub fn open(window: &mut Window, cx: &mut App) {
                             .text_sm()
                             .font_weight(FontWeight::NORMAL)
                             .text_color(palette.muted)
-                            .child("Release history"),
+                            .child(tr("Release history")),
                     ),
             )
             .child(
@@ -75,17 +76,17 @@ pub fn open(window: &mut Window, cx: &mut App) {
                     .gap_3()
                     .child(
                         Link::new("github-releases")
-                            .child("Releases on GitHub")
+                            .child(tr("Releases on GitHub"))
                             .href(RELEASES)
                             .text_color(palette.accent)
                             .underline()
-                            .accessibility_label("Releases on GitHub")
+                            .accessibility_label(tr("Releases on GitHub"))
                             .open_with(|url, _, _, cx| cx.open_url(url)),
                     )
                     .child(
                         Button::new("close-changelog")
                             .planner_style(cx)
-                            .label("Close")
+                            .label(tr("Close"))
                             .on_click(|_, window, cx| window.close_dialog(cx)),
                     ),
             )

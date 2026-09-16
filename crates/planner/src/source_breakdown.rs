@@ -1,4 +1,5 @@
 //! SourceTooltip.tsx presentation over the existing engine breakdown contract.
+use hsplanner_engine::calc::i18n::tr;
 use gpui_kit::{
     base::Disableable,
     component::{WindowExt, button::Button},
@@ -196,14 +197,14 @@ fn calculation(b: &StatBreakdown, cx: &App) -> Div {
     let mut rows = div().px_3().py_2().flex().flex_col().gap_1();
     let total = format_total(b.combined, b.is_percent);
     if !b.has_more && !b.has_increased {
-        rows = rows.child(value_row("Total", total.clone(), true, cx));
+        rows = rows.child(value_row(tr("Total"), total.clone(), true, cx));
     } else {
         let flat = b.has_increased || !b.is_percent;
         rows = rows.child(value_row(
             if flat {
-                "Additive (flat)"
+                tr("Additive (flat)")
             } else {
-                "Additive (+)"
+                tr("Additive (+)")
             },
             format_total(b.additive_sum, !flat),
             false,
@@ -211,7 +212,7 @@ fn calculation(b: &StatBreakdown, cx: &App) -> Div {
         ));
         if b.has_increased {
             rows = rows.child(value_row(
-                "Increased (+%)",
+                tr("Increased (+%)"),
                 format_total(b.increased_sum, true),
                 false,
                 cx,
@@ -220,9 +221,9 @@ fn calculation(b: &StatBreakdown, cx: &App) -> Div {
         if b.has_more {
             rows = rows.child(value_row(
                 if flat {
-                    "More (×)"
+                    tr("More (×)")
                 } else {
-                    "Multiplicative (×)"
+                    tr("Multiplicative (×)")
                 },
                 multiplier(b.more_sum),
                 false,
@@ -240,13 +241,13 @@ fn calculation(b: &StatBreakdown, cx: &App) -> Div {
                     .text_size(units(10.))
                     .text_color(p.text.opacity(0.4))
                     .child(if flat {
-                        "flat × (1 + inc/100) × (1 + more/100)"
+                        tr("flat × (1 + inc/100) × (1 + more/100)")
                     } else {
-                        "(1 + add/100) × (1 + more/100) − 1"
+                        tr("(1 + add/100) × (1 + more/100) − 1")
                     }),
             )
             .child(
-                value_row("Combined", total.clone(), true, cx)
+                value_row(tr("Combined"), total.clone(), true, cx)
                     .border_t_1()
                     .border_color(p.border.opacity(0.4))
                     .pt_1(),
@@ -254,14 +255,14 @@ fn calculation(b: &StatBreakdown, cx: &App) -> Div {
     }
     if let Some(raw) = b.pre_diminish {
         rows = rows.child(value_row(
-            "Before diminishing returns",
+            tr("Before diminishing returns"),
             format_total(raw, b.is_percent),
             false,
             cx,
         ));
     }
     div()
-        .child(section("Calculation", Some(total), cx))
+        .child(section(tr("Calculation"), Some(total), cx))
         .child(rows)
 }
 fn subtotal_rows(rows: &[StatTypeSubtotal], percent: bool, more: bool, cx: &App) -> Div {
@@ -315,8 +316,8 @@ fn by_source(b: &StatBreakdown, cx: &App) -> Div {
         cx,
     ));
     for (title, sources, more) in [
-        ("Increased", &b.increased_by_type, false),
-        ("Multiplicative", &b.more_by_type, true),
+        (tr("Increased"), &b.increased_by_type, false),
+        (tr("Multiplicative"), &b.more_by_type, true),
     ] {
         if !sources.is_empty() {
             rows = rows
@@ -339,7 +340,7 @@ fn by_source(b: &StatBreakdown, cx: &App) -> Div {
                 .child(subtotal_rows(sources, true, more, cx));
         }
     }
-    div().child(section("By source", None, cx)).child(rows)
+    div().child(section(tr("By source"), None, cx)).child(rows)
 }
 fn source_rows(
     rows: &[SourceContribution],
@@ -433,9 +434,9 @@ fn body(
     if grouped {
         content = content.child(section(
             if b.is_percent && !b.has_increased {
-                "Additive (+)"
+                tr("Additive (+)")
             } else {
-                "Additive (flat)"
+                tr("Additive (flat)")
             },
             Some(format_total(
                 b.additive_sum,
@@ -455,7 +456,7 @@ fn body(
     if b.has_increased {
         content = content
             .child(section(
-                "Increased (+%)",
+                tr("Increased (+%)"),
                 Some(format_total(b.increased_sum, true)),
                 cx,
             ))
@@ -471,7 +472,7 @@ fn body(
     if b.has_more {
         content = content
             .child(section(
-                "Multiplicative (Total)",
+                tr("Multiplicative (Total)"),
                 Some(multiplier(b.more_sum)),
                 cx,
             ))
@@ -525,7 +526,7 @@ impl Render for SourcesTooltip {
                         div()
                             .text_size(units(9.))
                             .text_color(p.text.opacity(0.4))
-                            .child("RIGHT-CLICK TO PIN"),
+                            .child(tr("RIGHT-CLICK TO PIN")),
                     ),
             )
             .child(body(&self.0, false, None, cx))
@@ -632,7 +633,7 @@ impl Render for SourceDialog {
                             false,
                             cx,
                         )
-                        .accessibility_label("Close source breakdown")
+                        .accessibility_label(tr("Close source breakdown"))
                         .on_click(|_, window, cx| window.close_dialog(cx)),
                     ),
             )
@@ -655,7 +656,7 @@ impl Render for SourceDialog {
                     .font_family(theme::MONO_FONT_FAMILY)
                     .text_size(units(9.))
                     .text_color(p.faint)
-                    .child("HOVER OR SELECT ITEM / TREE SOURCES TO PREVIEW · ESC CLOSE"),
+                    .child(tr("HOVER OR SELECT ITEM / TREE SOURCES TO PREVIEW · ESC CLOSE")),
             )
     }
 }

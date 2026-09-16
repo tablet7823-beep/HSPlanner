@@ -103,7 +103,7 @@ fn skill_spec_to_calc_skill(spec: &SkillSpec) -> CalcSkill {
         per_level: f.per_level,
     };
     CalcSkill {
-        name: normalize_skill_name(&spec.name),
+        name: normalize_skill_name(spec.match_name()),
         tags: spec.tags.clone().unwrap_or_default(),
         damage_type: spec.damage_type.clone(),
         damage_formula: spec.damage_formula.map(to_formula),
@@ -772,7 +772,7 @@ pub(crate) fn performance_from_stats(
             if !deps.proc_toggles.get(&toggle_key).copied().unwrap_or(false) {
                 continue;
             }
-            let key = normalize_skill_name(&granted.name);
+            let key = normalize_skill_name(granted.match_name());
             let Some(&(rank_min, rank_max)) = granted_ranks.get(&key) else {
                 continue;
             };

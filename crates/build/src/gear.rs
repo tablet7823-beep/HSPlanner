@@ -1,4 +1,5 @@
 //! Item edits shared by native gear, stash, mercenary and import flows.
+use hsplanner_engine::calc::i18n::tr;
 use crate::{
     BuildSnapshot,
     library::{StashEntry, new_id},
@@ -17,7 +18,7 @@ pub use affix_pools::{
 };
 
 pub fn make_item(base_id: &str) -> Result<EquippedItem, String> {
-    let base = data::get_item(base_id).ok_or("Unknown item.")?;
+    let base = data::get_item(base_id).ok_or(tr("Unknown item."))?;
     let mut item = EquippedItem {
         base_id: base_id.into(),
         stars: Some(0),
@@ -51,10 +52,10 @@ pub fn set_socket_count(item: &mut EquippedItem, count: u32) {
 
 pub fn set_socket(item: &mut EquippedItem, index: usize, id: Option<&str>) -> Result<(), String> {
     if index >= item.socket_count as usize {
-        return Err("Socket no longer exists.".into());
+        return Err(tr("Socket no longer exists.").into());
     }
     if id.is_some_and(|id| data::get_gem(id).is_none() && data::get_rune(id).is_none()) {
-        return Err("Unknown gem or rune.".into());
+        return Err(tr("Unknown gem or rune.").into());
     }
     item.socketed.resize(item.socket_count as usize, None);
     item.socketed[index] = id.map(str::to_owned);
@@ -65,7 +66,7 @@ pub fn set_forge(item: &mut EquippedItem, id: Option<&str>) -> Result<(), String
     item.forged_mods = match id {
         None => vec![],
         Some(id) => {
-            let crystal = data::data().crystals.get(id).ok_or("Unknown crystal.")?;
+            let crystal = data::data().crystals.get(id).ok_or(tr("Unknown crystal."))?;
             vec![EquippedAffix {
                 affix_id: id.into(),
                 tier: crystal.tier,
@@ -174,16 +175,16 @@ pub fn add_affix_with_pool_override(
     id: &str,
     allow_outside_pool: bool,
 ) -> Result<(), String> {
-    let base = data::get_item(&item.base_id).ok_or("Unknown item.")?;
+    let base = data::get_item(&item.base_id).ok_or(tr("Unknown item."))?;
     if base
         .max_affixes
         .is_some_and(|max| item.affixes.len() >= max as usize)
     {
-        return Err("This item has no free affix slots.".into());
+        return Err(tr("This item has no free affix slots.").into());
     }
-    let affix = data::get_affix(id).ok_or("Unknown affix.")?;
+    let affix = data::get_affix(id).ok_or(tr("Unknown affix."))?;
     if !affix_allowed(base, affix, allow_outside_pool) {
-        return Err("This affix is not available for the selected item.".into());
+        return Err(tr("This affix is not available for the selected item.").into());
     }
     item.affixes.push(EquippedAffix {
         affix_id: id.into(),
@@ -195,12 +196,12 @@ pub fn add_affix_with_pool_override(
 }
 
 pub fn apply_runeword(item: &mut EquippedItem, id: &str) -> Result<(), String> {
-    let base = data::get_item(&item.base_id).ok_or("Unknown item.")?;
+    let base = data::get_item(&item.base_id).ok_or(tr("Unknown item."))?;
     let rw = data::data()
         .runewords
         .iter()
         .find(|rw| rw.id == id)
-        .ok_or("Unknown runeword.")?;
+        .ok_or(tr("Unknown runeword."))?;
     // The reference applies runewords using the base capacity, without a crystal bonus.
     let bare = EquippedItem {
         base_id: item.base_id.clone(),
@@ -210,7 +211,7 @@ pub fn apply_runeword(item: &mut EquippedItem, id: &str) -> Result<(), String> {
         || !rw.allowed_base_types.contains(&base.base_type)
         || rw.runes.len() > max_sockets(&bare) as usize
     {
-        return Err("This runeword does not fit the selected base.".into());
+        return Err(tr("This runeword does not fit the selected base.").into());
     }
     item.socket_count = rw.runes.len() as u32;
     item.socketed = rw.runes.iter().cloned().map(Some).collect();
@@ -222,7 +223,7 @@ pub fn set_augment(item: &mut EquippedItem, id: Option<&str>) -> Result<(), Stri
     item.augment = match id {
         None => None,
         Some(id) => {
-            data::get_augment(id).ok_or("Unknown augment.")?;
+            data::get_augment(id).ok_or(tr("Unknown augment."))?;
             Some(AugmentRef {
                 id: id.into(),
                 level: item
@@ -280,15 +281,15 @@ pub fn commit(
     extra_charm_slot: bool,
 ) -> Result<(), String> {
     if let Some(item) = &item {
-        let base = data::get_item(&item.base_id).ok_or("Unknown item.")?;
+        let base = data::get_item(&item.base_id).ok_or(tr("Unknown item."))?;
         if !accepts(snapshot, slot, base, mercenary) {
-            return Err("This item cannot be equipped in the selected slot.".into());
+            return Err(tr("This item cannot be equipped in the selected slot.").into());
         }
         if !mercenary
             && slot.starts_with("charm_")
             && !charm_fits(snapshot, slot, base, extra_charm_slot)
         {
-            return Err("This charm will not fit. Free up space first.".into());
+            return Err(tr("This charm will not fit. Free up space first.").into());
         }
     }
     let inventory = if mercenary {

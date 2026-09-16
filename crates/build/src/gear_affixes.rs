@@ -1,4 +1,5 @@
 //! Reference Gear affix-pool restrictions, shared by the picker and edit validation.
+use hsplanner_engine::calc::i18n::tr;
 use hsplanner_engine::calc::{
     data, season,
     types::{Affix, ItemBase},
@@ -52,26 +53,26 @@ pub fn affix_pool_type(base: &ItemBase) -> Option<&'static str> {
     if base.slot == "weapon" {
         return match base.base_type.as_str() {
             "Sword" | "Mace" | "Dagger" | "Claw" | "Axe" | "Polearm" | "Chainsaw" | "Novelty" => {
-                Some("Weapon:Melee")
+                Some(tr("Weapon:Melee"))
             }
             "Bow" | "Gun" | "Rifle Gun" | "Throwing" | "1-Handed Throwing Weapon" => {
-                Some("Weapon:Ranged")
+                Some(tr("Weapon:Ranged"))
             }
-            "Staff" | "Cane" | "Wand" | "Book" | "Spellblade" | "Flask" => Some("Weapon:Caster"),
+            "Staff" | "Cane" | "Wand" | "Book" | "Spellblade" | "Flask" => Some(tr("Weapon:Caster")),
             _ => None,
         };
     }
     match super::slot_group(&base.slot) {
-        "helmet" => Some("Helmet"),
-        "armor" => Some("Chest"),
-        "boots" => Some("Boots"),
-        "gloves" => Some("Gloves"),
-        "belt" => Some("Belt"),
-        "amulet" => Some("Amulet"),
-        "ring" => Some("Ring"),
-        "charm" => Some("Charm"),
-        "offhand" => Some("Shield"),
-        "potion" => Some("Flask"),
+        "helmet" => Some(tr("Helmet")),
+        "armor" => Some(tr("Chest")),
+        "boots" => Some(tr("Boots")),
+        "gloves" => Some(tr("Gloves")),
+        "belt" => Some(tr("Belt")),
+        "amulet" => Some(tr("Amulet")),
+        "ring" => Some(tr("Ring")),
+        "charm" => Some(tr("Charm")),
+        "offhand" => Some(tr("Shield")),
+        "potion" => Some(tr("Flask")),
         _ => None,
     }
 }

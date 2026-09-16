@@ -1,3 +1,4 @@
+use hsplanner_engine::calc::i18n::tr;
 use crate::shell::Shell;
 use gpui_kit::component::button::Button;
 use gpui_kit::{prelude::*, *};
@@ -83,12 +84,12 @@ impl Render for Startup {
         let palette = cx.global::<TooltipTheme>();
         div().size_full().flex().items_center().justify_center().bg(palette.panel).text_color(palette.text)
             .child(div().max_w(rems(48.)).p_6().flex().flex_col().gap_4()
-                .child(div().text_2xl().child(gpui_kit::text!(id="startup-title","Your library could not be opened")))
+                .child(div().text_2xl().child(gpui_kit::text!(id="startup-title",tr("Your library could not be opened"))))
                 .child(gpui_kit::text!(id="startup-error",self.error.clone().unwrap_or_default()))
-                .child(div().text_color(palette.muted).child("The saved file stays in place. Restoring the previous copy also keeps the unreadable file for recovery."))
+                .child(div().text_color(palette.muted).child(tr("The saved file stays in place. Restoring the previous copy also keeps the unreadable file for recovery.")))
                 .child(div().flex().gap_3()
-                    .child(Button::new("retry-open").planner_style(cx).label(if self.loading {"Loading…"} else {"Retry"}).on_click(cx.listener(|this,_,window,cx|this.retry(false,window,cx))))
-                    .child(Button::new("restore-backup").planner_style(cx).label("Restore previous copy").on_click(cx.listener(|this,_,window,cx|this.retry(true,window,cx))))))
+                    .child(Button::new("retry-open").planner_style(cx).label(if self.loading {tr("Loading…")} else {tr("Retry")}).on_click(cx.listener(|this,_,window,cx|this.retry(false,window,cx))))
+                    .child(Button::new("restore-backup").planner_style(cx).label(tr("Restore previous copy")).on_click(cx.listener(|this,_,window,cx|this.retry(true,window,cx))))))
             .into_any_element()
     }
 }

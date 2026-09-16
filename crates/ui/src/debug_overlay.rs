@@ -1,4 +1,5 @@
 //! Dev-build overlay: frames per second, frame interval and the newest log lines.
+use hsplanner_engine::calc::i18n::tr;
 use crate::{controls::PlannerControl, debug_log, theme};
 use gpui_kit::{component::Sizable, component::button::Button, prelude::*, *};
 use std::{
@@ -142,14 +143,14 @@ impl Render for DebugOverlay {
                         Button::new("debug-copy")
                             .planner_style(cx)
                             .small()
-                            .label("Copy logs")
+                            .label(tr("Copy logs"))
                             .on_click(move |_, _, cx| {
                                 cx.write_to_clipboard(ClipboardItem::new_string(copy_text.clone()))
                             }),
                     )
                     .child(
                         crate::controls::icon_button("debug-close", "×", false, cx)
-                            .accessibility_label("Close debug overlay")
+                            .accessibility_label(tr("Close debug overlay"))
                             .on_click(cx.listener(|this, _, _, cx| this.toggle(cx))),
                     ),
             )
@@ -175,7 +176,7 @@ impl Render for DebugOverlay {
                     .border_t_1()
                     .border_color(p.border)
                     .text_color(p.faint)
-                    .child("newest first · overlay refresh 2/s · cmd-shift-d"),
+                    .child(tr("newest first · overlay refresh 2/s · cmd-shift-d")),
             )
     }
 }

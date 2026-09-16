@@ -1,4 +1,5 @@
 //! Retained text draft and validation for the item editor; Save updates only the gear draft.
+use hsplanner_engine::calc::i18n::tr;
 use super::*;
 use gpui_kit::component::button::ButtonVariants;
 use gpui_kit::component::input::{Textarea, TextareaState};
@@ -42,7 +43,7 @@ impl GearView {
                                                 .font_family(theme::MONO_FONT_FAMILY)
                                                 .text_xs()
                                                 .text_color(p.accent)
-                                                .child("EDIT ITEM · TEXT EDIT"),
+                                                .child(tr("EDIT ITEM · TEXT EDIT")),
                                         )
                                         .child(title.clone()),
                                 ),
@@ -80,7 +81,7 @@ impl ItemTextEditor {
             state.set_value(value, window, cx);
             state
         });
-        let search = cx.new(|cx| InputState::new(window, cx).placeholder("Search custom affixes…"));
+        let search = cx.new(|cx| InputState::new(window, cx).placeholder(tr("Search custom affixes…")));
         let subscriptions = vec![
             cx.subscribe(&text, |this, _, event: &InputEvent, cx| {
                 if matches!(event, InputEvent::Change) {
@@ -174,7 +175,7 @@ impl ItemTextEditor {
             self.result.item = None;
             self.result.diagnostics.push(item_text::Diagnostic {
                 line: 0,
-                message: "The build or item changed. Close and reopen Text Edit.".into(),
+                message: tr("The build or item changed. Close and reopen Text Edit.").into(),
                 warning: false,
             });
             cx.notify();
@@ -240,7 +241,7 @@ impl Render for ItemTextEditor {
                     .p_3()
                     .text_xs()
                     .text_color(muted)
-                    .child("No matching stats"),
+                    .child(tr("No matching stats")),
             );
         }
         let mut validation = div()
@@ -250,11 +251,11 @@ impl Render for ItemTextEditor {
             .p_3()
             .text_xs();
         if self.pending {
-            validation = validation.child("Validating…")
+            validation = validation.child(tr("Validating…"))
         } else if self.result.diagnostics.is_empty() {
             validation = validation
                 .text_color(muted)
-                .child("All clear · Save to update the item draft.")
+                .child(tr("All clear · Save to update the item draft."))
         }
         for d in &self.result.diagnostics {
             validation = validation.child(
@@ -299,14 +300,14 @@ impl Render for ItemTextEditor {
                                     .p_2()
                                     .text_xs()
                                     .text_color(muted)
-                                    .child("TEXT · AFFIXES, STARS, SOCKETS, AUGMENT"),
+                                    .child(tr("TEXT · AFFIXES, STARS, SOCKETS, AUGMENT")),
                             )
                             .child(
                                 div().flex_1().min_h_0().child(
                                     Textarea::new(&self.text)
                                         .h_full()
                                         .bordered(false)
-                                        .aria_label("Item text")
+                                        .aria_label(tr("Item text"))
                                         .p_3()
                                         .font_family(theme::MONO_FONT_FAMILY)
                                         .text_sm()
@@ -329,7 +330,7 @@ impl Render for ItemTextEditor {
                                     .border_t_1()
                                     .border_color(border)
                                     .text_xs()
-                                    .child("CUSTOM AFFIXES · CLICK TO INSERT"),
+                                    .child(tr("CUSTOM AFFIXES · CLICK TO INSERT")),
                             )
                             .child(Input::new(&self.search).planner_style(cx))
                             .child(list),
@@ -348,23 +349,23 @@ impl Render for ItemTextEditor {
                             .text_xs()
                             .text_color(if ready { accent } else { muted })
                             .child(if self.pending {
-                                "Validating…"
+                                tr("Validating…")
                             } else if ready {
-                                "Ready to save"
+                                tr("Ready to save")
                             } else {
-                                "Fix errors before saving"
+                                tr("Fix errors before saving")
                             }),
                     )
                     .child(
                         Button::new("cancel-text-edit")
                             .planner_style(cx)
-                            .label("Cancel")
+                            .label(tr("Cancel"))
                             .on_click(|_, window, cx| window.close_dialog(cx)),
                     )
                     .child(
                         Button::new("save-text-edit")
                             .planner_style(cx)
-                            .label("Save")
+                            .label(tr("Save"))
                             .disabled(!ready)
                             .on_click(cx.listener(|this, _, window, cx| this.save(window, cx))),
                     ),

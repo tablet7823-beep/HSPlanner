@@ -196,7 +196,7 @@ pub fn apply_item_granted_conversions(
                 continue;
             }
         }
-        let key = normalize_skill_name(&granted.name);
+        let key = normalize_skill_name(granted.match_name());
         let (rank_min, rank_max) = item_granted_ranks.get(&key).copied().unwrap_or((0.0, 0.0));
         if rank_max <= 0.0 {
             continue;

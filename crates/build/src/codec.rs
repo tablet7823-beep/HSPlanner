@@ -1,3 +1,4 @@
+use hsplanner_engine::calc::i18n::tr;
 use serde_json::{Value, json};
 
 use crate::{BuildSnapshot, notes::Notes};
@@ -82,7 +83,7 @@ pub fn encode(snapshot: &BuildSnapshot, notes: &Notes) -> Result<String, String>
     wire.insert("n".into(), json!(notes.to_html()));
     let json = serde_json::to_string(&wire).map_err(|e| e.to_string())?;
     if json.len() > MAX_CODE_LENGTH {
-        return Err("This build is too large to share as a code.".into());
+        return Err(tr("This build is too large to share as a code.").into());
     }
     Ok(lz_str::compress_to_encoded_uri_component(json.as_str()))
 }
@@ -107,12 +108,12 @@ fn remove_null_properties(value: &mut Value) {
 pub fn decode(input: &str) -> Result<(BuildSnapshot, Notes), String> {
     let code = parse_input(input)?;
     if code.len() > MAX_CODE_LENGTH {
-        return Err("Build code is too large.".into());
+        return Err(tr("Build code is too large.").into());
     }
     let utf16 =
-        lz_str::decompress_from_encoded_uri_component(&code).ok_or("Invalid build code.")?;
+        lz_str::decompress_from_encoded_uri_component(&code).ok_or(tr("Invalid build code."))?;
     if utf16.len() > MAX_CODE_LENGTH {
-        return Err("Build code expands beyond the supported size.".into());
+        return Err(tr("Build code expands beyond the supported size.").into());
     }
     let json = String::from_utf16(&utf16).map_err(|_| "Invalid text in build code.")?;
     let wire: Value = serde_json::from_str(&json).map_err(|_| "Invalid build data.")?;
@@ -121,7 +122,7 @@ pub fn decode(input: &str) -> Result<(BuildSnapshot, Notes), String> {
 
 pub fn decode_value(wire: &Value) -> Result<(BuildSnapshot, Notes), String> {
     if !matches!(wire["v"].as_u64(), Some(1 | 2)) {
-        return Err("Unsupported build code version.".into());
+        return Err(tr("Unsupported build code version.").into());
     }
     for key in ["a", "i", "s", "ss", "buf", "ec", "pt"] {
         if !wire[key].is_object() {
@@ -129,7 +130,7 @@ pub fn decode_value(wire: &Value) -> Result<(BuildSnapshot, Notes), String> {
         }
     }
     if !wire["t"].is_array() || !wire["l"].is_number() || !wire["kps"].is_number() {
-        return Err("Incomplete build code.".into());
+        return Err(tr("Incomplete build code.").into());
     }
     let mut snapshot = serde_json::Map::new();
     for &(short, long) in FIELDS {
@@ -180,20 +181,20 @@ pub fn decode_value(wire: &Value) -> Result<(BuildSnapshot, Notes), String> {
         &mut decoded.allocated_ether_nodes,
     ] {
         if nodes.len() > 10_000 {
-            return Err("Too many tree nodes.".into());
+            return Err(tr("Too many tree nodes.").into());
         }
     }
     Ok((decoded, Notes::from_html(wire["n"].as_str().unwrap_or(""))))
 }
 
 fn normalize_inventory(value: &mut Value) -> Result<(), String> {
-    let inventory = value.as_object_mut().ok_or("Invalid equipment list.")?;
+    let inventory = value.as_object_mut().ok_or(tr("Invalid equipment list."))?;
     if inventory.len() > 5_000 {
-        return Err("Too many equipment slots.".into());
+        return Err(tr("Too many equipment slots.").into());
     }
     inventory.retain(|_, v| !v.is_null());
     for item in inventory.values_mut() {
-        let item = item.as_object_mut().ok_or("Invalid equipped item.")?;
+        let item = item.as_object_mut().ok_or(tr("Invalid equipped item."))?;
         let count = item
             .get("socketCount")
             .and_then(Value::as_u64)
@@ -237,7 +238,7 @@ fn normalize_inventory(value: &mut Value) -> Result<(), String> {
 fn parse_input(input: &str) -> Result<String, String> {
     let value = input.trim();
     if value.len() > MAX_CODE_LENGTH {
-        return Err("Build code is too large.".into());
+        return Err(tr("Build code is too large.").into());
     }
     let code = ["#b=", "?b=", "&b="]
         .iter()
@@ -254,11 +255,11 @@ fn parse_input(input: &str) -> Result<String, String> {
             let a = chars
                 .next()
                 .and_then(|b| char::from(b).to_digit(16))
-                .ok_or("Invalid escaped build code.")?;
+                .ok_or(tr("Invalid escaped build code."))?;
             let b = chars
                 .next()
                 .and_then(|b| char::from(b).to_digit(16))
-                .ok_or("Invalid escaped build code.")?;
+                .ok_or(tr("Invalid escaped build code."))?;
             bytes.push((a * 16 + b) as u8);
         } else {
             bytes.push(ch);

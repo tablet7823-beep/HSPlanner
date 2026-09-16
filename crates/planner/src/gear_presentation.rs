@@ -1,4 +1,5 @@
 //! Equipment composition; the parent view retains draft and comparison ownership.
+use hsplanner_engine::calc::i18n::tr;
 use super::*;
 use crate::gear_stash::{self, StashRow};
 use crate::item_tooltip;
@@ -178,7 +179,7 @@ impl GearView {
                                         .text_color(palette.faint)
                                         .child(hsplanner_ui::tooltip_text::TooltipText::new(
                                             "gear-slot-eyebrow",
-                                            "GEAR SLOT",
+                                            tr("GEAR SLOT"),
                                             0.12,
                                         )),
                                 ),
@@ -451,9 +452,9 @@ impl GearView {
                                 if enabled { "on" } else { "off" }
                             ))
                             .cursor_tooltip(if enabled {
-                                "Effects applied — click to disable"
+                                tr("Effects applied — click to disable")
                             } else {
-                                "Effects off — click to enable"
+                                tr("Effects off — click to enable")
                             })
                             .on_click(cx.listener(move |this, _, _, cx| {
                                 this.session.update(cx, |session, cx| {
@@ -471,7 +472,7 @@ impl GearView {
         }));
         panel_with_trailing(
             "equipment-panel",
-            "Equipment",
+            tr("Equipment"),
             div()
                 .flex()
                 .font_family(theme::MONO_FONT_FAMILY)
@@ -645,7 +646,7 @@ impl GearView {
                         .border_color(theme::inventory_border(false))
                         .bg(theme::inventory_cell(false))
                         .disabled(key.is_none())
-                        .accessibility_label("Add charm…")
+                        .accessibility_label(tr("Add charm…"))
                         .on_click(cx.listener(move |this, _, window, cx| {
                             if let Some(key) = &key {
                                 this.open_slot(key.clone(), window, cx);
@@ -672,7 +673,7 @@ impl GearView {
         }
         panel_with_trailing(
             "charms-panel",
-            "Charm Inventory",
+            tr("Charm Inventory"),
             div()
                 .flex()
                 .font_family(theme::MONO_FONT_FAMILY)
@@ -712,7 +713,7 @@ impl GearView {
                 .px_3()
                 .pb_2()
                 .child(self.slot_cell(key, 64., 64., None, cx))
-                .child(div().text_color(p.negative).child("Does not fit"))
+                .child(div().text_color(p.negative).child(tr("Does not fit")))
         }))
     }
 
@@ -765,7 +766,7 @@ impl GearView {
             .when(groups.len() > 1, |view| {
                 view.child(chip(
                     "stash-group-all".into(),
-                    "All slots".into(),
+                    tr("All slots").into(),
                     None,
                     self.stash_group.is_none(),
                 ))
@@ -873,7 +874,7 @@ impl GearView {
                             .text_color(p.faint)
                             .child(format!(
                                 "{} · ★{} · {}◇",
-                                base.base_type,
+                                crate::gear::editor::base_type_label(&base.base_type),
                                 item.stars.unwrap_or(0),
                                 item.socket_count
                             )),
@@ -928,7 +929,7 @@ impl GearView {
         let p = cx.global::<TooltipTheme>();
         let session = self.session.read(cx);
         let empty = self.stash_rows.is_empty();
-        panel("stash-panel", "Stash", cx)
+        panel("stash-panel", tr("Stash"), cx)
             .min_w(rems(280. / 13.))
             .flex_1()
             .child(
@@ -954,9 +955,9 @@ impl GearView {
                     .when(empty, |v| {
                         v.child(div().px_3().py_8().text_color(p.muted).child(
                             if session.draft().stash.is_empty() {
-                                "Your stash is empty. Save an item from its editor."
+                                tr("Your stash is empty. Save an item from its editor.")
                             } else {
-                                "No matching items."
+                                tr("No matching items.")
                             },
                         ))
                     }),
@@ -973,7 +974,7 @@ impl GearView {
             .count();
         panel_with_trailing(
             "merc-loadout",
-            "Loadout",
+            tr("Loadout"),
             div()
                 .flex()
                 .font_family(theme::MONO_FONT_FAMILY)
@@ -1127,7 +1128,7 @@ impl GearView {
                                                         .or_else(|| base.map(|b| b.name.clone()))
                                                         .unwrap_or_else(|| {
                                                             if locked {
-                                                                "locked · 2H weapon equipped"
+                                                                tr("locked · 2H weapon equipped")
                                                             } else {
                                                                 "empty"
                                                             }
@@ -1141,9 +1142,13 @@ impl GearView {
                                                 .text_size(rems(10. / 13.))
                                                 .text_color(p.muted)
                                                 .child(if runeword.is_some() {
-                                                    format!("Runeword · {}", b.base_type)
+                                                    format!(
+                                                        "{} · {}",
+                                                        tr("Runeword"),
+                                                        crate::gear::editor::base_type_label(&b.base_type)
+                                                    )
                                                 } else {
-                                                    b.base_type.clone()
+                                                    crate::gear::editor::base_type_label(&b.base_type)
                                                 })
                                         })),
                                 )
@@ -1202,7 +1207,7 @@ impl GearView {
                                 .items_end()
                                 .justify_between()
                                 .gap_3()
-                                .child(section_heading("gear-heading", "Loadout", "Gear", cx))
+                                .child(section_heading("gear-heading", tr("Loadout"), tr("Gear"), cx))
                                 .child(
                                     div()
                                         .flex()
@@ -1213,17 +1218,17 @@ impl GearView {
                                                 .text_size(rems(10. / 13.))
                                                 .font_family(theme::MONO_FONT_FAMILY)
                                                 .text_color(p.faint)
-                                                .child(format!(
-                                                    "{} items  ·  {} gems  ·  {} runes",
-                                                    data::data().items.len(),
-                                                    data::data().gems.len(),
-                                                    data::data().runes.len()
-                                                )),
+                                                .child(
+                                                    tr("{items} items  ·  {gems} gems  ·  {runes} runes")
+                                                        .replace("{items}", &data::data().items.len().to_string())
+                                                        .replace("{gems}", &data::data().gems.len().to_string())
+                                                        .replace("{runes}", &data::data().runes.len().to_string()),
+                                                ),
                                         )
                                         .child(
                                             hsplanner_ui::controls::command_button(
                                                 "import-screenshot",
-                                                "Import screenshot",
+                                                tr("Import screenshot"),
                                                 hsplanner_ui::controls::ButtonTone::Neutral,
                                                 hsplanner_ui::controls::ButtonSize::Small,
                                                 cx,
@@ -1262,11 +1267,11 @@ fn stash_equip_targets(
 ) -> Vec<(&'static str, Option<String>)> {
     if base_type.eq_ignore_ascii_case("ring") {
         vec![
-            ("Ring 1…", target.as_ref().map(|_| "ring_1".into())),
-            ("Ring 2…", target.as_ref().map(|_| "ring_2".into())),
+            (tr("Ring 1…"), target.as_ref().map(|_| "ring_1".into())),
+            (tr("Ring 2…"), target.as_ref().map(|_| "ring_2".into())),
         ]
     } else {
-        vec![("Equip…", target)]
+        vec![(tr("Equip…"), target)]
     }
 }
 

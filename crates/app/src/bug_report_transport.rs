@@ -1,4 +1,5 @@
 //! Wire-compatible with Tauri's bugReport.ts; no automatic retries or live-test submissions.
+use hsplanner_engine::calc::i18n::tr;
 use gpui_kit::http_client::{AsyncBody, HttpClient, HttpRequestExt, RedirectPolicy, Request};
 use serde_json::{Value, json};
 use std::{io::Read, path::Path, sync::Arc, time::Duration};
@@ -25,7 +26,7 @@ pub(super) struct Shot {
 impl Shot {
     pub fn from_bytes(name: String, bytes: Vec<u8>) -> Result<Self, String> {
         if bytes.len() > MAX_BYTES {
-            return Err("Each screenshot must be at most 8 MB.".into());
+            return Err(tr("Each screenshot must be at most 8 MB.").into());
         }
         let format =
             image::guess_format(&bytes).map_err(|_| "Choose a PNG, JPEG, WebP or GIF image.")?;
@@ -34,7 +35,7 @@ impl Shot {
             image::ImageFormat::Jpeg => ("image/jpeg", "jpg"),
             image::ImageFormat::WebP => ("image/webp", "webp"),
             image::ImageFormat::Gif => ("image/gif", "gif"),
-            _ => return Err("Choose a PNG, JPEG, WebP or GIF image.".into()),
+            _ => return Err(tr("Choose a PNG, JPEG, WebP or GIF image.").into()),
         };
         // Decode with bounded dimensions before accepting untrusted image bytes.
         let mut reader = image::ImageReader::with_format(std::io::Cursor::new(&bytes), format);
@@ -84,11 +85,11 @@ pub(super) struct Report {
 impl Report {
     pub fn validate(&self) -> Result<(), String> {
         for (label, value, min, max) in [
-            ("Title", &self.title, 3, 100),
-            ("Description", &self.description, 10, 1000),
-            ("Steps", &self.steps, 0, 600),
-            ("Expected result", &self.expected, 0, 400),
-            ("Contact", &self.contact, 0, 80),
+            (tr("Title"), &self.title, 3, 100),
+            (tr("Description"), &self.description, 10, 1000),
+            (tr("Steps"), &self.steps, 0, 600),
+            (tr("Expected result"), &self.expected, 0, 400),
+            (tr("Contact"), &self.contact, 0, 80),
         ] {
             let len = value.trim().chars().count();
             if len < min || len > max {
@@ -96,21 +97,21 @@ impl Report {
             }
         }
         if self.kind > 2 {
-            return Err("Choose a report type.".into());
+            return Err(tr("Choose a report type.").into());
         }
         if self.shots.len() > MAX_SHOTS
             || self.shots.iter().any(|shot| shot.bytes.len() > MAX_BYTES)
         {
-            return Err("Attach up to 3 images, at most 8 MB each.".into());
+            return Err(tr("Attach up to 3 images, at most 8 MB each.").into());
         }
         Ok(())
     }
     fn payload(&self) -> Value {
         let mut fields = Vec::new();
         for (name, value) in [
-            ("Steps to reproduce", &self.steps),
-            ("Expected instead", &self.expected),
-            ("Contact", &self.contact),
+            (tr("Steps to reproduce"), &self.steps),
+            (tr("Expected instead"), &self.expected),
+            (tr("Contact"), &self.contact),
         ] {
             if !value.trim().is_empty() {
                 fields.push(json!({"name": name, "value": value.trim()}));
@@ -165,8 +166,8 @@ impl Report {
 fn status_error(status: u16) -> Result<(), String> {
     match status {
         200..=299 => Ok(()),
-        429 => Err("Too many reports. Try again in a minute.".into()),
-        500..=599 => Err("The report server had a problem. Try again shortly.".into()),
+        429 => Err(tr("Too many reports. Try again in a minute.").into()),
+        500..=599 => Err(tr("The report server had a problem. Try again shortly.").into()),
         _ => Err(format!("Sending the report failed ({status}).")),
     }
 }
@@ -179,7 +180,7 @@ pub(super) async fn send(
     let boundary = format!("hsplanner-{}", uuid::Uuid::new_v4());
     let request = Request::post(endpoint.trim())
         .header(
-            "Content-Type",
+            tr("Content-Type"),
             format!("multipart/form-data; boundary={boundary}"),
         )
         .follow_redirects(RedirectPolicy::NoFollow)
