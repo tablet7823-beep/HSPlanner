@@ -12,7 +12,7 @@ use hsplanner_ui::{
 };
 
 const NOTES: &str = include_str!("../../../CHANGELOG.md");
-const RELEASES: &str = "https://github.com/zium1337/HSPlanner/releases";
+const RELEASES: &str = "https://github.com/tablet7823-beep/HSPlanner/releases";
 
 pub fn open(window: &mut Window, cx: &mut App) {
     window.open_dialog(cx, |dialog, window, cx| {

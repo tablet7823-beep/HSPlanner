@@ -67,7 +67,9 @@ def main():
         with path.open("rb") as source:
             digest = hashlib.file_digest(source, "sha256").hexdigest()
         checksums.append(f"{digest}  {path.name}\n")
-    (destination / "SHA256SUMS").write_text("".join(checksums))
+    # newline="" keeps LF on Windows too: the default translation writes CRLF,
+    # which makes `sha256sum -c SHA256SUMS` fail to find the files it names.
+    (destination / "SHA256SUMS").write_text("".join(checksums), newline="")
     print(f"Packages: {destination}")
 
 

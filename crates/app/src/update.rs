@@ -12,11 +12,23 @@ use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use std::{path::Path, sync::Arc, time::Duration};
 
-pub const REPO: &str = "HeroSiegePlanner/HSPlanner";
+// This fork's own releases. Pointing at upstream would offer the English build
+// as an update and, since the installer identity is unchanged, replace the
+// Korean one with it.
+pub const REPO: &str = "tablet7823-beep/HSPlanner";
 pub const USER_AGENT: &str = concat!("HSPlanner/", env!("CARGO_PKG_VERSION"));
-// cargo-packager names installers after `productName` in packaging/packager.json;
 // SHA256SUMS identifies releases produced by our packaging pipeline.
+//
+// The case varies by format: cargo-packager names the macOS bundle after
+// `productName` ("HSPlanner_1.1.0_aarch64.dmg") but the NSIS installer after
+// `name` ("hsplanner_1.1.0_x64-setup.exe"). Matching this prefix exactly found
+// the DMG and missed every Windows installer, so the comparison ignores case.
 const ASSET_PREFIX: &str = "HSPlanner_";
+
+fn is_package(name: &str) -> bool {
+    name.get(..ASSET_PREFIX.len())
+        .is_some_and(|prefix| prefix.eq_ignore_ascii_case(ASSET_PREFIX))
+}
 const CHECK_TIMEOUT: Duration = Duration::from_secs(10);
 const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(600);
 
@@ -142,7 +154,7 @@ fn pick(release: Release, current: &Version, os: &str) -> Option<Update> {
         || !release
             .assets
             .iter()
-            .any(|asset| asset.name.starts_with(ASSET_PREFIX))
+            .any(|asset| is_package(&asset.name))
     {
         return None;
     }
@@ -155,7 +167,7 @@ fn pick(release: Release, current: &Version, os: &str) -> Option<Update> {
         release
             .assets
             .into_iter()
-            .find(|asset| asset.name.starts_with(ASSET_PREFIX) && asset.name.ends_with(extension))
+            .find(|asset| is_package(&asset.name) && asset.name.ends_with(extension))
     });
     Some(Update {
         version,
@@ -384,6 +396,38 @@ mod tests {
             update.installer.unwrap().name,
             "HSPlanner_1.2.0_aarch64.dmg"
         );
+    }
+
+    #[test]
+    fn packager_output_names_are_recognised_whatever_their_case() {
+        // The names cargo-packager actually produces, taken from a published
+        // release: the DMG is capitalised and the installer is not.
+        let release = release(
+            "v1.2.0",
+            &[
+                "HSPlanner_1.2.0_aarch64.dmg",
+                "hsplanner_1.2.0_x64-setup.exe",
+                "SHA256SUMS",
+            ],
+        );
+        let update = pick(release, &Version::new(1, 1, 0), "windows").unwrap();
+        assert_eq!(
+            update.installer.expect("windows installer").name,
+            "hsplanner_1.2.0_x64-setup.exe"
+        );
+    }
+
+    #[test]
+    fn a_windows_only_release_is_still_offered() {
+        // This fork publishes no macOS build, so the lowercase installer is the
+        // only package in the release; an exact-prefix check hid it entirely.
+        let release = release(
+            "v1.2.0",
+            &["hsplanner_1.2.0_x64-setup.exe", "SHA256SUMS"],
+        );
+        let update = pick(release, &Version::new(1, 1, 0), "windows")
+            .expect("a windows-only release should still be an update");
+        assert_eq!(update.version, Version::new(1, 2, 0));
     }
 
     #[test]
