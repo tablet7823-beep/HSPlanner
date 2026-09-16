@@ -70,70 +70,71 @@
 <details>
 <summary>캐릭터 — 읽기 전용 요약: 클래스, 레벨, 능력치, 현재 빌드의 데미지·방어 수치</summary>
 
-<img width="1710" height="1041" alt="image" src="https://github.com/user-attachments/assets/85a6820e-d527-4faa-a15b-a108158fa1ea" />
+<img width="1696" height="1037" alt="캐릭터 탭" src="docs/screenshots/character.webp" />
 
 </details>
 
 <details>
 <summary>인카네이션 트리 — 확대·이동이 되는 특성 그래프. 자동 경로 탐색, 마우스를 올리면 경로 미리보기, 미니맵, 초기화</summary>
 
-<img width="1710" height="1071" alt="image" src="https://github.com/user-attachments/assets/f430c2ed-e84f-4dfa-8933-660781b45a31" />
+<img width="1696" height="1037" alt="인카네이션 트리 탭" src="docs/screenshots/tree.webp" />
 
 </details>
 
 <details>
 <summary>에테르 트리 — 인카네이션 트리와 같은 방식이며, 자체 노드 그래프와 요약 패널을 가집니다</summary>
 
-<img width="1710" height="1043" alt="image" src="https://github.com/user-attachments/assets/8f090a91-f204-41ab-bcd2-4a321de659f5" />
+<img width="1696" height="1037" alt="에테르 트리 탭" src="docs/screenshots/ether.webp" />
 
 </details>
 
 <details>
 <summary>스킬 — 선행 조건과 레벨별 상한을 지키는 포인트 분배, 하위 스킬 포함</summary>
 
-<img width="1710" height="1044" alt="image" src="https://github.com/user-attachments/assets/dfa357a1-3fb6-4c6c-bbc8-264238c904e8" />
+<img width="1696" height="1037" alt="스킬 탭" src="docs/screenshots/skills.webp" />
 
 </details>
 
 <details>
 <summary>장비 — 무기, 방어구, 부적, 장신구 슬롯. 소켓(젬·룬), 룬어 인식, 세트 보너스</summary>
 
-<img width="1710" height="1042" alt="image" src="https://github.com/user-attachments/assets/1c5e71bb-75d2-429c-a29d-92d31d0102cb" />
+<img width="1696" height="1037" alt="장비 탭" src="docs/screenshots/gear.webp" />
 
 </details>
 
 <details>
 <summary>용병 — 자체 장비와 스탯 기여를 가진 용병 슬롯</summary>
 
-<img width="1710" height="1042" alt="image" src="https://github.com/user-attachments/assets/8699c5bd-1133-4553-bad9-63004a399e98" />
+<img width="1696" height="1037" alt="용병 탭" src="docs/screenshots/mercenary.webp" />
 
 </details>
 
 <details>
 <summary>스탯 — 트리, 에테르, 장비, 용병, 능력치, 룬어, 세트에서 오는 보너스 합계</summary>
 
-<img width="1710" height="1041" alt="image" src="https://github.com/user-attachments/assets/c47238ca-f3df-4b62-b1eb-b8aa298789db" />
+<img width="1696" height="1037" alt="스탯 탭" src="docs/screenshots/stats.webp" />
 
 </details>
 
 <details>
 <summary>설정 — 클래스·레벨·능력치 분배, 조건부 토글, 진행도 슬라이더</summary>
 
-<img width="1710" height="1044" alt="image" src="https://github.com/user-attachments/assets/2bb20bbd-3181-4d75-9626-495bf82b916a" />
+<img width="1696" height="1037" alt="설정 탭" src="docs/screenshots/config.webp" />
 
 </details>
 
 <details>
 <summary>노트 — 빌드마다 붙이는 위지윅 편집기. 공유 링크에도 함께 담깁니다</summary>
 
-<img width="1710" height="1043" alt="image" src="https://github.com/user-attachments/assets/83d9551f-65b5-43cb-ab14-af465e48cb3b" />
+<img width="1696" height="1037" alt="노트 탭" src="docs/screenshots/notes.webp" />
 
 </details>
 
 <details>
 <summary>필터 — 루트 필터 편집기. "빌드에서 생성" 기능 포함</summary>
 
-<img width="1710" height="1043" alt="image" src="https://github.com/user-attachments/assets/47ffe454-0471-42ca-ba88-75230f4bfc8c" />
+네이티브 앱에서는 이 탭이 아직 열리지 않습니다(상단 메뉴에서 비활성 상태). 그래서
+캡처를 싣지 않았습니다.
 
 </details>
 
@@ -146,7 +147,7 @@
 - [x] **공유** — 빌드 전체를 압축된 URL로 내보냅니다 (lz-string)
 - [x] **업데이트 확인** — GitHub 릴리스로 새 버전을 확인합니다
 
-<img width="1710" height="1044" alt="image" src="https://github.com/user-attachments/assets/bcbcfce1-b70e-4c8c-bca3-e3f991fe6317" />
+<img width="1696" height="1037" alt="빌드 라이브러리" src="docs/screenshots/library.webp" />
 
 ---
 
