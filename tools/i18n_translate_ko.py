@@ -135,6 +135,16 @@ GLOSSARY = {
     "Pull": "끌어당김", "Knockback": "밀쳐내기", "Fork": "분열",
     "Echo": "메아리", "Multishot": "다중 사격",
     "Absorbed": "흡수", "Absorb": "흡수",
+    "Explosion area of effect": "폭발 영향 범위",
+    "Poison Length": "독 지속시간",
+    "Mana Costs": "마나 소모",
+    "Potion Stacks": "물약 중첩", "Potion Stack": "물약 중첩",
+    "gain a Potion Stack": "물약 중첩 획득",
+    "Ancient Monster Pack Size": "고대 몬스터 무리 크기",
+    "Loot amount": "전리품 양",
+    "Bleeding Monsters": "출혈 몬스터", "Burning Monsters": "화상 몬스터",
+    "Deep Frozen Monsters": "심층 빙결 몬스터", "Poisoned Monsters": "중독 몬스터",
+    "Stunned Monsters": "기절 몬스터",
     # Split as "All" + "Damage Taken" the game's standalone "All" (모두) reads
     # wrong; keep the whole phrase as one term.
     "All Damage Taken": "받는 모든 데미지",
@@ -271,6 +281,15 @@ RULES: list[tuple[re.Pattern, str]] = [
     (re.compile(rf"^-({NUM})%\s+(.+)$"), "{1} -{0}%"),
     (re.compile(rf"^-({NUM})\s+(.+)$"), "{1} -{0}"),
     (re.compile(rf"^(.+) [Ii]ncreased by ({NUM})%$"), "{0} {1}% 증가"),
+    (re.compile(rf"^(.+) [Dd]ecreased by ({NUM})%$"), "{0} {1}% 감소"),
+    # Affix rolls put the range after the phrase instead of in front of it.
+    (re.compile(rf"^Extra Damage to (.+) ({NUM})%$"), "{0} 추가 데미지 {1}%"),
+    (re.compile(rf"^Replenish (.+) ({NUM})%$"), "{0} 회복 {1}%"),
+    (re.compile(rf"^Slows target by ({NUM})%$"), "대상 {0}% 둔화"),
+    (re.compile(r"^Slows target by %$"), "대상 % 둔화"),
+    (re.compile(rf"^\+({NUM}) (.+) per second$"), "초당 {1} +{0}"),
+    (re.compile(rf"^\+?({NUM})% chance to (.+) on Kill$"), "처치 시 {1} 확률 +{0}%"),
+    (re.compile(r"^% chance to (.+) on Kill$"), "처치 시 {0} 확률 %"),
     (re.compile(rf"^(.+) [Rr]educed by ({NUM})%$"), "{0} {1}% 감소"),
     # Affix templates leave the number out entirely — the roll fills it in.
     (re.compile(r"^(.+) [Ii]ncreased by %$"), "{0} % 증가"),

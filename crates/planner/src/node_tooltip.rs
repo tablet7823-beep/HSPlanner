@@ -1,4 +1,4 @@
-use hsplanner_engine::calc::i18n::tr;
+use hsplanner_engine::calc::i18n::{tr, tr_owned};
 use std::collections::HashMap;
 
 use gpui_kit::base::Tooltip;
@@ -342,7 +342,7 @@ impl RenderOnce for NodeTooltip {
                                 .text_color(palette.muted)
                                 .child(TooltipText::new(
                                     gpui_kit::SharedString::from(format!("tooltip-tag-{tag}")),
-                                    tag.to_uppercase(),
+                                    tr_owned(&tag).to_uppercase(),
                                     tag_tracking,
                                 ))
                         })),

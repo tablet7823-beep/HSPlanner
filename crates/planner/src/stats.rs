@@ -1,5 +1,5 @@
 //! Read-only planner results, with view-local search, filters and source disclosures.
-use hsplanner_engine::calc::i18n::tr;
+use hsplanner_engine::calc::i18n::{tr, tr_owned};
 use crate::{TreeView, build_panel::format_range};
 use gpui_kit::base::Selectable;
 use gpui_kit::component::{
@@ -995,10 +995,10 @@ impl StatsView {
             .text_color(p.muted);
         if let Some(cost) = value.skill_costs.get(id) {
             if let Some(range) = cost.mana_min.zip(cost.mana_max) {
-                summary = summary.child(format!("{} mana", decimal_range(range)));
+                summary = summary.child(format!("{} {}", decimal_range(range), tr("mana")));
             }
             if let Some(range) = cost.cast_rate_min.zip(cost.cast_rate_max) {
-                summary = summary.child(format!("{} casts/s", decimal_range(range)));
+                summary = summary.child(format!("{} {}", decimal_range(range), tr("casts/s")));
             }
         }
         let mut tags = div().flex().flex_wrap().gap_1();
@@ -1017,7 +1017,9 @@ impl StatsView {
                         .text_color(p.accent_hot)
                         .font_family(theme::MONO_FONT_FAMILY)
                         .text_size(units(9.))
-                        .child(tag.to_uppercase()),
+                        // Tags stay English in the data — they are matched
+                        // against affix-tags.json — so translate on the way out.
+                        .child(tr_owned(&tag).to_uppercase()),
                 );
             }
         }
@@ -1045,7 +1047,7 @@ impl StatsView {
                                     .border_1()
                                     .border_color(theme::damage_color(kind).opacity(0.5))
                                     .text_color(theme::damage_color(kind))
-                                    .child(kind.to_uppercase()),
+                                    .child(tr_owned(kind).to_uppercase()),
                             )
                         },
                     ),
@@ -1190,10 +1192,11 @@ impl StatsView {
                 .filter(|_| rank > 0)
                 .unwrap_or_default();
             let rank_label = if bonus == (0., 0.) {
-                format!("RANK {rank}/{}", skill.max_rank)
+                format!("{} {rank}/{}", tr("RANK"), skill.max_rank)
             } else {
                 format!(
-                    "RANK {}/{} ({rank} +{})",
+                    "{} {}/{} ({rank} +{})",
+                    tr("RANK"),
                     decimal_range((rank as f64 + bonus.0, rank as f64 + bonus.1)),
                     skill.max_rank,
                     decimal_range(bonus)
@@ -1309,7 +1312,7 @@ impl StatsView {
                         .py(units(2.))
                         .font_family(theme::MONO_FONT_FAMILY)
                         .text_size(units(9.))
-                        .child(kind.to_uppercase()),
+                        .child(tr_owned(kind).to_uppercase()),
                 );
             }
             for tag in hsplanner_engine::calc::subskill::effective_skill_tags(
@@ -1326,7 +1329,7 @@ impl StatsView {
                         .font_family(theme::MONO_FONT_FAMILY)
                         .text_size(units(9.))
                         .text_color(p.accent_hot)
-                        .child(tag.to_uppercase()),
+                        .child(tr_owned(&tag).to_uppercase()),
                 );
             }
             card = card.child(tags);
@@ -1339,16 +1342,18 @@ impl StatsView {
                 .text_color(p.muted);
             if let Some(cost) = value.and_then(|value| value.skill_costs.get(&skill.id)) {
                 if let Some(range) = cost.mana_min.zip(cost.mana_max) {
-                    costs = costs.child(format!("{} mana", decimal_range(range)));
+                    costs = costs.child(format!("{} {}", decimal_range(range), tr("mana")));
                 }
                 if let Some(range) = cost.cast_rate_min.zip(cost.cast_rate_max) {
-                    costs = costs.child(format!("{} casts/s", decimal_range(range)));
+                    costs = costs.child(format!("{} {}", decimal_range(range), tr("casts/s")));
                 }
             }
             if let Some(speed) = skill.movement_during_use {
-                costs = costs.child(format!("Move {speed}%"));
+                costs = costs.child(tr("Move {n}%").replace("{n}", &speed.to_string()));
             }
-            costs = costs.child(format!("max rank {}", skill.max_rank));
+            costs = costs.child(
+                tr("max rank {n}").replace("{n}", &skill.max_rank.to_string()),
+            );
             card = card.child(costs);
             if open
                 && rank > 0
@@ -1452,7 +1457,7 @@ impl StatsView {
                                     .font_family(theme::MONO_FONT_FAMILY)
                                     .text_size(units(9.))
                                     .text_color(theme::damage_color(&entry.damage_type))
-                                    .child(entry.damage_type.to_uppercase()),
+                                    .child(tr_owned(&entry.damage_type).to_uppercase()),
                             )
                             .child(
                                 div()
