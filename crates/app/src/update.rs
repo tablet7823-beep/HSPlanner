@@ -100,7 +100,10 @@ impl Updater {
                         if silent {
                             State::Idle
                         } else {
-                            State::Failed(format!("Could not check for updates: {error:#}"))
+                            State::Failed(
+                                tr("Could not check for updates: {error}")
+                                    .replace("{error}", &format!("{error:#}")),
+                            )
                         }
                     }
                 };
@@ -131,7 +134,7 @@ impl Updater {
                 Ok(()) => cx.emit(Installed),
                 Err(error) => {
                     log::error!("Update install failed: {error:#}");
-                    this.state = State::Failed(format!("Update failed: {error:#}"));
+                    this.state = State::Failed(tr("Update failed: {error}").replace("{error}", &format!("{error:#}")));
                     cx.notify();
                 }
             });
@@ -207,7 +210,7 @@ async fn download(http: Arc<dyn HttpClient>, asset: &Asset) -> anyhow::Result<st
         asset.name
     );
     let path = std::env::temp_dir().join(&asset.name);
-    std::fs::write(&path, bytes).with_context(|| format!("writing {}", path.display()))?;
+    std::fs::write(&path, bytes).with_context(|| tr("writing {path}").replace("{path}", &path.display().to_string()))?;
     Ok(path)
 }
 
@@ -275,7 +278,9 @@ fn replace_bundle(mount: &Path, bundle: &Path) -> anyhow::Result<()> {
     let _ = std::fs::remove_dir_all(&staged);
     let _ = std::fs::remove_dir_all(&old);
     run("ditto", &[fresh.as_os_str(), staged.as_os_str()])?;
-    std::fs::rename(bundle, &old).with_context(|| format!("replacing {}", bundle.display()))?;
+    std::fs::rename(bundle, &old).with_context(|| {
+        tr("replacing {path}").replace("{path}", &bundle.display().to_string())
+    })?;
     std::fs::rename(&staged, bundle)?;
     let _ = std::fs::remove_dir_all(&old);
     Ok(())
@@ -286,7 +291,7 @@ fn run(program: &str, args: &[&std::ffi::OsStr]) -> anyhow::Result<()> {
     let output = std::process::Command::new(program)
         .args(args)
         .output()
-        .with_context(|| format!("running {program}"))?;
+        .with_context(|| tr("running {program}").replace("{program}", program))?;
     anyhow::ensure!(
         output.status.success(),
         "{program} failed: {}",
@@ -344,9 +349,9 @@ pub fn open_dialog(updater: Entity<Updater>, window: &mut Window, cx: &mut App) 
         let page = update.page.clone();
         let install = updater.clone();
         dialog
-            .title(format!("HSPlanner v{} is available", update.version))
+            .title(tr("HSPlanner v{version} is available").replace("{version}", &update.version.to_string()))
             .child(div().flex().flex_col().gap_2()
-                .child(format!("You are running v{}.", current_version()))
+                .child(tr("You are running v{version}.").replace("{version}", &current_version().to_string()))
                 .child(div().text_color(palette.muted).child(explanation)))
             .footer(div().flex().items_center().justify_between().gap_3()
                 .child(gpui_kit::base::Link::new("update-release-page").child(tr("Release notes")).href(page)

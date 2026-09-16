@@ -29,7 +29,7 @@ pub(super) fn description(content: Option<&TreeSocketContent>) -> (String, Vec<S
             let (name, stats) = match data::get_socketable_by_id(id) {
                 Some(data::Socketable::Gem(g)) => (&g.name, &g.stats),
                 Some(data::Socketable::Rune(r)) => (&r.name, &r.stats),
-                None => return (format!("Unknown socketable: {id}"), vec![]),
+                None => return (tr("Unknown socketable: {id}").replace("{id}", id), vec![]),
             };
             let mut values: Vec<_> = stats.iter().collect();
             values.sort_by_key(|(key, _)| *key);
@@ -62,7 +62,7 @@ pub(super) fn description(content: Option<&TreeSocketContent>) -> (String, Vec<S
                             def.tier
                         )
                     }
-                    None => format!("Unknown affix: {}", eq.affix_id),
+                    None => tr("Unknown affix: {id}").replace("{id}", &eq.affix_id),
                 })
                 .collect(),
         ),
@@ -325,10 +325,12 @@ impl JewelryEditor {
                 });
             let input = cx.new(|cx| {
                 InputState::new(window, cx)
-                    .placeholder(format!(
-                        "{} roll",
-                        stat_name(def.stat_key.as_deref().unwrap_or(""))
-                    ))
+                    .placeholder(
+                        tr("{name} roll").replace(
+                            "{name}",
+                            &stat_name(def.stat_key.as_deref().unwrap_or("")),
+                        ),
+                    )
                     .default_value(format!("{}", (value * 100.).round() / 100.))
             });
             let id = group.clone();
@@ -356,7 +358,12 @@ impl JewelryEditor {
                         this.invalid_rolls.remove(&id);
                     } else {
                         this.invalid_rolls
-                            .insert(id.clone(), format!("Enter a roll between {lo} and {hi}."));
+                            .insert(
+                                id.clone(),
+                                tr("Enter a roll between {lo} and {hi}.")
+                                    .replace("{lo}", &lo.to_string())
+                                    .replace("{hi}", &hi.to_string()),
+                            );
                     }
                 }
                 cx.notify();
@@ -442,11 +449,12 @@ impl JewelryEditor {
     fn status_text(&self) -> String {
         match &self.pending {
             None => tr("Empty socket").into(),
-            Some(TreeSocketContent::Uncut { affixes }) => format!(
-                "Uncut Jewel · {} affix{}",
-                affixes.len(),
-                if affixes.len() == 1 { "" } else { "es" }
-            ),
+            Some(TreeSocketContent::Uncut { affixes }) => if affixes.len() == 1 {
+                tr("Uncut Jewel · {n} affix")
+            } else {
+                tr("Uncut Jewel · {n} affixes")
+            }
+            .replace("{n}", &affixes.len().to_string()),
             Some(TreeSocketContent::Item { id }) => self
                 .catalog
                 .iter()
@@ -509,11 +517,10 @@ impl JewelryEditor {
                 let button = if is_affix {
                     button
                         .child(div().flex_1().min_w_0().truncate().child(row.name.clone()))
-                        .child(mono(10., p.faint).flex_none().child(format!(
-                            "{} tier{}",
-                            row.tier,
-                            if row.tier == 1 { "" } else { "s" }
-                        )))
+                        .child(mono(10., p.faint).flex_none().child(
+                            if row.tier == 1 { tr("{n} tier") } else { tr("{n} tiers") }
+                                .replace("{n}", &row.tier.to_string()),
+                        ))
                 } else {
                     button
                         .child(
@@ -668,7 +675,7 @@ impl JewelryEditor {
                                 .text_color(p.accent_hot)
                                 .child(affixes.len().to_string()),
                         )
-                        .child(format!("/ {} affixes", jewelry::MAX_AFFIXES)),
+                        .child(tr("/ {n} affixes").replace("{n}", &jewelry::MAX_AFFIXES.to_string())),
                 )
                 .child(toggle),
         );
@@ -744,7 +751,7 @@ impl JewelryEditor {
         let def = data::get_affix(&eq.affix_id);
         let group = def.map_or_else(|| eq.affix_id.clone(), |a| a.group_id.clone());
         let name = def.map_or_else(
-            || format!("Unknown affix: {}", eq.affix_id),
+            || tr("Unknown affix: {id}").replace("{id}", &eq.affix_id),
             |a| a.description.clone(),
         );
         let stat = def.map_or_else(
@@ -799,7 +806,7 @@ impl JewelryEditor {
                     .children(value.map(|value| mono(11., p.accent_hot).flex_none().child(value)))
                     .child(
                         controls::icon_button("remove-affix", "×", true, cx)
-                            .accessibility_label(format!("Remove affix: {stat}"))
+                            .accessibility_label(tr("Remove affix: {stat}").replace("{stat}", &stat))
                             .on_click(cx.listener(move |this, _, window, cx| {
                                 if let Some(TreeSocketContent::Uncut { affixes }) =
                                     &mut this.pending
@@ -832,10 +839,10 @@ impl JewelryEditor {
                             .flex()
                             .items_center()
                             .gap_2()
-                            .child("tier")
+                            .child(tr("tier"))
                             .child(
                                 controls::icon_button("tier-down", "−", false, cx)
-                                    .accessibility_label(format!("Lower tier: {stat}"))
+                                    .accessibility_label(tr("Lower tier: {stat}").replace("{stat}", &stat))
                                     .disabled(tiers.first().is_none_or(|a| a.id == eq.affix_id))
                                     .on_click(cx.listener(move |this, _, window, cx| {
                                         this.tier_step(&prev, false, window, cx)
@@ -844,7 +851,7 @@ impl JewelryEditor {
                             .child(div().text_color(p.text).child(format!("T{}", eq.tier)))
                             .child(
                                 controls::icon_button("tier-up", "+", false, cx)
-                                    .accessibility_label(format!("Higher tier: {stat}"))
+                                    .accessibility_label(tr("Higher tier: {stat}").replace("{stat}", &stat))
                                     .disabled(tiers.last().is_none_or(|a| a.id == eq.affix_id))
                                     .on_click(cx.listener(move |this, _, window, cx| {
                                         this.tier_step(&next, true, window, cx)
@@ -856,7 +863,7 @@ impl JewelryEditor {
                             .flex()
                             .items_center()
                             .gap_2()
-                            .child("roll")
+                            .child(tr("roll"))
                             .children(self.affix_inputs.iter().find(|i| i.group == group).map(
                                 |i| {
                                     div()

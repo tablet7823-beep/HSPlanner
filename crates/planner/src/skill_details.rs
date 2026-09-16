@@ -64,7 +64,7 @@ pub(crate) fn stat_name(key: &str) -> String {
     if let Some(base) = key.strip_suffix("_more")
         && let Some(def) = stats.iter().find(|s| s.key == base)
     {
-        return format!("Total {}", def.name);
+        return tr("Total {name}").replace("{name}", &def.name);
     }
     key.split('_').map(capitalize).collect::<Vec<_>>().join(" ")
 }
@@ -304,7 +304,7 @@ pub(crate) fn empty_state(cx: &App) -> Div {
                             (tr("L-CLICK"), tr("Select skill")),
                             ("+", tr("Add a point")),
                             (tr("R-CLICK"), tr("Remove a point")),
-                            ("SHIFT", "5 points at a time"),
+                            ("SHIFT", tr("5 points at a time")),
                             (tr("CTRL/CMD+SHIFT"), tr("All the points")),
                             ("⚙", tr("Open subtree")),
                         ]
@@ -575,7 +575,7 @@ pub(crate) fn bonuses_block(details: &DetailsContext, cx: &App) -> Option<Div> {
             let element = details.stat(&format!("{kind}_skills"));
             if element != (0., 0.) {
                 rows = rows.child(row(
-                    format!("+ to {} Skills", capitalize(kind)),
+                    tr("+ to {kind} Skills").replace("{kind}", &capitalize(kind)),
                     value(element.0, element.1),
                     cx,
                 ));
@@ -591,7 +591,7 @@ pub(crate) fn bonuses_block(details: &DetailsContext, cx: &App) -> Option<Div> {
             let bonus = details.stat(key);
             if bonus != (0., 0.) {
                 rows = rows.child(row(
-                    format!("+ to {} Skills", def.tags.join(" + ")),
+                    tr("+ to {kind} Skills").replace("{kind}", &def.tags.join(" + ")),
                     value(bonus.0, bonus.1),
                     cx,
                 ));
@@ -608,7 +608,7 @@ pub(crate) fn bonuses_block(details: &DetailsContext, cx: &App) -> Option<Div> {
             .unwrap_or((0., 0.));
         if item != (0., 0.) {
             rows = rows.child(row(
-                format!("+ to {}", skill.name),
+                tr("+ to {name}").replace("{name}", &skill.name),
                 value(item.0, item.1),
                 cx,
             ));
@@ -752,7 +752,9 @@ pub(crate) fn stats_block(details: &DetailsContext, cx: &App) -> Option<Div> {
     let mut rows = div().flex().flex_col().gap_1();
     if let (Some(min), Some(max)) = (base_min, base_max) {
         let label = match (skill.attack_kind, skill.damage_type.as_deref()) {
-            (Some(AttackKindSpec::Attack), Some(kind)) => format!("{} damage", capitalize(kind)),
+            (Some(AttackKindSpec::Attack), Some(kind)) => {
+                tr("{kind} damage").replace("{kind}", &capitalize(kind))
+            }
             _ => tr("Base damage").into(),
         };
         let next_label = next.and_then(|(a, b)| {
@@ -1166,15 +1168,19 @@ pub(crate) fn subtree_block(details: &DetailsContext, cx: &App) -> Option<Div> {
                 .collect();
             for state in proc.applies_states.iter().flatten() {
                 parts.push(match state {
-                    AppliedStateValue::Name(name) => format!("applies {}", name.replace('_', " ")),
+                    AppliedStateValue::Name(name) => {
+                        tr("applies {state}").replace("{state}", &name.replace('_', " "))
+                    }
                     AppliedStateValue::Full { state, amount } => {
                         let amount = amount
                             .map(|a| a.base.unwrap_or(0.) + a.per_rank.unwrap_or(0.) * rank as f64)
                             .unwrap_or(0.);
                         if amount != 0. {
-                            format!("applies {} ({}%)", state.replace('_', " "), round2(amount))
+                            tr("applies {state} ({pct}%)")
+                                .replace("{state}", &state.replace('_', " "))
+                                .replace("{pct}", &round2(amount).to_string())
                         } else {
-                            format!("applies {}", state.replace('_', " "))
+                            tr("applies {state}").replace("{state}", &state.replace('_', " "))
                         }
                     }
                 });

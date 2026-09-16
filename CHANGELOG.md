@@ -10,6 +10,12 @@
 - 장비 칸을 우클릭하면 바로 비웁니다.
 - 팝업이 Esc와 바깥 클릭 양쪽으로 닫힙니다. 저장하지 않은 변경이 있으면 먼저 확인합니다.
 - 앱 내 업데이트는 이 포크의 릴리스를 봅니다. 원본의 영문판으로 덮어써지지 않습니다.
+- 빌드 목록의 클래스 열이 `viking` 같은 내부 id 대신 클래스 이름을 보여줍니다.
+  정렬은 원래부터 이름 기준이었으므로 표시와 정렬이 이제 같은 값을 씁니다.
+- `format!`로 조립하던 화면 문구 126곳이 번역을 타지 못하고 있었습니다.
+  `tools/i18n_extract_ui.py leaks`가 이런 자리를 찾아 주며, 현재 0건입니다.
+- Windows에서 `SHA256SUMS`가 CRLF로 저장돼 `sha256sum -c`가 파일을 찾지
+  못하던 문제를 고쳤습니다.
 
 
 - Restored the Release workflow with version/tag input and a prerelease option. It synchronizes native versions, tests and packages Windows/Linux/macOS, verifies combined checksums, and publishes the complete release using this changelog.

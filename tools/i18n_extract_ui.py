@@ -3,6 +3,8 @@
 
   scan   report the candidates and write data/i18n/ui/sources.json
   wrap   rewrite the call sites as tr("...")
+  leaks  report display text `wrap` cannot reach (format! templates,
+         SCREAMING badges) so it can be converted by hand
 
 Interface text in this codebase rarely reaches a renderer directly; it is
 passed into local helpers like `point_stat("tree-used", "Tree nodes", ..)`, so
@@ -18,6 +20,7 @@ lookup or match arm, where the literal is being matched rather than shown.
 
 Run:  python tools/i18n_extract_ui.py scan
       python tools/i18n_extract_ui.py wrap
+      python tools/i18n_extract_ui.py leaks
 """
 
 from __future__ import annotations
@@ -292,11 +295,101 @@ def wrap():
     print(f"wrapped {total} literals across {touched} files")
 
 
+# --- leaks -----------------------------------------------------------------
+# `wrap` deliberately skips two shapes: `format!` templates (the macro needs a
+# literal, so `tr(...)` cannot go round it) and SCREAMING literals (they look
+# like consts). Both still reach the screen — ` / {} EQUIPPED`, `VALIDATION`,
+# `Node #{}` all shipped in English because `scan` inherited those exclusions
+# and so never named them. `leaks` reports them for hand conversion into the
+# `tr("… {name}").replace("{name}", …)` form the code already uses elsewhere.
+
+# Text that is a serialisation format rather than a label. Translating any of
+# these breaks the round trip, so they are never reported.
+FORMAT_ONLY = (
+    "item_text.rs",      # the build-code item format, parsed back in
+    "gear_import.rs",    # parses pasted tooltips
+    "debug_overlay.rs",  # diagnostics
+    "debug_log.rs",
+    "bug_report_transport.rs",
+)
+# Where a literal ends up on screen.
+DISPLAY_SINK = re.compile(
+    r"\.(?:child|label|placeholder|accessibility_label|aria_label|cursor_tooltip"
+    r"|title|tooltip|push|push_str)\s*\(\s*&?\s*(?:format!\s*\(\s*)?$|format!\s*\(\s*$"
+)
+# `{id}-details`, `merc-slot-{key}` — element identifiers, not prose.
+IDENTIFIER = re.compile(r"^[a-z0-9{}]+(?:[-_/:][a-z0-9{}.:]+)+$")
+PLACEHOLDER = re.compile(r"\{[^{}]*\}")
+
+
+# English on purpose. Each of these reaches a screen, so the shape checks above
+# cannot rule them out — only knowing what the text is for can.
+ALLOWED = {
+    # Written into the item-text box and parsed back out of it; the preview
+    # button has to show the same words it is about to insert.
+    "+1{} {name} [custom]",
+    "{prefix}+1{} {name} [custom]\\n",
+    # Behind HSPLANNER_DIAGNOSTICS and the paint harness — numbers for us.
+    "calc {:.1} ms",
+    "{calculation} · {} visible · canvas {:.2} ms",
+    "{:.1} frames/s · p95 {:.1} ms\\nCanvas CPU {:.2} ms · {} samples",
+    # An element id that happens to read like prose.
+    "source-{group}-{}-{}-{:?}-{:?}",
+}
+
+
+def displayed(text: str) -> bool:
+    """Prose once the placeholders are taken out, and not an identifier."""
+    if text in ALLOWED:
+        return False
+    if not 2 <= len(text) <= 200 or IDENTIFIER.match(text):
+        return False
+    if any(frag in text for frag in REJECT_SUBSTRING) or text.startswith("http"):
+        return False
+    if any(rx.search(text) for rx in REJECT_PATHISH):
+        return False
+    # `{value:.0}` and `{}{suffix}` carry no words of their own.
+    return bool(re.search(r"[A-Za-z]{2}", PLACEHOLDER.sub("", text)))
+
+
+def leaks():
+    catalogue = {}
+    path = os.path.join(OUT_DIR, "ko.json")
+    if os.path.exists(path):
+        catalogue = json.load(open(path, encoding="utf-8"))
+    found = collections.defaultdict(list)
+    for source in sources():
+        if os.path.basename(source) in FORMAT_ONLY:
+            continue
+        original = open(source, encoding="utf-8").read()
+        text = mask_noise(original)
+        for span in cfg_test_spans(original):
+            text = text[: span[0]] + " " * (span[1] - span[0]) + text[span[1] :]
+        for match in LITERAL.finditer(text):
+            literal = match.group()[1:-1]
+            if literal in catalogue or not displayed(literal):
+                continue
+            if not DISPLAY_SINK.search(text[max(0, match.start() - 80) : match.start()]):
+                continue
+            line = text[: match.start()].count("\n") + 1
+            found[literal].append(f"{source}:{line}")
+    for literal in sorted(found):
+        print(f"  {literal!r}\n      {found[literal][0]}")
+    print(f"\ndisplay literals outside the catalogue: {len(found)}")
+    return found
+
+
+
 if __name__ == "__main__":
+    # Windows consoles default to cp949 here, and the reports quote the
+    # literals verbatim — en dashes and ellipses included.
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     mode = sys.argv[1] if len(sys.argv) > 1 else "scan"
     if mode == "scan":
         scan()
     elif mode == "wrap":
         wrap()
+    elif mode == "leaks":
+        raise SystemExit(1 if leaks() else 0)
     else:
-        raise SystemExit(f"unknown mode {mode!r}; use scan or wrap")
+        raise SystemExit(f"unknown mode {mode!r}; use scan, wrap or leaks")

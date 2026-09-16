@@ -33,14 +33,14 @@ pub fn open(window: &mut Window, cx: &mut App) {
                             .text_xs()
                             .font_family(theme::MONO_FONT_FAMILY)
                             .text_color(palette.accent)
-                            .child("CHANGELOG"),
+                            .child(tr("CHANGELOG")),
                     )
                     .child(
                         div()
                             .text_lg()
                             .font_weight(FontWeight::SEMIBOLD)
                             .text_color(palette.accent)
-                            .child(format!("HSPlanner v{}", env!("CARGO_PKG_VERSION"))),
+                            .child(tr("HSPlanner v{version}").replace("{version}", env!("CARGO_PKG_VERSION"))),
                     )
                     .child(
                         div()

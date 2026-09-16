@@ -293,9 +293,13 @@ impl TreeView {
         };
         let status = match &self.suggest.phase {
             Phase::Idle => tr("Path and synergy search").to_string(),
-            Phase::Computing => format!("Search {current} / {total}"),
+            Phase::Computing => tr("Search {current} / {total}")
+                .replace("{current}", &current.to_string())
+                .replace("{total}", &total.to_string()),
             Phase::Done => self.suggest.result.as_ref().map_or(String::new(), |r| {
-                format!("Used {} of {}", r.budget_used, r.budget_requested)
+                tr("Used {used} of {requested}")
+                    .replace("{used}", &r.budget_used.to_string())
+                    .replace("{requested}", &r.budget_requested.to_string())
             }),
             Phase::Failed(_) => tr("Last run errored").to_string(),
         };
@@ -459,9 +463,10 @@ impl TreeView {
                 .child(mono(
                     "suggest-footer",
                     match &self.suggest.phase {
-                        Phase::Done => format!("{} NODES READY", self.suggest.added.len()),
-                        Phase::Computing => "OPTIMIZING".into(),
-                        Phase::Failed(_) => "ERROR".into(),
+                        Phase::Done => tr("{n} NODES READY")
+                            .replace("{n}", &self.suggest.added.len().to_string()),
+                        Phase::Computing => tr("OPTIMIZING").into(),
+                        Phase::Failed(_) => tr("ERROR").into(),
                         Phase::Idle => tr("CONFIGURE BUDGET").into(),
                     },
                     match &self.suggest.phase {
@@ -581,16 +586,15 @@ impl TreeView {
                             this.suggest.unsupported_expanded = !this.suggest.unsupported_expanded;
                             cx.notify();
                         }))
-                        .child(format!(
-                            "▲ {} unsupported mod line{} (treated as 0 DPS) {}",
-                            result.unsupported_lines.len(),
+                        .child(
                             if result.unsupported_lines.len() == 1 {
-                                ""
+                                tr("▲ {n} unsupported mod line (treated as 0 DPS) {mark}")
                             } else {
-                                "s"
-                            },
-                            if expanded { "−" } else { "+" }
-                        ))
+                                tr("▲ {n} unsupported mod lines (treated as 0 DPS) {mark}")
+                            }
+                            .replace("{n}", &result.unsupported_lines.len().to_string())
+                            .replace("{mark}", if expanded { "−" } else { "+" }),
+                        )
                         .children(lines.into_iter().take(shown).map(|line| {
                             div().pl_4().text_color(p.muted).child(format!("· {line}"))
                         })),
@@ -605,7 +609,10 @@ impl TreeView {
         let name = info
             .map(|info| info.t.trim())
             .filter(|name| !name.is_empty())
-            .map_or_else(|| format!("Node #{}", step.node_id), str::to_string);
+            .map_or_else(
+                || tr("Node #{id}").replace("{id}", &step.node_id.to_string()),
+                str::to_string,
+            );
         let (badge, badge_color) = match info.map(|info| info.n.as_str()) {
             Some("jewelry") => ("SOCKET", p.stat_blue),
             Some("big") => ("NOTABLE", p.accent_hot),
@@ -617,7 +624,7 @@ impl TreeView {
             (tr("Path").to_string(), p.faint)
         } else {
             (
-                format!("+{} DPS", hsplanner_ui::numbers::compact(step.gain, &scale)),
+                tr("+{n} DPS").replace("{n}", &hsplanner_ui::numbers::compact(step.gain, &scale)),
                 if step.gain > 0. { p.positive } else { p.muted },
             )
         };

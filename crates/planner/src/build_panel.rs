@@ -95,9 +95,9 @@ pub fn preview_changes(
         }));
     };
     let path_label = if preview.removed > 0 {
-        format!("Removing {} nodes:", preview.removed)
+        tr("Removing {n} nodes:").replace("{n}", &preview.removed.to_string())
     } else {
-        format!("Allocating {} nodes:", preview.added)
+        tr("Allocating {n} nodes:").replace("{n}", &preview.added.to_string())
     };
     let mut groups = vec![(tr("This node:").to_owned(), &preview.single)];
     if preview.added > 1 || preview.removed > 1 {
@@ -125,10 +125,10 @@ pub fn preview_changes(
                     .map(|change| change_row(change, palette)),
             );
             if count < changes.len() {
-                group = group.child(div().text_xs().text_color(palette.muted).child(format!(
-                    "{} more changes in the side panel",
-                    changes.len() - count
-                )));
+                group = group.child(div().text_xs().text_color(palette.muted).child(
+                    tr("{n} more changes in the side panel")
+                        .replace("{n}", &(changes.len() - count).to_string()),
+                ));
             }
         }
         panel = panel.child(group);

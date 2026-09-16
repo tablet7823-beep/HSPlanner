@@ -18,7 +18,7 @@
 일치합니다. 게임 테이블에 한국어가 없는 항목 — 룬 이름(`Ber`, `Eth`, `Xo` 등)과
 일부 아이템 — 은 게임에서도 영문으로 나오므로 그대로 두었습니다.
 
-게임 데이터 99.6%, 인터페이스 98%가 번역되어 있습니다.
+게임 데이터 99.6%, 인터페이스 98.4%가 번역되어 있습니다.
 
 ### 번역 고치기
 
@@ -169,9 +169,10 @@ cargo build --release -p hsplanner
 카탈로그는 손으로 고치지 않고 스크립트로 다시 만듭니다. 쌓는 **순서가 곧 우선순위**입니다.
 
 ```bash
-python tools/i18n_build.py          # 추출 → 게임 CSV → 조립 → 수작업
-python tools/i18n_extract_ui.py scan   # 새로 생긴 인터페이스 문구 확인
-python tools/i18n_lint.py           # 번역된 tr()이 비교에 쓰이는 곳을 잡는다
+python tools/i18n_build.py             # 추출 → 게임 CSV → 조립 → 수작업
+python tools/i18n_extract_ui.py scan   # tr()이 덮고 있는 인터페이스 문구를 센다
+python tools/i18n_extract_ui.py leaks  # tr() 밖에 남은 화면 문구를 잡는다
+python tools/i18n_lint.py              # 번역된 tr()이 비교에 쓰이는 곳을 잡는다
 ```
 
 업스트림이 게임 데이터를 갱신하면 `i18n_build.py`만 다시 돌리면 됩니다.
@@ -179,6 +180,12 @@ python tools/i18n_lint.py           # 번역된 tr()이 비교에 쓰이는 곳�
 `i18n_lint.py`는 반드시 돌리세요. `tr()`은 카탈로그에 없는 문자열을 그대로 돌려주기
 때문에, 잘못 감싸도 당장은 멀쩡해 보이다가 그 문구에 번역이 생기는 순간 비교가
 조용히 실패합니다.
+
+`leaks`는 `wrap`이 손댈 수 없는 자리를 찾습니다. `format!`은 리터럴을 요구해서
+`tr()`로 감쌀 수 없고 대문자 리터럴은 상수처럼 보이는데, 둘 다 화면에는 그대로
+나옵니다. 여기 걸린 문구는 `tr("… {name}").replace("{name}", …)` 꼴로 손수
+바꿔야 합니다. 번역하면 안 되는 자리(아이템 텍스트 형식, 진단 출력, 요소 id)는
+`i18n_extract_ui.py`의 `ALLOWED`에 사유와 함께 적어 두었습니다.
 
 ### 프로젝트 구조
 

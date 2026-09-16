@@ -284,7 +284,7 @@ fn preview_ehp(result: &hsplanner_engine::calc::defense::EhpResult) -> Vec<(Stri
     result
         .entries
         .iter()
-        .map(|e| (format!("{} eHP", e.damage_type), e.ehp))
+        .map(|e| (tr("{type} eHP").replace("{type}", &e.damage_type), e.ehp))
         .collect()
 }
 
@@ -362,13 +362,17 @@ impl LibraryView {
                                 .font_family(theme::MONO_FONT_FAMILY)
                                 .text_color(p.faint)
                                 .child(
-                                    StyledText::new(format!(
-                                        "{} · LV {} · HERO LV {nodes} · {}P · {}",
-                                        class_name.to_uppercase(),
-                                        snapshot.map_or(1, |s| s.level),
-                                        build.profiles.len(),
-                                        build.season.to_uppercase()
-                                    ))
+                                    StyledText::new(
+                                        tr("{class} · LV {level} · HERO LV {nodes} · {profiles}P · {season}")
+                                            .replace("{class}", &class_name.to_uppercase())
+                                            .replace(
+                                                "{level}",
+                                                &snapshot.map_or(1, |s| s.level).to_string(),
+                                            )
+                                            .replace("{nodes}", &nodes.to_string())
+                                            .replace("{profiles}", &build.profiles.len().to_string())
+                                            .replace("{season}", &build.season.to_uppercase()),
+                                    )
                                     .with_highlights([(
                                         0..class_name.len(),
                                         HighlightStyle {
@@ -644,7 +648,7 @@ impl LibraryView {
                                                 .font_family(theme::MONO_FONT_FAMILY)
                                                 .text_size(rems(9. / 13.))
                                                 .text_color(p.accent_deep)
-                                                .child("ACTIVE"),
+                                                .child(tr("ACTIVE")),
                                         )
                                     }),
                             )
@@ -684,7 +688,7 @@ impl LibraryView {
                                                 .profile(&duplicate_id)
                                                 .ok_or(tr("Profile no longer exists."))?;
                                             let copied = hsplanner_build::library::Profile::new(
-                                                &format!("{} Copy", source.name),
+                                                &tr("{name} Copy").replace("{name}", &source.name),
                                                 &source.snapshot()?,
                                             )?;
                                             build.profiles.push(copied);

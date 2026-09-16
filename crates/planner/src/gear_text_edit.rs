@@ -262,12 +262,15 @@ impl Render for ItemTextEditor {
                 div()
                     .mb_2()
                     .text_color(if d.warning { accent } else { negative })
-                    .child(format!(
-                        "{} · line {}: {}",
-                        if d.warning { "WARN" } else { "ERR" },
-                        d.line,
-                        d.message
-                    )),
+                    .child(
+                        if d.warning {
+                            tr("WARN · line {line}: {message}")
+                        } else {
+                            tr("ERR · line {line}: {message}")
+                        }
+                        .replace("{line}", &d.line.to_string())
+                        .replace("{message}", &d.message),
+                    ),
             );
         }
         // Bound the editor viewport inside the dialog's title and padding so
@@ -322,7 +325,7 @@ impl Render for ItemTextEditor {
                             .min_w_0()
                             .flex()
                             .flex_col()
-                            .child(div().p_2().text_xs().text_color(accent).child("VALIDATION"))
+                            .child(div().p_2().text_xs().text_color(accent).child(tr("VALIDATION")))
                             .child(validation)
                             .child(
                                 div()

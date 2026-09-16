@@ -332,9 +332,12 @@ fn render_bar(
                 ))
                 .track_focus(focus)
                 .role(accesskit::Role::Group)
-                .aria_label(format!(
-                    "Progression step {current} of {total}. {ORDER_EXPLANATION}"
-                ))
+                .aria_label(
+                    tr("Progression step {current} of {total}. {explanation}")
+                        .replace("{current}", &current.to_string())
+                        .replace("{total}", &total.to_string())
+                        .replace("{explanation}", ORDER_EXPLANATION),
+                )
                 .when(focus.is_focused(window), |bar| {
                     bar.border_color(p.accent_hot)
                 })

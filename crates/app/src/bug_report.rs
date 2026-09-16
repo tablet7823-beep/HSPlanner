@@ -226,7 +226,10 @@ impl ReportEditor {
         for result in incoming {
             match result {
                 Ok(shot) if self.shots.len() < MAX_SHOTS => self.shots.push(shot),
-                Ok(_) => self.error = Some(format!("Attach up to {MAX_SHOTS} screenshots.")),
+                Ok(_) => {
+                    self.error =
+                        Some(tr("Attach up to {n} screenshots.").replace("{n}", &MAX_SHOTS.to_string()))
+                }
                 Err(error) => self.error = Some(error),
             }
         }
@@ -408,7 +411,7 @@ impl Render for ReportEditor {
                         div()
                             .text_size(rems(11. / 13.))
                             .text_color(p.faint)
-                            .child(format!("up to {MAX_SHOTS}, 8 MB each")),
+                            .child(tr("up to {n}, 8 MB each").replace("{n}", &MAX_SHOTS.to_string())),
                     ),
                 cx,
             ));
@@ -429,7 +432,7 @@ impl Render for ReportEditor {
                             true,
                             cx,
                         )
-                        .accessibility_label(format!("Remove {}", shot.name))
+                        .accessibility_label(tr("Remove {name}").replace("{name}", &shot.name))
                         .disabled(locked)
                         .on_click(cx.listener(move |this, _, _, cx| {
                             this.shots.retain(|shot| shot.id != id);
@@ -450,7 +453,10 @@ impl Render for ReportEditor {
             fields = fields.child(
                 div().mt_2().text_color(p.muted).child(
                     Checkbox::new("report-attach-build")
-                        .label(format!("Attach my build ({label}) so it can be reproduced"))
+                        .label(
+                            tr("Attach my build ({label}) so it can be reproduced")
+                                .replace("{label}", &label),
+                        )
                         .checked(self.attach)
                         .disabled(locked)
                         .on_click(cx.listener(|this, checked, _, cx| {

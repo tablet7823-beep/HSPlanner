@@ -105,8 +105,10 @@ fn gem_detail(description: Option<&str>) -> String {
 
 fn tier_detail(tier: u32, description: Option<&str>) -> String {
     match description.filter(|d| !d.is_empty()) {
-        Some(description) => format!("Tier {tier} · {description}"),
-        None => format!("Tier {tier}"),
+        Some(description) => tr("Tier {tier} · {description}")
+            .replace("{tier}", &tier.to_string())
+            .replace("{description}", description),
+        None => tr("Tier {tier}").replace("{tier}", &tier.to_string()),
     }
 }
 
@@ -523,7 +525,10 @@ impl GearView {
                         .map(|element| {
                             Row::new(
                                 element,
-                                format!("{}{} Skills", element[..1].to_uppercase(), &element[1..]),
+                                tr("{element} Skills").replace(
+                                    "{element}",
+                                    &format!("{}{}", element[..1].to_uppercase(), &element[1..]),
+                                ),
                                 "",
                             )
                         }),
@@ -875,7 +880,7 @@ impl GearView {
             .min_w_0()
             .track_focus(&binding.focus)
             .role(accesskit::Role::Group)
-            .aria_label(format!("{label} roll"))
+            .aria_label(tr("{label} roll").replace("{label}", &label))
             .rounded_sm()
             .when(binding.focus.is_focused(window), |v| {
                 v.shadow(vec![BoxShadow {

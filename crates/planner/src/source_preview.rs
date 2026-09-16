@@ -120,7 +120,7 @@ pub(super) fn wrap(
         .h_auto()
         .p_0()
         .justify_start()
-        .accessibility_label(format!("Preview {}", item_name(source)))
+        .accessibility_label(tr("Preview {name}").replace("{name}", &item_name(source)))
         .child(
             div()
                 .id("source-item-hover")
@@ -186,10 +186,10 @@ pub(super) fn wrap(
             .h_auto()
             .p_0()
             .justify_start()
-            .accessibility_label(format!(
-                "Preview tree node #{}",
-                preview.scene.graph.nodes[index].id
-            ))
+            .accessibility_label(
+                tr("Preview tree node #{id}")
+                    .replace("{id}", &preview.scene.graph.nodes[index].id.to_string()),
+            )
             .child(
                 div()
                     .id("source-node-hover")
@@ -240,12 +240,18 @@ impl NodePreview {
             .child(
                 div()
                     .p_3()
-                    .child(info.map_or_else(|| format!("Node #{}", node.id), |info| info.t.clone()))
+                    .child(info.map_or_else(
+                        || tr("Node #{id}").replace("{id}", &node.id.to_string()),
+                        |info| info.t.clone(),
+                    ))
                     .child(
                         div()
                             .text_xs()
                             .text_color(cx.theme().muted_foreground)
-                            .child(format!("Incarnation Tree · #{}", node.id)),
+                            .child(
+                                tr("Incarnation Tree · #{id}")
+                                    .replace("{id}", &node.id.to_string()),
+                            ),
                     ),
             )
             .child(

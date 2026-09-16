@@ -108,12 +108,13 @@ impl EditorView {
                 ),
             );
         let spent: u32 = snapshot.allocated.values().sum();
-        content = content.child(format!(
-            "{} attribute points available",
-            snapshot
+        content = content.child(tr("{n} attribute points available").replace(
+            "{n}",
+            &snapshot
                 .level
                 .saturating_mul(data::game_config().attribute_points_per_level)
                 .saturating_sub(spent)
+                .to_string(),
         ));
         for attribute in &data::game_config().attributes {
             let key = attribute.key.clone();
@@ -294,21 +295,29 @@ impl EditorView {
             return content.child(tr("Calculating…"));
         };
         for skill in &performance.per_skill {
-            content = content.child(div().text_lg().child(format!(
-                    "{}: {} DPS",
-                    skill
-                        .performance
-                        .active_skill_name
-                        .as_deref()
-                        .unwrap_or(&skill.skill_id),
-                    format_range(
-                        (
-                            skill.performance.combined_dps_min.unwrap_or(0.),
-                            skill.performance.combined_dps_max.unwrap_or(0.)
+            content = content.child(
+                div().text_lg().child(
+                    tr("{name}: {dps} DPS")
+                        .replace(
+                            "{name}",
+                            skill
+                                .performance
+                                .active_skill_name
+                                .as_deref()
+                                .unwrap_or(&skill.skill_id),
+                        )
+                        .replace(
+                            "{dps}",
+                            &format_range(
+                                (
+                                    skill.performance.combined_dps_min.unwrap_or(0.),
+                                    skill.performance.combined_dps_max.unwrap_or(0.),
+                                ),
+                                false,
+                            ),
                         ),
-                        false
-                    )
-                )));
+                ),
+            );
         }
         for (group, stats, sources) in [
             (
@@ -397,7 +406,7 @@ impl EditorView {
             let enabled = snapshot.enemy_conditions.get(key).copied().unwrap_or(false);
             content = content.child(
                 Checkbox::new(SharedString::from(format!("enemy-{key}")))
-                    .label(format!("Enemy {key}"))
+                    .label(tr("Enemy {key}").replace("{key}", key))
                     .checked(enabled)
                     .on_click(cx.listener(move |this, checked: &bool, _, cx| {
                         this.edit(cx, |s| {
@@ -414,7 +423,7 @@ impl EditorView {
                 .unwrap_or(false);
             content = content.child(
                 Checkbox::new(SharedString::from(format!("player-{key}")))
-                    .label(format!("Player {key}"))
+                    .label(tr("Player {key}").replace("{key}", key))
                     .checked(enabled)
                     .on_click(cx.listener(move |this, checked: &bool, _, cx| {
                         this.edit(cx, |s| {
@@ -431,7 +440,11 @@ impl EditorView {
                     .flex()
                     .gap_3()
                     .items_center()
-                    .child(format!("{key} resistance: {value:.0}%"))
+                    .child(
+                        tr("{key} resistance: {value}%")
+                            .replace("{key}", key)
+                            .replace("{value}", &format!("{value:.0}")),
+                    )
                     .child(
                         Button::new("less")
                             .planner_style(cx)

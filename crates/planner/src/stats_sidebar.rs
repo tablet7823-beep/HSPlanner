@@ -180,7 +180,7 @@ fn ehp_rows(ehp: &EhpResult) -> Vec<(String, Option<f64>)> {
             if let Some(first) = name.get_mut(0..1) {
                 first.make_ascii_uppercase();
             }
-            (format!("{name} eHP"), entry.ehp)
+            (tr("{name} eHP").replace("{name}", &name), entry.ehp)
         })
         .collect()
 }
@@ -294,8 +294,12 @@ impl StatsSidebar {
                     .font_weight(FontWeight::NORMAL)
                     .map(|button| Styled::rounded(button, units(3.)))
                     .bg(p.panel_secondary)
-                    .accessibility_label(format!("Remove {name} from active skills"))
-                    .cursor_tooltip(format!("Remove {name} from active skills"))
+                    .accessibility_label(
+                        tr("Remove {name} from active skills").replace("{name}", &name),
+                    )
+                    .cursor_tooltip(
+                        tr("Remove {name} from active skills").replace("{name}", &name),
+                    )
                     .child(
                         div()
                             .w_full()
@@ -648,7 +652,7 @@ impl Render for StatsSidebar {
                     .text_color(p.accent_hot)
                     .child(TooltipText::new(
                         "sidebar-level",
-                        format!("LV {}", snapshot.level),
+                        tr("LV {n}").replace("{n}", &snapshot.level.to_string()),
                         0.18,
                     ))
                     .child(TooltipText::new(

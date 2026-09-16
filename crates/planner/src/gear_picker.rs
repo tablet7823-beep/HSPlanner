@@ -119,17 +119,23 @@ fn base_meta(base: &ItemBase) -> String {
         parts.push(format!("{} {min}–{max}", tr("Def")));
     }
     if let (Some(min), Some(max)) = (base.damage_min, base.damage_max) {
-        parts.push(format!("Dmg {min}–{max}"));
+        parts.push(
+            tr("Dmg {min}–{max}")
+                .replace("{min}", &min.to_string())
+                .replace("{max}", &max.to_string()),
+        );
     }
     if let Some(block) = base.block_chance {
-        parts.push(format!("Block {block}%"));
+        parts.push(tr("Block {n}%").replace("{n}", &block.to_string()));
     }
     if let Some(sockets) = base.sockets {
         let max = base.max_sockets.unwrap_or(sockets);
         parts.push(if max > sockets {
-            format!("{sockets}/{max} sockets")
+            tr("{n}/{max} sockets")
+                .replace("{n}", &sockets.to_string())
+                .replace("{max}", &max.to_string())
         } else {
-            format!("{sockets} sockets")
+            tr("{n} sockets").replace("{n}", &sockets.to_string())
         });
     }
     parts.join(" · ")
@@ -277,12 +283,13 @@ impl GearView {
                         base_id: base.id.clone(),
                         name: base.name.clone(),
                         rarity: base.rarity.clone(),
-                        meta: format!(
-                            "{} · {} stars · {} sockets",
-                            crate::gear::editor::base_type_label(&base.base_type),
-                            entry.item.stars.unwrap_or(0),
-                            entry.item.socket_count
-                        ),
+                        meta: tr("{type} · {stars} stars · {sockets} sockets")
+                            .replace(
+                                "{type}",
+                                &crate::gear::editor::base_type_label(&base.base_type),
+                            )
+                            .replace("{stars}", &entry.item.stars.unwrap_or(0).to_string())
+                            .replace("{sockets}", &entry.item.socket_count.to_string()),
                         search: base_search(base),
                         sort_values: sort_values(base),
                         item: Some(entry.item.clone()),

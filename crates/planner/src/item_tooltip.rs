@@ -357,19 +357,20 @@ fn skill_name(id: &str) -> Option<String> {
 fn random_skill_label(skill_id: Option<&str>) -> String {
     skill_id
         .and_then(skill_name)
-        .unwrap_or_else(|| format!("{RANDOM_SKILL_NAME} (not rolled)"))
+        .unwrap_or_else(|| tr("{name} (not rolled)").replace("{name}", RANDOM_SKILL_NAME))
 }
 
 fn random_element_label(element: Option<&str>) -> String {
     match element {
-        Some(element) => format!("to {} Skills (random element)", capitalize(element)),
+        Some(element) => tr("to {element} Skills (random element)")
+            .replace("{element}", &capitalize(element)),
         None => tr("to Random Element Skills (not rolled)").into(),
     }
 }
 
 fn all_skills_class_label(class_id: Option<&str>) -> String {
     match class_id.and_then(data::get_class) {
-        Some(class) => format!("to All Skills ({})", class.name),
+        Some(class) => tr("to All Skills ({class})").replace("{class}", &class.name),
         None if class_id.is_some() => tr("to All Skills (Class)").into(),
         None => tr("to All Skills (Class) (not rolled)").into(),
     }
@@ -377,7 +378,7 @@ fn all_skills_class_label(class_id: Option<&str>) -> String {
 
 fn subskill_boost_label(skill_id: Option<&str>) -> String {
     match skill_id.and_then(skill_name) {
-        Some(name) => format!("to {name} Sub Skills"),
+        Some(name) => tr("to {name} Sub Skills").replace("{name}", &name),
         None if skill_id.is_some() => tr("to Random Skill Sub Skills").into(),
         None => tr("to Random Skill Sub Skills (not rolled)").into(),
     }
@@ -569,7 +570,9 @@ pub(crate) fn build_model(
                 continue;
             }
             implicit_lines.push(Line::Text {
-                text: format!("{} to {label}", format_ranged(shown, "")),
+                text: tr("{value} to {label}")
+                    .replace("{value}", &format_ranged(shown, ""))
+                    .replace("{label}", &label),
                 style: LineStyle::Implicit,
                 custom: custom.is_some(),
             });
@@ -717,7 +720,7 @@ pub(crate) fn build_model(
                     vec![Line::Entry {
                         title: augment.name.clone(),
                         style: LineStyle::Implicit,
-                        suffix: Some(format!("level {}", augment_ref.level)),
+                        suffix: Some(tr("level {n}").replace("{n}", &augment_ref.level.to_string())),
                         desc: None,
                         icon: augment_icon(&augment.id),
                         lines: stats
@@ -744,9 +747,9 @@ pub(crate) fn build_model(
                 let active = equipped_count >= bonus.pieces;
                 Line::Entry {
                     title: if active {
-                        format!("{}-Set (active)", bonus.pieces)
+                        tr("{n}-Set (active)").replace("{n}", &bonus.pieces.to_string())
                     } else {
-                        format!("{}-Set", bonus.pieces)
+                        tr("{n}-Set").replace("{n}", &bonus.pieces.to_string())
                     },
                     style: if active {
                         LineStyle::SetActive
@@ -787,7 +790,11 @@ pub(crate) fn build_model(
             header: Some((
                 set.name.clone(),
                 HeaderTone::Green,
-                Some(format!("{equipped_count}/{} pieces", set.items.len())),
+                Some(
+                    tr("{count}/{total} pieces")
+                        .replace("{count}", &equipped_count.to_string())
+                        .replace("{total}", &set.items.len().to_string()),
+                ),
             )),
             lines,
             footnote: None,
@@ -804,22 +811,31 @@ pub(crate) fn build_model(
                 .iter()
                 .map(|proc| {
                     let mut title = match trigger_label(&proc.trigger) {
-                        Some(label) => format!("{}% Chance {label}", num(proc.chance)),
+                        Some(label) => tr("{pct}% Chance {label}")
+                            .replace("{pct}", &num(proc.chance))
+                            .replace("{label}", label),
                         None => format!("{}% {}", num(proc.chance), proc.trigger.replace('_', " ")),
                     };
                     if let Some(description) = &proc.description {
                         title = match trigger_label(&proc.trigger) {
                             Some(label) => {
-                                format!("{}% Chance {label} to {description}", num(proc.chance))
+                                tr("{pct}% Chance {label} to {description}")
+                                    .replace("{pct}", &num(proc.chance))
+                                    .replace("{label}", label)
+                                    .replace("{description}", description)
                             }
                             None => format!("{}% {description}", num(proc.chance)),
                         };
                     } else {
                         match (&proc.target, proc.cast_level) {
                             (Some(target), Some(level)) => {
-                                title.push_str(&format!(" to cast level {level} {target}"))
+                                title.push_str(
+                                    &tr(" to cast level {level} {target}")
+                                        .replace("{level}", &level.to_string())
+                                        .replace("{target}", target),
+                                )
                             }
-                            (Some(target), None) => title.push_str(&format!(" to cast {target}")),
+                            (Some(target), None) => title.push_str(&tr(" to cast {target}").replace("{target}", target)),
                             _ => {}
                         }
                     }
@@ -1349,7 +1365,7 @@ fn render_text(text: &str, style: LineStyle, custom: bool, cx: &App) -> Div {
                     .font_family(theme::MONO_FONT_FAMILY)
                     .text_size(units(10.))
                     .text_color(p.accent_hot.opacity(0.7))
-                    .child("CUSTOM"),
+                    .child(tr("CUSTOM")),
             )
         })
 }

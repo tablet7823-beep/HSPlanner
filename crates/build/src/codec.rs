@@ -126,7 +126,7 @@ pub fn decode_value(wire: &Value) -> Result<(BuildSnapshot, Notes), String> {
     }
     for key in ["a", "i", "s", "ss", "buf", "ec", "pt"] {
         if !wire[key].is_object() {
-            return Err(format!("Missing or invalid build field: {key}"));
+            return Err(tr("Missing or invalid build field: {key}").replace("{key}", key));
         }
     }
     if !wire["t"].is_array() || !wire["l"].is_number() || !wire["kps"].is_number() {
@@ -175,7 +175,7 @@ pub fn decode_value(wire: &Value) -> Result<(BuildSnapshot, Notes), String> {
         snapshot.insert("season".into(), json!("s10"));
     }
     let mut decoded: BuildSnapshot = serde_json::from_value(Value::Object(snapshot))
-        .map_err(|e| format!("Invalid build fields: {e}"))?;
+        .map_err(|e| tr("Invalid build fields: {error}").replace("{error}", &e.to_string()))?;
     for nodes in [
         &mut decoded.allocated_tree_nodes,
         &mut decoded.allocated_ether_nodes,

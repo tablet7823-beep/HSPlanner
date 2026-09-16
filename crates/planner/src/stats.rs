@@ -500,7 +500,7 @@ impl StatsView {
             .py_1()
             .px_0()
             .rounded_sm()
-            .accessibility_label(format!("{label} sources"))
+            .accessibility_label(tr("{name} sources").replace("{name}", &label))
             .child(
                 div()
                     .w_full()
@@ -573,7 +573,7 @@ impl StatsView {
                     linear_color_stop(p.panel_secondary, 0.),
                     linear_color_stop(p.background, 1.),
                 ))
-                .accessibility_label(format!("{} sources", attribute.name))
+                .accessibility_label(tr("{name} sources").replace("{name}", &attribute.name))
                 .child(
                     div()
                         .w_full()
@@ -641,10 +641,10 @@ impl StatsView {
             .h_auto()
             .px_3()
             .py_2p5()
-            .accessibility_label(format!(
-                "{} {title}",
-                if open { "Collapse" } else { "Expand" }
-            ))
+            .accessibility_label(
+                if open { tr("Collapse {title}") } else { tr("Expand {title}") }
+                    .replace("{title}", &title),
+            )
             .child(
                 div()
                     .w_full()
@@ -777,7 +777,7 @@ impl StatsView {
                 breakdown.stat_name = label.clone();
                 body = body.child(crate::source_breakdown::trigger(
                     SharedString::from(format!("{row_key}-sources")),
-                    button.accessibility_label(format!("{label} sources")),
+                    button.accessibility_label(tr("{name} sources").replace("{name}", &label)),
                     breakdown,
                     self.session.clone(),
                 ));
@@ -785,10 +785,14 @@ impl StatsView {
                 let toggle = row_key.clone();
                 body = body.child(
                     button
-                        .accessibility_label(format!(
-                            "{} {label} calculation",
-                            if expanded { "Hide" } else { "Show" }
-                        ))
+                        .accessibility_label(
+                            if expanded {
+                                tr("Hide {label} calculation")
+                            } else {
+                                tr("Show {label} calculation")
+                            }
+                            .replace("{label}", &label),
+                        )
                         .on_click(cx.listener(move |this, _, _, cx| this.toggle(&toggle, cx))),
                 );
                 if expanded {
@@ -1224,12 +1228,12 @@ impl StatsView {
             } else {
                 damage
                     .map(|value| {
-                        format!(
-                            "{} damage",
-                            hsplanner_ui::numbers::compact_range(
+                        tr("{value} damage").replace(
+                            "{value}",
+                            &hsplanner_ui::numbers::compact_range(
                                 value,
-                                &self.session.read(cx).state().settings.number_scale
-                            )
+                                &self.session.read(cx).state().settings.number_scale,
+                            ),
                         )
                     })
                     .unwrap_or_else(|| "—".into())
@@ -1261,7 +1265,7 @@ impl StatsView {
                         .h_auto()
                         .p_0()
                         .selected(open)
-                        .accessibility_label(format!("{} damage", skill.name))
+                        .accessibility_label(tr("{name} damage").replace("{name}", &skill.name))
                         .child(
                             div()
                                 .w_full()
@@ -1445,7 +1449,7 @@ impl StatsView {
                     .border_1()
                     .border_color(if worst { p.accent_deep } else { p.border })
                     .selected(open)
-                    .accessibility_label(format!("{} effective HP", entry.damage_type))
+                    .accessibility_label(tr("{type} effective HP").replace("{type}", &entry.damage_type))
                     .child(
                         div()
                             .w_full()
@@ -1482,7 +1486,7 @@ impl StatsView {
             if open {
                 disclosures = disclosures.child(heading(
                     SharedString::from(format!("ehp-layers-{}", entry.damage_type)),
-                    &format!("{} mitigation", entry.damage_type),
+                    &tr("{type} mitigation").replace("{type}", &entry.damage_type),
                     cx,
                 ));
                 for layer in &entry.layers {

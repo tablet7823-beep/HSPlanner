@@ -404,7 +404,7 @@ impl TreeView {
                             .text_color(palette.faint)
                             .child(TooltipText::new(
                                 "ether-summary-count",
-                                format!("{} NODES", self.selected.len()),
+                                tr("{n} NODES").replace("{n}", &self.selected.len().to_string()),
                                 0.14,
                             )),
                     ),

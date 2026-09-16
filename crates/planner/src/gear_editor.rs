@@ -232,7 +232,7 @@ impl GearView {
                                     .text_color(if active { p.positive } else { p.faint })
                                     .child(TooltipText::new(
                                         SharedString::from(format!("set-bonus-{}", bonus.pieces)),
-                                        format!("{}-SET", bonus.pieces),
+                                        tr("{n}-SET").replace("{n}", &bonus.pieces.to_string()),
                                         0.14,
                                     )),
                             )
@@ -292,7 +292,9 @@ impl GearView {
                 .default_open(count >= 2)
                 .right(
                     mono_summary(
-                        format!("{count}/{} pieces", set.items.len()),
+                        tr("{count}/{total} pieces")
+                            .replace("{count}", &count.to_string())
+                            .replace("{total}", &set.items.len().to_string()),
                         p.positive.opacity(0.8),
                     )
                     .into_any_element(),
@@ -322,7 +324,7 @@ impl GearView {
         let summary = match (names.len(), unique.len()) {
             (0, _) => None,
             (n, 1) => Some(format!("{} ×{n}", unique[0].to_uppercase())),
-            (n, _) => Some(format!("{n} SOCKETED")),
+            (n, _) => Some(tr("{n} SOCKETED").replace("{n}", &n.to_string())),
         };
         let right = div()
             .flex()
@@ -364,7 +366,7 @@ impl GearView {
                 rows = rows.child(self.socket_row(item, base, index, cx));
             }
             if let Some(count) = base.sockets.filter(|count| *count != item.socket_count) {
-                rows = rows.child(hint("base-sockets", &format!("base · {count}"), cx));
+                rows = rows.child(hint("base-sockets", &tr("base · {count}").replace("{count}", &count.to_string()), cx));
             }
             rows
         };
@@ -635,9 +637,11 @@ impl GearView {
             .gap_2()
             .child(mono_summary(
                 if pinned_count > 0 {
-                    format!("{pinned_count}/{total} pinned")
+                    tr("{pinned}/{total} pinned")
+                        .replace("{pinned}", &pinned_count.to_string())
+                        .replace("{total}", &total.to_string())
                 } else {
-                    format!("{total} rollable")
+                    tr("{total} rollable").replace("{total}", &total.to_string())
                 },
                 if pinned_count > 0 {
                     accent_hot.opacity(0.8)
@@ -751,7 +755,7 @@ impl GearView {
         }
         let p = cx.global::<TooltipTheme>();
         let active = item_tooltip::runeword_for(base, Some(item)).map(|r| r.name.clone());
-        let right = mono_summary(format!("{count} compatible"), p.faint);
+        let right = mono_summary(tr("{count} compatible").replace("{count}", &count.to_string()), p.faint);
         let body = div().px_3().py_2().child(
             ghost_button("pick-runeword", tr("Browse runewords →"), cx).on_click(
                 cx.listener(|this, _, window, cx| this.choose_picker(Picker::Runeword, window, cx)),
@@ -856,7 +860,12 @@ impl GearView {
             None => mono_summary(tr("not rolled"), p.faint),
         };
         let body = div().px_3().py_2().child(
-            ghost_button(key, &format!("Pick {} →", label.to_lowercase()), cx).on_click(
+            ghost_button(
+                key,
+                &tr("Pick {label} →").replace("{label}", &label.to_lowercase()),
+                cx,
+            )
+            .on_click(
                 cx.listener(move |this, _, window, cx| this.choose_picker(picker, window, cx)),
             ),
         );
@@ -1009,7 +1018,7 @@ impl GearView {
                                     .gap_2()
                                     .child(self.roll_control(
                                         &key,
-                                        &format!("{} roll", affix.name),
+                                        &tr("{name} roll").replace("{name}", &affix.name),
                                         window,
                                         cx,
                                     ))
@@ -1062,7 +1071,7 @@ impl GearView {
                     .into_any_element()
             } else {
                 mono_summary(
-                    format!("{} forged", item.forged_mods.len()),
+                    tr("{n} forged").replace("{n}", &item.forged_mods.len().to_string()),
                     negative.opacity(0.9),
                 )
                 .into_any_element()
@@ -1169,7 +1178,7 @@ impl GearView {
                                     .gap_2()
                                     .child(self.roll_control(
                                         &key,
-                                        &format!("{name} roll"),
+                                        &tr("{name} roll").replace("{name}", &name),
                                         window,
                                         cx,
                                     ))
@@ -1208,7 +1217,9 @@ impl GearView {
                 .items_center()
                 .gap_2()
                 .child(mono_summary(
-                    format!("{} · Lv {level}", augment.name.to_uppercase()),
+                    tr("{name} · Lv {level}")
+                        .replace("{name}", &augment.name.to_uppercase())
+                        .replace("{level}", &level.to_string()),
                     p.angelic.opacity(0.9),
                 ))
                 .child(
@@ -1425,11 +1436,12 @@ impl GearView {
                     ("build-changes", tr("Build Stats"), stat_rows),
                 ] {
                     if !changes.is_empty() {
-                        let count = format!(
-                            "{} change{}",
-                            changes.len(),
-                            if changes.len() == 1 { "" } else { "s" }
-                        );
+                        let count = (if changes.len() == 1 {
+                            tr("{n} change")
+                        } else {
+                            tr("{n} changes")
+                        })
+                        .replace("{n}", &changes.len().to_string());
                         details = details.child(
                             div()
                                 .id(id)
@@ -1689,11 +1701,11 @@ impl GearView {
                     view.children(pool.map(|pool| {
                         let label = pool.split_once(':').map_or_else(
                             || pool.to_owned(),
-                            |(head, style)| format!("{style} {head}"),
+                            |(head, style)| tr("{style} {head}").replace("{style}", style).replace("{head}", head),
                         );
                         div().px_4().py_2().child(
                             gpui_kit::component::checkbox::Checkbox::new("affixes-outside-pool")
-                                .label(format!("Show all affixes (outside the {label} pool)"))
+                                .label(tr("Show all affixes (outside the {label} pool)").replace("{label}", &label))
                                 .checked(self.show_all_affixes)
                                 .on_click(cx.listener(|this, checked: &bool, _, cx| {
                                     this.show_all_affixes = *checked;
@@ -1715,7 +1727,7 @@ impl GearView {
                         .border_color(border)
                         .text_size(units(11.))
                         .text_color(muted)
-                        .child(format!("{} results", self.rows.len())),
+                        .child(tr("{n} results").replace("{n}", &self.rows.len().to_string())),
                 ),
         )
     }
@@ -2494,7 +2506,7 @@ fn roll_entries(item: &EquippedItem, base: &ItemBase) -> Vec<RollEntry> {
             entries.push(RollEntry {
                 key: format!("skill:{name}"),
                 stat: name.clone(),
-                label: format!("to {name}"),
+                label: tr("to {name}").replace("{name}", &name),
                 format_key: String::new(),
                 bounds: apply_stars_to_ranged_value((min, max), "item_granted_skill_rank", stars),
                 pinned: item.skill_bonus_overrides.get(name).copied(),

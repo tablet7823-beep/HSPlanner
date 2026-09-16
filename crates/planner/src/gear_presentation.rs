@@ -1,5 +1,5 @@
 //! Equipment composition; the parent view retains draft and comparison ownership.
-use hsplanner_engine::calc::i18n::tr;
+use hsplanner_engine::calc::i18n::{tr, tr_owned};
 use super::*;
 use crate::gear_stash::{self, StashRow};
 use crate::item_tooltip;
@@ -308,9 +308,12 @@ impl GearView {
                 foreground.opacity(0.4)
             }
         });
-        let label = format!(
-            "{name}: {}",
-            base.map_or(if locked { "locked" } else { "empty" }, |b| b.name.as_str())
+        let label = tr("{name}: {state}").replace("{name}", &name).replace(
+            "{state}",
+            &base.map_or_else(
+                || if locked { tr("locked") } else { tr("empty") }.to_owned(),
+                |b| b.name.clone(),
+            ),
         );
         let charm = key.starts_with("charm_");
         let key = key.to_owned();
@@ -363,7 +366,7 @@ impl GearView {
                                 .child(if locked {
                                     "2H".into()
                                 } else {
-                                    empty.unwrap_or(name).to_uppercase()
+                                    tr_owned(empty.unwrap_or(name)).to_uppercase()
                                 }),
                         )
                     })
@@ -484,10 +487,14 @@ impl GearView {
                                     inset: false,
                                 }])
                             })
-                            .accessibility_label(format!(
-                                "Potion {n} effects {}",
-                                if enabled { "on" } else { "off" }
-                            ))
+                            .accessibility_label(
+                                if enabled {
+                                    tr("Potion {n} effects on")
+                                } else {
+                                    tr("Potion {n} effects off")
+                                }
+                                .replace("{n}", &n.to_string()),
+                            )
                             .cursor_tooltip(if enabled {
                                 tr("Effects applied — click to disable")
                             } else {
@@ -520,7 +527,7 @@ impl GearView {
                         .text_color(if count > 0 { p.accent_hot } else { p.muted })
                         .child(count.to_string()),
                 )
-                .child(format!(" / {equipment} EQUIPPED")),
+                .child(tr(" / {n} EQUIPPED").replace("{n}", &equipment.to_string())),
             cx,
         )
         .child(
@@ -551,7 +558,7 @@ impl GearView {
                                         "amulet",
                                         44.,
                                         44.,
-                                        Some("AMU"),
+                                        Some(tr("AMU")),
                                         cx,
                                     ))),
                             )
@@ -582,7 +589,7 @@ impl GearView {
                                                 "ring_1",
                                                 44.,
                                                 44.,
-                                                Some("RING"),
+                                                Some(tr("RING")),
                                                 cx,
                                             ))
                                             .child(self.slot_cell("belt", 68., 44., None, cx))
@@ -590,7 +597,7 @@ impl GearView {
                                                 "ring_2",
                                                 44.,
                                                 44.,
-                                                Some("RING"),
+                                                Some(tr("RING")),
                                                 cx,
                                             )),
                                     )
@@ -945,7 +952,7 @@ impl GearView {
             )
             .child(
                 hsplanner_ui::controls::icon_button("remove", "×", true, cx)
-                    .accessibility_label(format!("Remove {} from stash", base.name))
+                    .accessibility_label(tr("Remove {name} from stash").replace("{name}", &base.name))
                     .on_click(cx.listener(move |this, _, _, cx| {
                         this.session.update(cx, |session, cx| {
                             session.edit(|draft| draft.stash.retain(|entry| entry.id != remove));
@@ -1022,7 +1029,7 @@ impl GearView {
                         .text_color(if count > 0 { p.accent_hot } else { p.muted })
                         .child(count.to_string()),
                 )
-                .child(format!(" / {} EQUIPPED", slots.len())),
+                .child(tr(" / {n} EQUIPPED").replace("{n}", &slots.len().to_string())),
             cx,
         )
         .child(
@@ -1069,10 +1076,18 @@ impl GearView {
                     let mut badges = Vec::new();
                     if let Some((base, item)) = base.zip(item) {
                         if let Some((min, max)) = base.defense_min.zip(base.defense_max) {
-                            badges.push(format!("DEF {min}–{max}"));
+                            badges.push(
+                                tr("DEF {min}–{max}")
+                                    .replace("{min}", &min.to_string())
+                                    .replace("{max}", &max.to_string()),
+                            );
                         }
                         if let Some((min, max)) = base.damage_min.zip(base.damage_max) {
-                            badges.push(format!("DMG {min}–{max}"));
+                            badges.push(
+                                tr("DMG {min}–{max}")
+                                    .replace("{min}", &min.to_string())
+                                    .replace("{max}", &max.to_string()),
+                            );
                         }
                         if item.socket_count > 0 {
                             badges.push(format!(
@@ -1106,12 +1121,15 @@ impl GearView {
                         .py_1p5()
                         .border_color(base.map_or(p.border, |_| foreground.opacity(0.4)))
                         .when(base.is_none(), |view| view.border_dashed())
-                        .accessibility_label(format!(
-                            "{name}: {}",
-                            base.map_or(if locked { "locked" } else { "empty" }, |b| b
-                                .name
-                                .as_str())
-                        ))
+                        .accessibility_label(
+                            tr("{name}: {state}").replace("{name}", &name).replace(
+                                "{state}",
+                                &base.map_or_else(
+                                    || if locked { tr("locked") } else { tr("empty") }.to_owned(),
+                                    |b| b.name.clone(),
+                                ),
+                            ),
+                        )
                         .child(
                             div()
                                 .w_full()
@@ -1167,7 +1185,7 @@ impl GearView {
                                                             if locked {
                                                                 tr("locked · 2H weapon equipped")
                                                             } else {
-                                                                "empty"
+                                                                tr("empty")
                                                             }
                                                             .into()
                                                         }),

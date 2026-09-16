@@ -268,8 +268,8 @@ impl Session {
             .class_id
             .as_deref()
             .and_then(hsplanner_engine::calc::data::get_class)
-            .map(|c| format!("Imported {}", c.name))
-            .unwrap_or_else(|| "Imported build".into());
+            .map(|c| tr("Imported {name}").replace("{name}", &c.name))
+            .unwrap_or_else(|| tr("Imported build").into());
         let id = self
             .state
             .library

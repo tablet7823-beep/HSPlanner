@@ -48,7 +48,10 @@ impl MigrationExport {
         for build in &self.library.builds {
             for profile in &build.profiles {
                 profile.snapshot().map_err(|e| {
-                    format!("Cannot migrate {} / {}: {e}", build.name, profile.name)
+                    tr("Cannot migrate {build} / {profile}: {error}")
+                        .replace("{build}", &build.name)
+                        .replace("{profile}", &profile.name)
+                        .replace("{error}", &e.to_string())
                 })?;
             }
         }
@@ -149,7 +152,9 @@ pub fn restore_backup(directory: &Path) -> Result<WorkspaceState, String> {
 }
 
 fn read_json<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T, String> {
-    let file = File::open(path).map_err(|e| format!("Cannot open {}: {e}", path.display()))?;
+    let file = File::open(path).map_err(|e| tr("Cannot open {path}: {error}")
+            .replace("{path}", &path.display().to_string())
+            .replace("{error}", &e.to_string()))?;
     let mut bytes = Vec::new();
     file.take(MAX_STATE_BYTES + 1)
         .read_to_end(&mut bytes)
@@ -158,10 +163,9 @@ fn read_json<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T, String> {
         return Err(tr("The saved data exceeds the supported file size.").into());
     }
     serde_json::from_slice(&bytes).map_err(|e| {
-        format!(
-            "Cannot read {}: {e}. The original file is unchanged.",
-            path.display()
-        )
+        tr("Cannot read {path}: {error}. The original file is unchanged.")
+            .replace("{path}", &path.display().to_string())
+            .replace("{error}", &e.to_string())
     })
 }
 
@@ -177,9 +181,11 @@ fn replace_file(path: &Path, bytes: &[u8]) -> Result<(), String> {
     let mut file = tempfile::NamedTempFile::new_in(parent).map_err(|e| e.to_string())?;
     file.write_all(bytes)
         .and_then(|_| file.as_file().sync_all())
-        .map_err(|e| format!("Could not save data: {e}"))?;
+        .map_err(|e| tr("Could not save data: {error}").replace("{error}", &e.to_string()))?;
     file.persist(path)
-        .map_err(|e| format!("Could not replace saved data: {}", e.error))?;
+        .map_err(|e| {
+            tr("Could not replace saved data: {error}").replace("{error}", &e.error.to_string())
+        })?;
     #[cfg(unix)]
     File::open(parent)
         .and_then(|f| f.sync_all())
@@ -193,7 +199,7 @@ pub fn write_atomic(directory: &Path, state: &WorkspaceState) -> Result<(), Stri
     if bytes.len() as u64 > MAX_STATE_BYTES {
         return Err(tr("The library is too large to save.").into());
     }
-    fs::create_dir_all(directory).map_err(|e| format!("Cannot create data directory: {e}"))?;
+    fs::create_dir_all(directory).map_err(|e| tr("Cannot create data directory: {error}").replace("{error}", &e.to_string()))?;
     let path = directory.join("state.json");
     if path.exists() {
         let previous: WorkspaceState = read_json(&path)?;

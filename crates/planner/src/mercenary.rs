@@ -1,4 +1,4 @@
-use hsplanner_engine::calc::i18n::{tr, tr_data};
+use hsplanner_engine::calc::i18n::{tr, tr_data, tr_owned};
 use crate::{TreeView, build_panel::format_range, gear::GearView};
 use gpui_kit::base::Disableable;
 use gpui_kit::component::{
@@ -88,7 +88,7 @@ impl MercenaryView {
         };
         panel_with_trailing(
             "merc-skills-panel",
-            format!("{} Skills", class.name),
+            tr("{class} Skills").replace("{class}", &class.name),
             div()
                 .flex()
                 .font_family(theme::MONO_FONT_FAMILY)
@@ -180,13 +180,13 @@ impl MercenaryView {
                                                 .text_color(p.faint)
                                                 .child(format!(
                                                     "{}{}",
-                                                    skill.kind.to_uppercase(),
+                                                    tr_owned(&skill.kind).to_uppercase(),
                                                     skill
                                                         .damage_type
                                                         .as_ref()
                                                         .map(|kind| format!(
                                                             " · {}",
-                                                            kind.to_uppercase()
+                                                            tr_owned(kind).to_uppercase()
                                                         ))
                                                         .unwrap_or_default()
                                                 )),
@@ -200,7 +200,7 @@ impl MercenaryView {
                                                     .border_color(p.positive.opacity(0.4))
                                                     .text_size(rems(8.5 / 13.))
                                                     .text_color(p.positive)
-                                                    .child("HERO"),
+                                                    .child(tr("HERO")),
                                             )
                                         }),
                                 )
@@ -220,10 +220,10 @@ impl MercenaryView {
                                 .child(
                                     icon_button("minus", "−", false, cx)
                                         .disabled(rank == 0)
-                                        .accessibility_label(format!(
-                                            "Decrease {} rank",
-                                            skill.name
-                                        ))
+                                        .accessibility_label(
+                                            tr("Decrease {name} rank")
+                                                .replace("{name}", &skill.name),
+                                        )
                                         .on_click(cx.listener(move |this, _, _, cx| {
                                             this.edit(cx, |s| {
                                                 s.set_mercenary_skill(
@@ -245,10 +245,10 @@ impl MercenaryView {
                                 .child(
                                     icon_button("plus", "+", false, cx)
                                         .disabled(rank >= max)
-                                        .accessibility_label(format!(
-                                            "Increase {} rank",
-                                            skill.name
-                                        ))
+                                        .accessibility_label(
+                                            tr("Increase {name} rank")
+                                                .replace("{name}", &skill.name),
+                                        )
                                         .on_click(cx.listener(move |this, _, _, cx| {
                                             this.edit(cx, |s| s.set_mercenary_skill(&id, rank + 1))
                                         })),
@@ -495,20 +495,20 @@ impl Render for MercenaryView {
         div().size_full().bg(p.background).child(div().id("mercenary-overview").size_full().track_scroll(&self.scroll).overflow_y_scroll().child(div().p_6().flex().flex_col().gap_4()
             .child(div().flex().items_end().justify_between().gap_3().child(section_heading("merc-heading",tr("Loadout"),tr("Mercenary"),cx))
                 .when(selected.is_some(),|v|v.child(div().flex().gap_3().items_center().font_family(theme::MONO_FONT_FAMILY).text_size(rems(10./13.)).text_color(p.faint)
-                    .child(format!("{used} / {} equipped  ·  {spent} skill points",mercenary::data().slots.len()))
+                    .child(tr("{used} / {total} equipped  ·  {spent} skill points").replace("{used}",&used.to_string()).replace("{total}",&mercenary::data().slots.len().to_string()).replace("{spent}",&spent.to_string()))
                     .child(Button::new("reset-mercenary").planner_style(cx).small().label(tr("Dismiss"))
                         .on_click(cx.listener(|this,_,_,cx|this.edit(cx,|s|{s.merc_class_id=None;s.merc_skill_ranks.clear();s.merc_inventory.clear();s.merc_disabled_auras.clear();})))))))
             .child(div().flex().flex_wrap().gap_2p5().children(mercenary::data().classes.iter().map(|class|{
                 let id=class.id.clone();let chosen=selected==Some(id.as_str());
                 Button::new(SharedString::from(format!("merc-class-{id}"))).planner_style(cx).custom(ButtonCustomVariant::new(cx).color(if chosen { p.accent_hot.opacity(0.08) } else { p.panel }).hover(p.panel_secondary)).min_w(rems(200./13.)).flex_1().h_auto().min_h(rems(56./13.)).px_3().py_2p5().border_color(if chosen{p.accent_hot}else{p.border})
-                    .accessibility_label(format!("Hire {}",class.name))
+                    .accessibility_label(tr("Hire {name}").replace("{name}",&class.name))
                     .child(div().w_full().flex().items_center().gap_3()
                         .child(div().size_12().flex_shrink_0().border_1().border_color(p.border_strong).rounded_sm().bg(p.background)
                             .children(IMAGES.get(id.as_str()).map(|i|img(i.clone()).size_full().object_fit(ObjectFit::Contain))))
                         .child(div().flex_1().min_w_0().flex().flex_col().items_start()
                             .child(div().font_family(theme::FONT_FAMILY).text_size(rems(1.)).font_weight(FontWeight::SEMIBOLD).text_color(if chosen{p.accent_hot}else{p.text}).child(class.name.clone()))
-                            .child(div().text_size(rems(9./13.)).text_color(p.muted).child(class.role.to_uppercase()))
-                            .child(div().truncate().font_family(theme::FONT_FAMILY).text_size(rems(10./13.)).text_color(p.faint).child(class.location.clone())))
+                            .child(div().text_size(rems(9./13.)).text_color(p.muted).child(tr_owned(&class.role).to_uppercase()))
+                            .child(div().truncate().font_family(theme::FONT_FAMILY).text_size(rems(10./13.)).text_color(p.faint).child(tr_owned(&class.location))))
                         .when(chosen,|v|v.child(div().self_start().text_color(p.accent_hot).child("◆"))))
                     .on_click(cx.listener(move|this,_,_,cx|this.edit(cx,|s|s.set_mercenary_class(Some(&id)))))
             })))

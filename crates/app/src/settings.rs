@@ -160,10 +160,14 @@ impl Render for SettingsView {
                 cx,
             ))
             .child(if settings.auto_save {
-                hint(format!("{SAVE_SHORTCUT} still saves instantly"), p.faint)
+                hint(
+                    tr("{key} still saves instantly").replace("{key}", SAVE_SHORTCUT),
+                    p.faint,
+                )
             } else {
                 hint(
-                    format!("Manual mode — press {SAVE_SHORTCUT} to save the active build"),
+                    tr("Manual mode — press {key} to save the active build")
+                        .replace("{key}", SAVE_SHORTCUT),
                     p.accent_hot.opacity(0.8),
                 )
             });

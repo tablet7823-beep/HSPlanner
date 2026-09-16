@@ -210,7 +210,7 @@ impl RenderOnce for NodeTooltip {
                                     self.info
                                         .as_ref()
                                         .map(|info| info.t.clone())
-                                        .unwrap_or_else(|| format!("Node #{}", self.node.id)),
+                                        .unwrap_or_else(|| tr("Node #{id}").replace("{id}", &self.node.id.to_string())),
                                     title_tracking,
                                 )
                                 .glow(self.effects.then_some(accent)),

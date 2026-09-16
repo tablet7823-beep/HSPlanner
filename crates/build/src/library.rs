@@ -125,11 +125,11 @@ impl Library {
                 || build.profiles.is_empty()
                 || build.profile(&build.active_profile_id).is_none()
             {
-                return Err(format!("Invalid library record: {}", build.name));
+                return Err(tr("Invalid library record: {name}").replace("{name}", &build.name));
             }
             let mut profiles = std::collections::HashSet::new();
             if build.profiles.iter().any(|p| !profiles.insert(&p.id)) {
-                return Err(format!("Duplicate profile in {}", build.name));
+                return Err(tr("Duplicate profile in {name}").replace("{name}", &build.name));
             }
         }
         let folders: std::collections::HashMap<_, _> =
@@ -321,12 +321,14 @@ pub fn clean_name(name: &str) -> Result<String, String> {
 
 pub fn duplicate_name<'a>(name: &str, taken: impl Iterator<Item = &'a str>) -> String {
     let taken: std::collections::HashSet<_> = taken.collect();
-    let base = format!("{name} (copy)");
+    let base = tr("{name} (copy)").replace("{name}", name);
     if !taken.contains(base.as_str()) {
         return base;
     }
     for i in 2.. {
-        let value = format!("{name} (copy {i})");
+        let value = tr("{name} (copy {i})")
+            .replace("{name}", name)
+            .replace("{i}", &i.to_string());
         if !taken.contains(value.as_str()) {
             return value;
         }

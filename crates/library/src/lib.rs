@@ -40,6 +40,18 @@ struct LibrarySort {
     direction: SortDirection,
 }
 
+/// The class column and the class sort read the same name. They used to
+/// disagree: sorting resolved the display name while the column printed the
+/// raw `class_id`, so a Korean build listed `VIKING` next to a sort order
+/// built from 바이킹.
+fn class_label(build: &SavedBuild) -> String {
+    build
+        .class_id
+        .as_deref()
+        .and_then(hsplanner_engine::calc::data::get_class)
+        .map_or_else(|| tr("Unknown").to_string(), |class| class.name.clone())
+}
+
 impl LibrarySort {
     fn select(&mut self, column: SortColumn) {
         self.direction = if self.column == column {
@@ -79,15 +91,7 @@ impl LibrarySort {
         match self.column {
             SortColumn::Favorite => SortKey::Number(u32::from(build.favorite)),
             SortColumn::Name => SortKey::Text(build.name.to_lowercase()),
-            SortColumn::Class => SortKey::Text(
-                build
-                    .class_id
-                    .as_deref()
-                    .and_then(hsplanner_engine::calc::data::get_class)
-                    .map(|class| class.name.as_str())
-                    .unwrap_or(tr("Unknown"))
-                    .to_lowercase(),
-            ),
+            SortColumn::Class => SortKey::Text(class_label(build).to_lowercase()),
             SortColumn::Level => {
                 SortKey::Number(query::profile_summary(build, true).map_or(1, |s| s.0))
             }
@@ -299,7 +303,11 @@ impl LibraryView {
             .border_0()
             .rounded_none()
             .font_weight(FontWeight::NORMAL)
-            .accessibility_label(format!("Sort by {accessible_title}{state}"))
+            .accessibility_label(
+                tr("Sort by {title}{state}")
+                    .replace("{title}", &accessible_title)
+                    .replace("{state}", state),
+            )
             .child(
                 div()
                     .flex()
@@ -613,7 +621,7 @@ impl Render for LibraryView {
                             ),
                     )
                     .child(div().w(rems(130. / 13.)).flex_none().child(label(
-                        build.class_id.clone().unwrap_or_else(|| "Unknown".into()),
+                        class_label(build),
                         muted,
                     )))
                     .child(
@@ -902,7 +910,11 @@ impl Render for LibraryView {
                         cx.notify();
                     })),
             )
-            .child(format!("{count} builds · Page {}", self.page + 1))
+            .child(
+                tr("{count} builds · Page {page}")
+                    .replace("{count}", &count.to_string())
+                    .replace("{page}", &(self.page + 1).to_string()),
+            )
             .child(
                 Button::new("next-page")
                     .planner_style(cx)
@@ -979,7 +991,12 @@ impl Render for LibraryView {
         filter_bar = filter_bar.child(
             div()
                 .ml_auto()
-                .child(label(format!("{count} of {total}"), accent)),
+                .child(label(
+                    tr("{count} of {total}")
+                        .replace("{count}", &count.to_string())
+                        .replace("{total}", &total.to_string()),
+                    accent,
+                )),
         );
         let header = div()
             .py_2()
@@ -1188,7 +1205,7 @@ impl Render for LibraryView {
                         div()
                             .text_sm()
                             .text_color(muted)
-                            .child(format!("{total} builds")),
+                            .child(tr("{total} builds").replace("{total}", &total.to_string())),
                     ),
             );
         let body = div()
@@ -1311,7 +1328,7 @@ impl Render for LibraryView {
 
 #[cfg(test)]
 mod sorting_tests {
-    use super::{LibrarySort, SavedBuild, SortColumn, SortDirection};
+    use super::{LibrarySort, SavedBuild, SortColumn, SortDirection, class_label, tr};
     use hsplanner_build::{
         BuildSnapshot,
         library::{Library, Profile},
@@ -1432,6 +1449,17 @@ mod sorting_tests {
         assert_eq!(builds.last().unwrap().name, "Build 13");
         let selected = builds.iter().find(|build| build.id == selected).unwrap();
         assert_eq!(selected.active_profile_id, selected_profile);
+    }
+
+    #[test]
+    fn the_class_column_shows_the_class_name_not_its_id() {
+        let mut known = build("alpha", 1);
+        known.class_id = Some("stormweaver".into());
+        assert_eq!(class_label(&known), "Stormweaver");
+
+        let mut unknown = build("beta", 1);
+        unknown.class_id = Some("aaa-invalid-class".into());
+        assert_eq!(class_label(&unknown), tr("Unknown"));
     }
 
     #[test]

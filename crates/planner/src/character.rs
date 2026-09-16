@@ -727,7 +727,8 @@ impl CharacterView {
                     LoadoutEntry::skill(
                         skill,
                         if ix == 0 { tr("Main") } else { tr("Active") },
-                        format!("Lv {}", snapshot.skill_ranks.get(id).unwrap_or(&0)),
+                        tr("Lv {n}")
+                            .replace("{n}", &snapshot.skill_ranks.get(id).unwrap_or(&0).to_string()),
                     )
                 })
             })
@@ -740,7 +741,8 @@ impl CharacterView {
             active.push(LoadoutEntry::skill(
                 aura,
                 tr("Aura"),
-                format!("Lv {}", snapshot.skill_ranks.get(&aura.id).unwrap_or(&0)),
+                tr("Lv {n}")
+                    .replace("{n}", &snapshot.skill_ranks.get(&aura.id).unwrap_or(&0).to_string()),
             ));
         }
         let mut seen = std::collections::HashSet::new();
@@ -1303,7 +1305,7 @@ fn ehp_rows(result: &defense::EhpResult) -> Vec<(String, Option<f64>)> {
             if let Some(first) = name.get_mut(0..1) {
                 first.make_ascii_uppercase()
             }
-            (format!("{name} eHP"), entry.ehp)
+            (tr("{name} eHP").replace("{name}", &name), entry.ehp)
         })
         .collect()
 }

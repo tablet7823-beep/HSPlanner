@@ -234,7 +234,7 @@ impl RenderOnce for TopBar {
                 .child(divider(border))
                 .child(mono_label(
                     "library-breadcrumb",
-                    format!("Builds / {}", self.library_location),
+                    tr("Builds / {location}").replace("{location}", &self.library_location),
                     11.,
                     0.18,
                     Some(accent_hot),
@@ -367,7 +367,7 @@ impl RenderOnce for TopBar {
                                         ),
                                     ))
                             })
-                            .cursor_tooltip(format!("Build library · {}", self.build_name))
+                            .cursor_tooltip(tr("Build library · {name}").replace("{name}", &self.build_name))
                             .on_click(self.on_library),
                     )
                     .child(
@@ -497,7 +497,7 @@ impl RenderOnce for BottomBar {
             SaveState::Manual => (
                 accent_hot,
                 tr("Manual · "),
-                Some(format!("Auto-save is off — press {SAVE_SHORTCUT} to save")),
+                Some(tr("Auto-save is off — press {key} to save").replace("{key}", SAVE_SHORTCUT)),
             ),
         };
         let save_text = if self.save == SaveState::Manual {
@@ -571,7 +571,7 @@ impl RenderOnce for BottomBar {
                     .bg(panel_secondary.opacity(0.6))
                     .child(mono_label(
                         "footer-channel",
-                        BUILD_CHANNEL,
+                        tr(BUILD_CHANNEL),
                         9.,
                         0.18,
                         Some(channel_color),
@@ -665,7 +665,7 @@ fn update_button(updater: Entity<crate::update::Updater>, cx: &App) -> Button {
             ButtonTone::Neutral,
         ),
         State::Available(update) => (
-            format!("Update v{}", update.version),
+            tr("Update v{version}").replace("{version}", &update.version.to_string()),
             tr("A newer version is available").to_string(),
             ButtonTone::Primary,
         ),

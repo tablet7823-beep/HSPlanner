@@ -131,10 +131,9 @@ impl ConfigView {
                 name: if difficulty.resist_penalty == 0. {
                     difficulty.name.clone()
                 } else {
-                    format!(
-                        "{} ({:.0}% resistances)",
-                        difficulty.name, difficulty.resist_penalty
-                    )
+                    tr("{name} ({pct}% resistances)")
+                        .replace("{name}", &difficulty.name)
+                        .replace("{pct}", &format!("{:.0}", difficulty.resist_penalty))
                 },
             })
             .collect::<Vec<_>>();
@@ -146,7 +145,7 @@ impl ConfigView {
         let custom_editor = cx.new(|cx| {
             let mut state = TextareaState::new(window, cx)
                 .auto_grow(4, 12)
-                .placeholder("100% Faster Cast Rate\n+50 Life\n12-18 Cold Resistance");
+                .placeholder(tr("100% Faster Cast Rate\n+50 Life\n12-18 Cold Resistance"));
             state.set_value(custom_saved.clone(), window, cx);
             state
         });
@@ -712,7 +711,7 @@ impl ConfigView {
                                             .child("−"),
                                     )
                                     .disabled(added == 0)
-                                    .accessibility_label(format!("Decrease {}", attr.name))
+                                    .accessibility_label(tr("Decrease {name}").replace("{name}", &attr.name))
                                     .on_click(cx.listener(move |this, event, _, cx| {
                                         let count = allocation_step(event, added);
                                         this.edit(cx, |snapshot| {
@@ -747,7 +746,7 @@ impl ConfigView {
                                             .child("+"),
                                     )
                                     .disabled(remaining == 0)
-                                    .accessibility_label(format!("Increase {}", attr.name))
+                                    .accessibility_label(tr("Increase {name}").replace("{name}", &attr.name))
                                     .on_click(cx.listener(move |this, event, _, cx| {
                                         let count = allocation_step(event, remaining);
                                         this.edit(cx, |snapshot| {
@@ -870,7 +869,7 @@ impl ConfigView {
             .child(div().grid().grid_cols(if small { 4 } else { 2 }).gap_2().children([("fire",tr("Fire")),("cold",tr("Cold")),("lightning",tr("Lightning")),("poison",tr("Poison")),("arcane",tr("Arcane"))].into_iter().map(|(key,name)| {
                 tile(false,cx).flex().items_center().justify_between().gap_2()
                     .child(label(SharedString::from(format!("res-label-{key}")),name,condition_color(key,cx)))
-                    .child(div().flex().items_center().gap_1().child(self.number(NumberField::Resistance(key.into()),format!("Enemy {name} resistance"),cx)).child("%"))
+                    .child(div().flex().items_center().gap_1().child(self.number(NumberField::Resistance(key.into()),tr("Enemy {name} resistance").replace("{name}", name),cx)).child("%"))
             })))
     }
 
@@ -1042,10 +1041,14 @@ impl ConfigView {
                         .child(
                             Checkbox::new(SharedString::from(format!("config-merc-aura-{key}")))
                                 .checked(enabled)
-                                .label(format!(
-                                    "{name} · Level {}",
-                                    crate::build_panel::format_range(level, false)
-                                ))
+                                .label(
+                                    tr("{name} · Level {level}")
+                                        .replace("{name}", &name)
+                                        .replace(
+                                            "{level}",
+                                            &crate::build_panel::format_range(level, false),
+                                        ),
+                                )
                                 .on_click(cx.listener(move |this, checked: &bool, _, cx| {
                                     this.edit(cx, |snapshot| {
                                         snapshot.merc_disabled_auras.insert(key.clone(), !*checked);
@@ -1192,7 +1195,10 @@ impl ConfigView {
                         format!("granted:{}", skill.id),
                         (
                             skill.name.clone(),
-                            format!("Every {}s", skill.proc_cooldown.unwrap_or(1.5).max(1.5)),
+                            tr("Every {n}s").replace(
+                                "{n}",
+                                &skill.proc_cooldown.unwrap_or(1.5).max(1.5).to_string(),
+                            ),
                         ),
                     );
                 }
@@ -1220,12 +1226,11 @@ impl ConfigView {
                         key,
                         (
                             skill.name.clone(),
-                            format!(
-                                "{}% · {} · Lv {rank} · {}",
-                                proc.chance,
-                                proc.trigger.replace("on_", ""),
-                                base.name
-                            ),
+                            tr("{pct}% · {trigger} · Lv {rank} · {name}")
+                                .replace("{pct}", &proc.chance.to_string())
+                                .replace("{trigger}", &proc.trigger.replace("on_", ""))
+                                .replace("{rank}", &rank.to_string())
+                                .replace("{name}", &base.name),
                         ),
                     );
                 }
@@ -1318,7 +1323,7 @@ impl ConfigView {
         if !stacks.is_empty() {
             content=content.child(panel_with_trailing("config-stacks",tr("Combat Stacks"),count_badge("stack-count",stacks.iter().filter(|(stack,max)|snapshot.stack_counts.get(&stack.key).copied().unwrap_or(*max)<*max).count(),None,cx),cx).child(help(tr("How many stacks to assume are up. Builds start at their cap; drop the count to see a colder rotation."),cx))
                 .children(stacks.into_iter().map(|(stack,max)|tile(false,cx).flex().items_center().justify_between().gap_2().child(stack.name.clone())
-                    .child(div().flex().items_center().gap_1().child(self.number(NumberField::Stack(stack.key.clone()),format!("{} stacks",stack.name),cx)).child(format!("/ {max}"))))));
+                    .child(div().flex().items_center().gap_1().child(self.number(NumberField::Stack(stack.key.clone()),tr("{name} stacks").replace("{name}",&stack.name),cx)).child(format!("/ {max}"))))));
         }
         let skills = data::get_skills_by_class(snapshot.class_id.as_deref().unwrap_or(""));
         let kinds = [
@@ -1353,10 +1358,10 @@ impl ConfigView {
                             .flex()
                             .items_center()
                             .justify_between()
-                            .child(format!("{name} / sec"))
+                            .child(tr("{name} / sec").replace("{name}", name))
                             .child(self.number(
                                 NumberField::Entity(key.into()),
-                                format!("{name} attacks per second"),
+                                tr("{name} attacks per second").replace("{name}", name),
                                 cx,
                             ))
                     })),
@@ -1412,7 +1417,7 @@ impl ConfigView {
                         .when(!learned && !overridden, |view| view.opacity(0.6).border_color(p.border))
                         .flex().items_center().justify_between().gap_2()
                         .child(skill_caption(skill, 28.).text_color(if overridden { p.accent_hot } else { p.text }))
-                        .child(div().flex().items_center().gap_1().child(self.number(NumberField::Projectile(skill.id.clone()), format!("{} projectiles", skill.name), cx)).child(div().font_family(theme::MONO_FONT_FAMILY).text_size(rems(10. / 13.)).text_color(p.faint).child("×")))
+                        .child(div().flex().items_center().gap_1().child(self.number(NumberField::Projectile(skill.id.clone()), tr("{name} projectiles").replace("{name}", &skill.name), cx)).child(div().font_family(theme::MONO_FONT_FAMILY).text_size(rems(10. / 13.)).text_color(p.faint).child("×")))
                 }),
             )),
         )
@@ -1556,10 +1561,10 @@ fn parse_custom_text(text: &str) -> (Vec<CustomStat>, Vec<String>) {
         if let Some((stat_key, value)) = matched {
             stats.push(CustomStat { stat_key, value })
         } else {
-            issues.push(format!(
-                "line {} · Expected a value and known stat name, e.g. +50 Life.",
-                ix + 1
-            ))
+            issues.push(
+                tr("line {n} · Expected a value and known stat name, e.g. +50 Life.")
+                    .replace("{n}", &(ix + 1).to_string()),
+            )
         }
     }
     (stats, issues)
@@ -1586,8 +1591,11 @@ fn help(text: &str, cx: &App) -> Div {
 fn count_badge(id: impl Into<ElementId>, count: usize, total: Option<usize>, cx: &App) -> Div {
     let p = cx.global::<TooltipTheme>();
     let text = match total {
-        Some(total) => format!("{count} / {total} active"),
-        None => format!("{count} override{}", if count == 1 { "" } else { "s" }),
+        Some(total) => tr("{count} / {total} active")
+            .replace("{count}", &count.to_string())
+            .replace("{total}", &total.to_string()),
+        None => if count == 1 { tr("{count} override") } else { tr("{count} overrides") }
+            .replace("{count}", &count.to_string()),
     };
     label(id, text, if count > 0 { p.accent_hot } else { p.faint })
 }
