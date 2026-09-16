@@ -32,7 +32,16 @@ OUT_DIR = os.path.join(DATA_ROOT, "i18n")
 # English string and so share a catalogue entry — they move together. `tags` is
 # deliberately absent: those are matched against affix-tags.json, whose own tag
 # lists are JSON keys and would stay English, breaking the match.
-TEXT_FIELDS = {"name", "description", "desc", "label", "title", "flavor", "tree"}
+TEXT_FIELDS = {
+    "name", "description", "desc", "label", "title", "flavor", "tree", "details",
+}
+
+# Lists of prose. `uniqueEffects` is extracted but deliberately *not* applied by
+# the overlay: the planner filters those strings against a sentinel ("Unholy")
+# and splits `Name: formula` entries against skill names, all on the raw value.
+# Translating them in the data would break that, so the tooltip translates them
+# where it draws them instead.
+TEXT_LIST_FIELDS = {"descriptions", "uniqueEffects"}
 
 # `t` and `l` are the incarnation node title and its stat-line list. The key is
 # file-scoped on purpose: the *tree* files reuse `t` for the node size
@@ -73,7 +82,9 @@ def collect(path: str, doc, sink: collections.OrderedDict) -> None:
                 if isinstance(value, str) and key in str_fields:
                     if is_translatable(value):
                         sink.setdefault(value, []).append(f"{label}:{key}")
-                elif key in short_list and isinstance(value, list):
+                elif (key in short_list or key in TEXT_LIST_FIELDS) and isinstance(
+                    value, list
+                ):
                     for item in value:
                         if isinstance(item, str) and is_translatable(item):
                             sink.setdefault(item, []).append(f"{label}:{key}[]")

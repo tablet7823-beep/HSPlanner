@@ -32,10 +32,11 @@ pub(crate) use includes::{CATALOGS, CONTEXT_CATALOGS, UI_CATALOGS};
 /// Locale that means "leave the data exactly as upstream shipped it".
 pub const SOURCE_LOCALE: &str = "en";
 
-/// Object keys whose string value is displayed prose. Must stay in step with
-/// `TEXT_FIELDS` in tools/i18n_extract.py: a field listed there but not here is
-/// extracted and translated in the catalogue yet never applied, which reads as
-/// a missing translation rather than a wiring mistake.
+/// Object keys whose string value is displayed prose. Keep in step with
+/// `TEXT_FIELDS` in tools/i18n_extract.py — with one deliberate exception noted
+/// below. A field listed there but not here is extracted and translated in the
+/// catalogue yet never applied, which reads as a missing translation rather
+/// than a wiring mistake.
 ///
 /// `t` is the incarnation node title; the tree files reuse `t` for the node
 /// size (root/small/big), which never appears in a catalogue, so the lookup
@@ -51,10 +52,18 @@ const TEXT_FIELDS: &[&str] = &[
     "flavor",
     "t",
     "tree",
+    "details",
 ];
 
-/// Object keys holding a list of prose strings: the incarnation node stat lines.
-const TEXT_LIST_FIELDS: &[&str] = &["l"];
+/// Object keys holding a list of prose strings: the incarnation node stat lines
+/// and a set bonus's lines.
+///
+/// `uniqueEffects` is the exception mentioned above — the extractor collects it
+/// so the strings get translated, but applying it here would break the item
+/// tooltip, which tests those raw values against the sentinel "Unholy" and
+/// splits `Name: formula` entries against skill names. The tooltip translates
+/// them at the point it draws them instead, after every such test has run.
+const TEXT_LIST_FIELDS: &[&str] = &["l", "descriptions"];
 
 /// Field carrying the untranslated original, for the name-as-lookup-key paths.
 const SOURCE_FIELD: &str = "nameEn";

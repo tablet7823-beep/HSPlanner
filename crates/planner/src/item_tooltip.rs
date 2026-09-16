@@ -1,5 +1,5 @@
 //! Item tooltip: the reference `itemTooltipModel.ts` model and `ItemTooltip.tsx` look.
-use hsplanner_engine::calc::i18n::tr;
+use hsplanner_engine::calc::i18n::{tr, tr_data};
 use crate::{
     gear::{
         editor::rarity_label,
@@ -775,7 +775,11 @@ pub(crate) fn build_model(
                     } else {
                         "·"
                     };
-                    format!("{mark} {} ({})", piece.name, piece.slot)
+                    format!(
+                        "{mark} {} ({})",
+                        piece.name,
+                        crate::gear::editor::base_type_label(&piece.slot)
+                    )
                 })
                 .collect(),
         });
@@ -849,8 +853,10 @@ pub(crate) fn build_model(
     let special: Vec<Line> = effects
         .iter()
         .filter(|e| recognized(e))
+        // Translated only now: every check above — the "Unholy" sentinel, the
+        // recognised-effect list — runs against the raw English.
         .map(|e| Line::Text {
-            text: (*e).clone(),
+            text: tr_data(e),
             style: LineStyle::Special,
             custom: false,
         })
@@ -868,7 +874,7 @@ pub(crate) fn build_model(
             .iter()
             .filter(|e| !recognized(e))
             .map(|e| Line::Text {
-                text: (*e).clone(),
+                text: tr_data(e),
                 style: LineStyle::Unsupported,
                 custom: false,
             }),

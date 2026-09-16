@@ -135,6 +135,15 @@ GLOSSARY = {
     "Pull": "끌어당김", "Knockback": "밀쳐내기", "Fork": "분열",
     "Echo": "메아리", "Multishot": "다중 사격",
     "Absorbed": "흡수", "Absorb": "흡수",
+    "Potion Charges": "물약 충전", "Maximum Potion Charges": "최대 물약 충전",
+    "Flask Cooldown": "플라스크 쿨다운", "s": "초",
+    "Disarm Duration": "무장 해제 지속시간", "Slow Duration": "둔화 지속시간",
+    "Hex Duration": "저주 지속시간", "Freeze Duration": "빙결 지속시간",
+    "Stun Duration": "기절 지속시간", "Healing": "치유",
+    "Mana Restored": "회복 마나", "Life Replenish by": "생명력 회복",
+    "Burning Damage": "화상 데미지", "Poisoned Damage": "중독 데미지",
+    "Bleeding Damage": "출혈 데미지", "Blocking": "막기",
+    "Life Replenished when Blocking": "막기 시 생명력 회복",
     "Explosion area of effect": "폭발 영향 범위",
     "Poison Length": "독 지속시간",
     "Mana Costs": "마나 소모",
@@ -318,6 +327,14 @@ RULES: list[tuple[re.Pattern, str]] = [
     # Sub-skill blurbs: 222 of them are this one sentence, and the subtree
     # name inside is already translated.
     (re.compile(r"^Core of the (.+) subtree\.$"), "{0} 하위 트리의 핵심입니다."),
+    # Relic effects: "Agility: 19% [+1% per level] Attack Speed".
+    (re.compile(r"^(.+): (\S+) \[(\+\S+) per level\] (.+)$"),
+     "{0}: {1} [레벨당 {2}] {3}"),
+    # Set bonuses that grant skill ranks: "+5 to Holy Hammer (Paladin)".
+    (re.compile(rf"^\+({NUM}) to (.+) \((.+)\)$"), "{1} ({2}) +{0}"),
+    (re.compile(rf"^({NUM}) (.+)$"), "{1} {0}"),
+    (re.compile(rf"^(.+) ({NUM}) seconds$"), "{0} {1}초"),
+    (re.compile(rf"^({NUM})% (.+)$"), "{1} {0}%"),
     # Item proc lines: "cast Anchor Swing Level [60-80]".
     (re.compile(r"^cast (.+) Level (.+)$"), "{0} 레벨 {1} 시전"),
     (re.compile(r"^(.+) Converted [Tt]o (.+)$"), "{0}를 {1}로 전환"),
@@ -344,7 +361,9 @@ RULES: list[tuple[re.Pattern, str]] = [
     (re.compile(r"^(.+) on (.+)$"), "{1} 시 {0}"),
 ]
 
-NUMERIC = re.compile(rf"^{NUM}$")
+# A quantity may carry its unit: "19%", "1.8s", "[10-25]%". These pass through
+# untranslated like a bare number does.
+NUMERIC = re.compile(rf"^{NUM}\s*[%s]?$")
 
 
 @functools.lru_cache(maxsize=None)

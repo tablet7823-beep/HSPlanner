@@ -1,4 +1,4 @@
-use hsplanner_engine::calc::i18n::tr;
+use hsplanner_engine::calc::i18n::{tr, tr_data};
 use crate::{TreeView, build_panel::format_range, gear::GearView};
 use gpui_kit::base::Disableable;
 use gpui_kit::component::{
@@ -281,7 +281,7 @@ impl MercenaryView {
                     }
                 }
                 for effect in base.unique_effects.iter().flatten() {
-                    effects.push((base.name.clone(), effect.clone()));
+                    effects.push((base.name.clone(), tr_data(effect)));
                 }
             }
         }

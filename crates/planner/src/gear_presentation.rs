@@ -96,6 +96,36 @@ impl Render for GearEditor {
 }
 
 impl GearView {
+    /// Right-click on a filled slot empties it, without opening the editor.
+    ///
+    /// Goes through `gear::commit` like the editor's Remove button, so the
+    /// offhand revalidation and the two-handed rules still run.
+    fn clear_slot(&mut self, slot: &str, cx: &mut Context<Self>) {
+        let snapshot = self.session.read(cx).snapshot();
+        let inventory = if self.mercenary {
+            &snapshot.merc_inventory
+        } else {
+            &snapshot.inventory
+        };
+        if !inventory.contains_key(slot) {
+            return;
+        }
+        let mercenary = self.mercenary;
+        let result = self.session.update(cx, |session, cx| {
+            let extra = session.state().settings.extra_charm_slot;
+            let mut result = Ok(());
+            session.edit(|draft| {
+                result = gear::commit(&mut draft.snapshot, slot, None, mercenary, extra)
+            });
+            if result.is_ok() {
+                cx.notify();
+            }
+            result
+        });
+        self.error = result.err();
+        cx.notify();
+    }
+
     fn open_slot(&mut self, slot: String, window: &mut Window, cx: &mut Context<Self>) {
         self.invalidate_item_picker();
         self.slot = slot;
@@ -284,6 +314,7 @@ impl GearView {
         );
         let charm = key.starts_with("charm_");
         let key = key.to_owned();
+        let clear_key = key.clone();
         let tip_id = SharedString::from(format!("slot-tip-{key}"));
         let cell = Button::new(SharedString::from(format!("slot-{key}")))
             .planner_style(cx)
@@ -372,6 +403,10 @@ impl GearView {
             )
             .on_click(
                 cx.listener(move |this, _, window, cx| this.open_slot(key.clone(), window, cx)),
+            )
+            .on_mouse_down(
+                gpui_kit::MouseButton::Right,
+                cx.listener(move |this, _, _, cx| this.clear_slot(&clear_key, cx)),
             );
         match item {
             Some(item) => {
