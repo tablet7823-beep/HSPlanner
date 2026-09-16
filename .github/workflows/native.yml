@@ -2,7 +2,7 @@ name: Native GPUI
 
 on:
   push:
-    branches: [main, main-private]
+    branches: [main, main-private, korean]
   pull_request:
   workflow_dispatch:
   workflow_call:
